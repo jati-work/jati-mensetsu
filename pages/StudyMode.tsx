@@ -77,16 +77,31 @@ const StudyMode: React.FC<Props> = ({ questions, setQuestions, interviewPoints, 
     }, [isTimerRunning, timeLeft, isRecording]);
 
     const speak = (text: string) => {
+        if (!text) return;
         if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+        
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'ja-JP';
         utterance.rate = 0.85;
+
         if (availableVoices.length > 0) {
-            const v = voiceGender === 'female' ? 
-                availableVoices.find(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('haruka')) :
-                availableVoices.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('ichiro'));
-            utterance.voice = v || availableVoices[0];
+            const femaleKeywords = ['female', 'haruka', 'kyoko', 'sayaka', 'nanako', 'mizuki'];
+            const maleKeywords = ['male', 'ichiro', 'otoya', 'keita', 'puck'];
+
+            let selectedVoice = null;
+            if (voiceGender === 'female') {
+                selectedVoice = availableVoices.find(v => 
+                    femaleKeywords.some(key => v.name.toLowerCase().includes(key))
+                );
+            } else {
+                selectedVoice = availableVoices.find(v => 
+                    maleKeywords.some(key => v.name.toLowerCase().includes(key))
+                );
+            }
+            
+            utterance.voice = selectedVoice || availableVoices[0];
         }
+        
         window.speechSynthesis.speak(utterance);
     };
 
