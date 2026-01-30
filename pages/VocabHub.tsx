@@ -169,12 +169,15 @@ const handleSaveVocab = async () => {
 
     return (
         <div className="space-y-12 fade-in pb-20 pt-4 md:pt-0">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                <div className="space-y-2">
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">Vocab Hub Pro</h1>
-                    <p className="text-indigo-500 font-black text-[10px] uppercase tracking-[0.3em]">Flashcards untuk hafalan kotoba</p>
-                </div>
-            </div>
+<div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+    <div className="space-y-2">
+        <h1 className="text-4xl font-black text-gray-900 tracking-tight">Vocab Hub Pro</h1>
+        <p className="text-indigo-500 font-black text-[10px] uppercase tracking-[0.3em]">Flashcards untuk hafalan kotoba</p>
+    </div>
+    <button onClick={exportCsv} className="flex items-center gap-3 bg-emerald-50 text-emerald-600 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-all">
+        <Download size={18} /> EXPORT CSV
+    </button>
+</div>
 
             <div className="grid grid-cols-1 xl:grid-cols-5 gap-10">
                 <div className="xl:col-span-2 bg-white p-8 md:p-10 rounded-[48px] border border-gray-100 space-y-8 shadow-sm flex flex-col h-[800px] slide-up">
@@ -189,6 +192,47 @@ const handleSaveVocab = async () => {
                             {editingId ? 'SIMPAN PERUBAHAN' : 'TAMBAH KATA'}
                         </button>
                     </div>
+
+{/* Form Import Massal */}
+<div className="p-6 rounded-[35px] border-2 bg-gray-50/50 border-gray-200 space-y-3">
+    <h4 className="text-xs font-black text-gray-600 uppercase tracking-widest flex items-center gap-2">
+        <Upload size={14} /> Import Massal
+    </h4>
+    <p className="text-[9px] text-gray-400 font-bold">
+        📋 Copy paste langsung dari Excel atau format: <code className="bg-white px-2 py-0.5 rounded">Kategori, Kata, Arti</code>
+    </p>
+    <textarea 
+        value={bulkImport} 
+        onChange={(e) => setBulkImport(e.target.value)} 
+        className="w-full h-24 p-4 bg-white rounded-2xl text-xs font-bold outline-none border-none resize-none shadow-inner" 
+        placeholder="Umum	おふろ	Mandi
+Medis	病院	Rumah Sakit"
+    />
+    <button 
+        onClick={async () => {
+            const rows = bulkImport.split('\n').filter(r => r.trim());
+            const newVocabs = rows.map(r => {
+                const separator = r.includes('\t') ? '\t' : ',';
+                const p = r.split(separator).map(v => v.trim().replace(/^"|"$/g, ''));
+                return { 
+                    id: Date.now() + Math.random(), 
+                    category: p[0] || 'Umum', 
+                    word: p[1] || '', 
+                    meaning: p[2] || '' 
+                };
+            });
+            
+            for (const v of newVocabs) {
+                await saveVocab(v);
+            }
+            setVocabList([...vocabList, ...newVocabs]);
+            setBulkImport('');
+        }} 
+        className="w-full p-4 rounded-2xl bg-gray-900 text-white font-black text-[10px] tracking-widest transition-all hover:bg-black active:scale-95"
+    >
+        TAMBAH KE DATABASE
+    </button>
+</div>
 
                     <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                         {categories.map(cat => (
