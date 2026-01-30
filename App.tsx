@@ -1,15 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
-import { Lock, LayoutDashboard, FileSearch, Briefcase, BookOpen, Settings, LogOut, X, Menu, ArrowRight, BrainCircuit, RotateCw, RefreshCw, CloudOff, Cloud, CheckCircle } from 'lucide-react';
+import { LayoutDashboard, FileSearch, Briefcase, BookOpen, Settings, LogOut, X, Menu, BrainCircuit, RotateCw } from 'lucide-react';
 import { supabase } from './supabase.ts';
+import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import DocumentHub from './pages/DocumentHub.tsx';
 import TSKTracker from './pages/TSKTracker.tsx';
 import StudyMode from './pages/StudyMode.tsx';
 import VocabHub from './pages/VocabHub.tsx';
 import Management from './pages/Management.tsx';
-
-const APP_LOGO = "https://raw.githubusercontent.com/jati-work/jati-mensetsu/main/images/jati-mensetsu-logo.png";
 
 const App: React.FC = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('kaigo_logged') === 'true');
@@ -51,31 +49,29 @@ const App: React.FC = () => {
         setIsSupabaseConfigured(url.includes('supabase.co'));
     }, []);
 
-    // Load data awal
+    // Load data awal - TANPA AUTH CHECK
     const loadAllData = async () => {
         if (!isSupabaseConfigured) return;
         setIsSyncing(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
             const [
-                { data: profile },
+                { data: profiles },
                 { data: qData },
                 { data: tskData },
                 { data: vData },
                 { data: dData },
                 { data: rData }
             ] = await Promise.all([
-                supabase.from('profiles').select('*').eq('id', user.id).single(),
-                supabase.from('questions').select('*').eq('user_id', user.id),
-                supabase.from('tsk_pipeline').select('*').eq('user_id', user.id),
-                supabase.from('vocab').select('*').eq('user_id', user.id),
-                supabase.from('documents').select('*').eq('user_id', user.id),
-                supabase.from('roadmap').select('*').eq('user_id', user.id)
+                supabase.from('profiles').select('*').limit(1),
+                supabase.from('questions').select('*'),
+                supabase.from('tsk_pipeline').select('*'),
+                supabase.from('vocab').select('*'),
+                supabase.from('documents').select('*'),
+                supabase.from('roadmap').select('*')
             ]);
 
-            if (profile) {
+            if (profiles && profiles.length > 0) {
+                const profile = profiles[0];
                 setUserName(profile.user_name || 'Jati');
                 setTargetDate(profile.target_date || 'Q4 2025');
                 setCertStatus(profile.cert_status || 'JFT-A2 Lulus');
@@ -98,29 +94,44 @@ const App: React.FC = () => {
         }
     };
 
-    // Auto-sync data
+    // Auto-sync data - TANPA AUTH CHECK
     useEffect(() => {
         if (!isLoggedIn || !isSupabaseConfigured) return;
         
         const syncTimer = setTimeout(async () => {
             setIsSyncing(true);
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) {
-                    setIsSyncing(false);
-                    return;
-                }
+                // Cek apakah sudah ada profile
+                const { data: existingProfiles } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .limit(1);
 
-                await supabase.from('profiles').upsert({
-                    id: user.id,
-                    user_name: userName,
-                    target_date: targetDate,
-                    cert_status: certStatus,
-                    doc_notes: docNotes,
-                    interview_points: interviewPoints,
-                    emergency_phrases: emergencyPhrases,
-                    study_notes: studyNotes
-                });
+                if (existingProfiles && existingProfiles.length > 0) {
+                    // Update existing profile
+                    await supabase.from('profiles')
+                        .update({
+                            user_name: userName,
+                            target_date: targetDate,
+                            cert_status: certStatus,
+                            doc_notes: docNotes,
+                            interview_points: interviewPoints,
+                            emergency_phrases: emergencyPhrases,
+                            study_notes: studyNotes
+                        })
+                        .eq('id', existingProfiles[0].id);
+                } else {
+                    // Insert new profile
+                    await supabase.from('profiles').insert({
+                        user_name: userName,
+                        target_date: targetDate,
+                        cert_status: certStatus,
+                        doc_notes: docNotes,
+                        interview_points: interviewPoints,
+                        emergency_phrases: emergencyPhrases,
+                        study_notes: studyNotes
+                    });
+                }
             } catch (err) {
                 console.error("Sync Error:", err);
             } finally {
@@ -137,10 +148,11 @@ const App: React.FC = () => {
         }
     }, [isLoggedIn, isSupabaseConfigured]);
 
-    const handleLogin = () => {
+    const handleLogin = (name: string) => {
+        setUserName(name);
         setIsLoggedIn(true);
         localStorage.setItem('kaigo_logged', 'true');
-        localStorage.setItem('kaigo_user', userName);
+        localStorage.setItem('kaigo_user', name);
     };
 
     const handleLogout = () => {
@@ -168,45 +180,12 @@ const App: React.FC = () => {
         );
     }
 
+    // Tampilkan Login Page
     if (!isLoggedIn) {
-        return (
-            <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-6 relative overflow-hidden">
-                <div className="bg-white max-w-sm w-full p-10 md:p-14 rounded-[56px] shadow-2xl border border-gray-100 text-center space-y-10 fade-in z-10">
-                    <div className="w-28 h-28 bg-white border border-gray-100 rounded-[35px] mx-auto flex items-center justify-center overflow-hidden shadow-xl">
-                        <img src={APP_LOGO} alt="Logo" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="space-y-2">
-                        <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase">JATI MENSETSU</h1>
-                        <p className="text-gray-400 font-bold text-[10px] uppercase tracking-widest">Portal Persiapan Kaigo</p>
-                    </div>
-
-                    <div className={`mx-auto flex items-center justify-center gap-2 px-4 py-2 rounded-full border w-fit ${isSupabaseConfigured ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
-                        {isSupabaseConfigured ? <Cloud size={14} className="text-emerald-500"/> : <CloudOff size={14} className="text-rose-400"/>}
-                        <span className={`text-[9px] font-black uppercase tracking-tighter ${isSupabaseConfigured ? 'text-emerald-600' : 'text-rose-500'}`}>
-                            {isSupabaseConfigured ? 'Connected to Cloud' : 'Local Mode Only'}
-                        </span>
-                    </div>
-
-                    <div className="space-y-4">
-                        <input 
-                            type="text" 
-                            value={userName} 
-                            onChange={(e) => setUserName(e.target.value)} 
-                            className="w-full bg-gray-50 border border-gray-200 rounded-3xl py-5 px-8 text-gray-900 font-bold outline-none text-center focus:ring-4 focus:ring-indigo-50 transition-all" 
-                            placeholder="Siapa namamu?" 
-                        />
-                        <button 
-                            onClick={handleLogin} 
-                            className="w-full py-5 bg-indigo-600 text-white rounded-[32px] font-black text-lg shadow-xl hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-3"
-                        >
-                            MASUK <ArrowRight size={20} />
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
+        return <Login onLogin={handleLogin} isSupabaseConfigured={isSupabaseConfigured} />;
     }
 
+    // Main App
     return (
         <div className="flex h-screen w-full bg-white fade-in overflow-hidden relative">
             {/* Sidebar */}
@@ -235,7 +214,6 @@ const App: React.FC = () => {
                     ))}
                 </nav>
 
-                {/* Footer Sidebar yang Bersih tanpa Indikator Cloud */}
                 <div className="p-6">
                     <button onClick={handleLogout} className="w-full flex items-center gap-4 p-5 bg-rose-50/50 text-rose-500 rounded-3xl font-black text-xs hover:bg-rose-100 transition-colors shadow-sm">
                         <LogOut size={18} /><span>Log Out</span>
@@ -253,8 +231,6 @@ const App: React.FC = () => {
 
             {/* Main Content */}
             <main className="flex-1 h-full overflow-y-auto custom-scroll p-6 lg:p-16 max-w-6xl mx-auto relative pt-32 lg:pt-16">
-                
-                {/* Mobile Header Bar - Hanya Hamburger dengan Jarak yang Lega */}
                 <div className="lg:hidden fixed top-0 left-0 w-full h-24 bg-white/80 backdrop-blur-md z-[60] flex items-center px-10">
                     <button 
                         onClick={() => setIsSidebarOpen(true)} 
@@ -262,7 +238,6 @@ const App: React.FC = () => {
                     >
                         <Menu size={24} />
                     </button>
-                    {/* Tulisan Jati Mensetsu di sini sudah dihapus */}
                 </div>
 
                 <div className="fade-in">
