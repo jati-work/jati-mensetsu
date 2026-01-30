@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { PlusCircle, Trash2, Wallet, MessageCircle, TrendingUp, RefreshCw, XCircle, Briefcase, Bell } from 'lucide-react';
+import { supabase } from '../supabase';
 
 interface Round {
     id: number;
@@ -28,7 +28,94 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
     const [lastFetch, setLastFetch] = useState<string>('Manual');
     const [isFetching, setIsFetching] = useState(false);
 
-    // Live Exchange Rate Fetcher
+    // 🔥 LOAD DATA FROM SUPABASE
+    useEffect(() => {
+        loadTSKFromSupabase();
+        fetchKurs();
+    }, []);
+
+    const loadTSKFromSupabase = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('tsk_pipeline')
+                .select('*')
+                .order('id', { ascending: false }); // LIFO - newest first
+
+            if (error) {
+                console.error('Error loading TSK:', error);
+                return;
+            }
+
+            if (data) {
+                setTskList(data);
+            }
+        } catch (err) {
+            console.error('Error:', err);
+        }
+    };
+
+    // 🔥 SAVE TO SUPABASE
+    const saveToSupabase = async (newTSK: Omit<TSK, 'id'>) => {
+        try {
+            const { data, error } = await supabase
+                .from('tsk_pipeline')
+                .insert([newTSK])
+                .select();
+
+            if (error) {
+                console.error('Error saving TSK:', error);
+                alert('Gagal menyimpan: ' + error.message);
+                return null;
+            }
+
+            return data[0];
+        } catch (err) {
+            console.error('Error:', err);
+            return null;
+        }
+    };
+
+    // 🔥 UPDATE TO SUPABASE
+    const updateToSupabase = async (id: number, updates: Partial<TSK>) => {
+        try {
+            const { error } = await supabase
+                .from('tsk_pipeline')
+                .update(updates)
+                .eq('id', id);
+
+            if (error) {
+                console.error('Error updating TSK:', error);
+                return false;
+            }
+
+            return true;
+        } catch (err) {
+            console.error('Error:', err);
+            return false;
+        }
+    };
+
+    // 🔥 DELETE FROM SUPABASE
+    const deleteFromSupabase = async (id: number) => {
+        try {
+            const { error } = await supabase
+                .from('tsk_pipeline')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                console.error('Error deleting TSK:', error);
+                alert('Gagal hapus: ' + error.message);
+                return false;
+            }
+
+            return true;
+        } catch (err) {
+            console.error('Error:', err);
+            return false;
+        }
+    };
+
     const fetchKurs = async () => {
         setIsFetching(true);
         try {
@@ -45,11 +132,6 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
         }
     };
 
-    useEffect(() => {
-        fetchKurs();
-    }, []);
-
-    // Memoized next interview logic
     const nextInterview = useMemo(() => {
         const now = new Date();
         now.setHours(0, 0, 0, 0);
@@ -65,46 +147,45 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
         return all.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
     }, [tskList]);
 
-    const addRound = (tskId: number) => {
-        setTskList(tskList.map(t => {
-            if (t.id === tskId) {
-                const nextId = t.rounds.length + 1;
-                return {
-                    ...t,
-                    rounds: [...t.rounds, { id: Date.now(), label: `ROUND ${nextId}`, date: '' }]
-                };
-            }
-            return t;
-        }));
+    const addRound = async (tskId: number) => {
+        const tsk = tskList.find(t => t.id === tskId);
+        if (!tsk) return;
+
+        const nextId = tsk.rounds.length + 1;
+        const newRounds = [...tsk.rounds, { id: Date.now(), label: `ROUND ${nextId}`, date: '' }];
+        
+        const success = await updateToSupabase(tskId, { rounds: newRounds });
+        if (success) {
+            setTskList(tskList.map(t => t.id === tskId ? { ...t, rounds: newRounds } : t));
+        }
     };
 
-    const removeRound = (tskId: number, roundId: number) => {
-        setTskList(tskList.map(t => {
-            if (t.id === tskId) {
-                return {
-                    ...t,
-                    rounds: t.rounds.filter(r => r.id !== roundId)
-                };
-            }
-            return t;
-        }));
+    const removeRound = async (tskId: number, roundId: number) => {
+        const tsk = tskList.find(t => t.id === tskId);
+        if (!tsk) return;
+
+        const newRounds = tsk.rounds.filter(r => r.id !== roundId);
+        
+        const success = await updateToSupabase(tskId, { rounds: newRounds });
+        if (success) {
+            setTskList(tskList.map(t => t.id === tskId ? { ...t, rounds: newRounds } : t));
+        }
     };
 
-    const updateRound = (tskId: number, roundId: number, field: keyof Round, value: string) => {
-        setTskList(tskList.map(t => {
-            if (t.id === tskId) {
-                return {
-                    ...t,
-                    rounds: t.rounds.map(r => r.id === roundId ? { ...r, [field]: value } : r)
-                };
-            }
-            return t;
-        }));
+    const updateRound = async (tskId: number, roundId: number, field: keyof Round, value: string) => {
+        const tsk = tskList.find(t => t.id === tskId);
+        if (!tsk) return;
+
+        const newRounds = tsk.rounds.map(r => r.id === roundId ? { ...r, [field]: value } : r);
+        
+        const success = await updateToSupabase(tskId, { rounds: newRounds });
+        if (success) {
+            setTskList(tskList.map(t => t.id === tskId ? { ...t, rounds: newRounds } : t));
+        }
     };
 
-    const handleAddTsk = () => {
+    const handleAddTsk = async () => {
         const newTsk = { 
-            id: Date.now(), 
             name: "Nama TSK", 
             status: "Screening", 
             salary: 180000, 
@@ -112,8 +193,29 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
             notes: "", 
             retro: "" 
         };
-        // Tambahkan ke ATAS (LIFO)
-        setTskList([newTsk, ...tskList]);
+
+        const savedData = await saveToSupabase(newTsk);
+        if (savedData) {
+            setTskList([savedData, ...tskList]); // Add to top (LIFO)
+        }
+    };
+
+    const handleUpdateTSK = async (id: number, field: keyof TSK, value: any) => {
+        const updates = { [field]: value };
+        const success = await updateToSupabase(id, updates);
+        
+        if (success) {
+            setTskList(tskList.map(t => t.id === id ? { ...t, ...updates } : t));
+        }
+    };
+
+    const handleDeleteTSK = async (id: number) => {
+        if (!confirm('Yakin ingin menghapus lamaran ini?')) return;
+        
+        const success = await deleteFromSupabase(id);
+        if (success) {
+            setTskList(tskList.filter(t => t.id !== id));
+        }
     };
 
     return (
@@ -127,7 +229,7 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
                 
                 <div className="flex items-center gap-6 bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
                     <div className="space-y-1">
-                        <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Live Kurs JPY ➔ IDR</p>
+                        <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Live Kurs JPY → IDR</p>
                         <div className="flex items-center gap-2">
                             <span className="text-2xl font-black text-indigo-900">¥1 = Rp {exchangeRate.toFixed(2)}</span>
                             <button onClick={fetchKurs} className={`p-2 bg-white rounded-xl text-indigo-600 shadow-sm active:scale-95 transition-all ${isFetching ? 'animate-spin' : ''}`}>
@@ -148,7 +250,7 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
                     <div className="w-16 h-16 bg-rose-500 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-rose-200"><Bell size={28} className="animate-bounce" /></div>
                     <div className="flex-1">
                         <h4 className="text-rose-900 font-black text-xl">Interview Terdekat!</h4>
-                        <p className="text-rose-500 font-bold">Dengan {nextInterview.name} — {nextInterview.round}</p>
+                        <p className="text-rose-500 font-bold">Dengan {nextInterview.name} – {nextInterview.round}</p>
                         <p className="text-[10px] text-rose-300 font-black uppercase mt-1">Tanggal: {new Date(nextInterview.date).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     </div>
                 </div>
@@ -168,8 +270,17 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
                             {/* Info Dasar */}
                             <div className="space-y-4">
                                 <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Info Dasar</h3>
-                                <input value={tsk.name} onChange={(e) => setTskList(tskList.map(t => t.id === tsk.id ? {...t, name: e.target.value} : t))} className="text-2xl md:text-3xl font-black text-gray-900 bg-transparent outline-none w-full border-b border-transparent focus:border-indigo-100" placeholder="Nama TSK" />
-                                <select value={tsk.status} onChange={(e) => setTskList(tskList.map(t => t.id === tsk.id ? {...t, status: e.target.value} : t))} className="bg-indigo-50 text-indigo-600 px-6 py-2 rounded-full font-black text-[10px] uppercase border-none outline-none cursor-pointer">
+                                <input 
+                                    value={tsk.name} 
+                                    onChange={(e) => handleUpdateTSK(tsk.id, 'name', e.target.value)} 
+                                    className="text-2xl md:text-3xl font-black text-gray-900 bg-transparent outline-none w-full border-b border-transparent focus:border-indigo-100" 
+                                    placeholder="Nama TSK" 
+                                />
+                                <select 
+                                    value={tsk.status} 
+                                    onChange={(e) => handleUpdateTSK(tsk.id, 'status', e.target.value)} 
+                                    className="bg-indigo-50 text-indigo-600 px-6 py-2 rounded-full font-black text-[10px] uppercase border-none outline-none cursor-pointer"
+                                >
                                     <option>Screening</option><option>Interview</option><option>Offer</option><option>Rejected</option>
                                 </select>
                             </div>
@@ -179,7 +290,12 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
                                 <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Penawaran Gaji</h3>
                                 <div className="flex items-center gap-3">
                                     <span className="font-black text-gray-400">¥</span>
-                                    <input type="number" value={tsk.salary} onChange={(e) => setTskList(tskList.map(t => t.id === tsk.id ? {...t, salary: parseInt(e.target.value) || 0} : t))} className="text-3xl font-black text-indigo-600 bg-transparent outline-none w-full" />
+                                    <input 
+                                        type="number" 
+                                        value={tsk.salary} 
+                                        onChange={(e) => handleUpdateTSK(tsk.id, 'salary', parseInt(e.target.value) || 0)} 
+                                        className="text-3xl font-black text-indigo-600 bg-transparent outline-none w-full" 
+                                    />
                                 </div>
                                 <p className="text-sm font-bold text-emerald-600 flex items-center gap-2"><Wallet size={14} /> ≈ Rp {(tsk.salary * exchangeRate).toLocaleString('id-ID')}</p>
                             </div>
@@ -218,18 +334,28 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
                         <div className="pt-10 border-t border-gray-50 grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div className="space-y-4">
                                 <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2"><MessageCircle size={14} /> Catatan Khusus</h3>
-                                <textarea value={tsk.notes} onChange={(e) => setTskList(tskList.map(t => t.id === tsk.id ? {...t, notes: e.target.value} : t))} className="w-full h-24 bg-gray-50 p-6 rounded-[35px] text-sm outline-none resize-none border border-transparent focus:border-indigo-100" placeholder="Apa yang harus disiapkan? (Pakaian, Dokumen, dll)" />
+                                <textarea 
+                                    value={tsk.notes} 
+                                    onChange={(e) => handleUpdateTSK(tsk.id, 'notes', e.target.value)} 
+                                    className="w-full h-24 bg-gray-50 p-6 rounded-[35px] text-sm outline-none resize-none border border-transparent focus:border-indigo-100" 
+                                    placeholder="Apa yang harus disiapkan? (Pakaian, Dokumen, dll)" 
+                                />
                             </div>
                             <div className="space-y-4">
                                 <h3 className="text-[10px] font-black text-orange-400 uppercase tracking-widest flex items-center gap-2"><TrendingUp size={14} /> Retrospective / Evaluasi</h3>
-                                <textarea value={tsk.retro} onChange={(e) => setTskList(tskList.map(t => t.id === tsk.id ? {...t, retro: e.target.value} : t))} className="w-full h-24 bg-orange-50/30 p-6 rounded-[35px] text-sm outline-none resize-none border border-transparent focus:border-orange-100" placeholder="Apa yang kurang dari interview kemarin?" />
+                                <textarea 
+                                    value={tsk.retro} 
+                                    onChange={(e) => handleUpdateTSK(tsk.id, 'retro', e.target.value)} 
+                                    className="w-full h-24 bg-orange-50/30 p-6 rounded-[35px] text-sm outline-none resize-none border border-transparent focus:border-orange-100" 
+                                    placeholder="Apa yang kurang dari interview kemarin?" 
+                                />
                             </div>
                         </div>
 
                         {/* Footer Area - Delete Button */}
                         <div className="pt-6 flex justify-center">
                             <button 
-                                onClick={() => setTskList(tskList.filter(t => t.id !== tsk.id))} 
+                                onClick={() => handleDeleteTSK(tsk.id)} 
                                 className="flex items-center gap-2 text-[10px] font-black text-rose-300 hover:text-rose-500 transition-all uppercase tracking-widest bg-rose-50/50 px-8 py-3 rounded-2xl hover:bg-rose-50 active:scale-95 border border-rose-100/50"
                             >
                                 <Trash2 size={14} /> Hapus Lamaran Ini
