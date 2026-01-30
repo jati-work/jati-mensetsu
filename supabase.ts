@@ -1,9 +1,6 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-// Jika URL kosong, berikan placeholder agar library tidak crash saat inisialisasi.
-// Ganti nilai ini di environment variables (Vercel/Cloud) atau langsung di index.html jika perlu.
-const supabaseUrl = process.env.SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
