@@ -170,6 +170,9 @@ const loadAllData = async () => {
 };
 
     // Auto-sync data - TANPA AUTH CHECK
+// ========================================
+// AUTO-SYNC DATA (useEffect yang BENAR)
+// ========================================
 useEffect(() => {
     if (!isLoggedIn || !isSupabaseConfigured) return;
     
@@ -202,41 +205,9 @@ useEffect(() => {
     return () => clearTimeout(syncTimer);
 }, [userName, targetDate, certStatus, docNotes, isLoggedIn, isSupabaseConfigured]);
 
-                if (existingProfiles && existingProfiles.length > 0) {
-                    // Update existing profile
-                    await supabase.from('profiles')
-                        .update({
-                            user_name: userName,
-                            target_date: targetDate,
-                            cert_status: certStatus,
-                            doc_notes: docNotes,
-                            interview_points: interviewPoints,
-                            emergency_phrases: emergencyPhrases,
-                            study_notes: studyNotes
-                        })
-                        .eq('id', existingProfiles[0].id);
-                } else {
-                    // Insert new profile
-                    await supabase.from('profiles').insert({
-                        user_name: userName,
-                        target_date: targetDate,
-                        cert_status: certStatus,
-                        doc_notes: docNotes,
-                        interview_points: interviewPoints,
-                        emergency_phrases: emergencyPhrases,
-                        study_notes: studyNotes
-                    });
-                }
-            } catch (err) {
-                console.error("Sync Error:", err);
-            } finally {
-                setIsSyncing(false);
-            }
-        }, 3000);
-
-        return () => clearTimeout(syncTimer);
-    }, [userName, targetDate, certStatus, docNotes, interviewPoints, emergencyPhrases, studyNotes, isLoggedIn, isSupabaseConfigured]);
-
+// ========================================
+// LOAD DATA AWAL (useEffect yang BENAR)
+// ========================================
     useEffect(() => {
         if (isLoggedIn) {
             loadAllData();
