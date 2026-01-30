@@ -84,7 +84,10 @@ const Dashboard: React.FC<Props> = ({ userName, roadmapSteps, setRoadmapSteps, t
     autoFocus 
     value={targetDate} 
     onChange={(e) => setTargetDate(e.target.value)} 
-    onBlur={() => setEditingMetric(null)} 
+    onBlur={() => {
+        setEditingMetric(null);
+        saveSettings();
+    }} 
     className="text-2xl font-black bg-transparent border-b-2 border-indigo-400 outline-none w-full" 
 />
                     ) : <p className="text-3xl font-black text-indigo-900">{targetDate} <Edit3 size={14} className="inline opacity-20 group-hover:opacity-100" /></p>}
@@ -96,7 +99,10 @@ const Dashboard: React.FC<Props> = ({ userName, roadmapSteps, setRoadmapSteps, t
     autoFocus 
     value={certStatus} 
     onChange={(e) => setCertStatus(e.target.value)} 
-    onBlur={() => setEditingMetric(null)} 
+    onBlur={() => {
+        setEditingMetric(null);
+        saveSettings();
+    }} 
     className="text-2xl font-black bg-transparent border-b-2 border-emerald-400 outline-none w-full" 
 />
                     ) : <p className="text-3xl font-black text-emerald-900">{certStatus} <Edit3 size={14} className="inline opacity-20 group-hover:opacity-100" /></p>}
