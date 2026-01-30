@@ -101,43 +101,44 @@ const handleFileUpload = (id: number) => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {checklist.map(item => (
-                        <div key={item.id} className="space-y-2">
-                            <div className="p-6 bg-gray-50 rounded-3xl group border border-gray-100 flex items-center gap-4 transition-all hover:bg-white hover:shadow-lg">
-                                <button onClick={async () => {
-    const updated = checklist.map(i => i.id === item.id ? {...i, isDone: !i.isDone} : i);
-    setChecklist(updated);
-    const updatedItem = updated.find(i => i.id === item.id);
-    if (updatedItem) await saveDoc(updatedItem);
+{checklist.map(item => (
+    <div key={item.id} className="relative"> {/* tambah relative */}
+        <div className="p-6 bg-gray-50 rounded-3xl group border border-gray-100 flex items-center gap-4 transition-all hover:bg-white hover:shadow-lg">
+            <button onClick={async () => {
+const updated = checklist.map(i => i.id === item.id ? {...i, isDone: !i.isDone} : i);
+setChecklist(updated);
+const updatedItem = updated.find(i => i.id === item.id);
+if (updatedItem) await saveDoc(updatedItem);
 }} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${item.isDone ? 'bg-emerald-500 text-white' : 'bg-white text-gray-200 border-2 border-gray-100'}`}><CheckSquare size={20} /></button>
-                                <div className="flex-1">
-                                    <input value={item.label} onChange={(e) => {
-    const updated = checklist.map(i => i.id === item.id ? {...i, label: e.target.value} : i);
-    setChecklist(updated);
-    const updatedItem = updated.find(i => i.id === item.id);
-    if (updatedItem) saveDoc(updatedItem);
+            <div className="flex-1">
+                <input value={item.label} onChange={(e) => {
+const updated = checklist.map(i => i.id === item.id ? {...i, label: e.target.value} : i);
+setChecklist(updated);
+const updatedItem = updated.find(i => i.id === item.id);
+if (updatedItem) saveDoc(updatedItem);
 }} className="font-bold bg-transparent outline-none text-gray-900 w-full" placeholder="Nama Dokumen..." />
-                                    {item.fileName && <p className="text-[9px] font-bold text-indigo-400 mt-1 uppercase truncate max-w-[150px]">{item.fileName}</p>}
-                                </div>
-                                <div className="flex gap-2">
-                                    <button onClick={() => handleFileUpload(item.id)} className="p-3 bg-white rounded-xl text-indigo-500 shadow-sm hover:bg-indigo-50" title="Upload Document"><Upload size={16} /></button>
-                                    {item.fileUrl && (
-                                        <a href={item.fileUrl} download={item.fileName || "document"} className="p-3 bg-white rounded-xl text-emerald-500 shadow-sm hover:bg-emerald-50" title="Download Document"><Download size={16} /></a>
-                                    )}
-                                </div>
-                            </div>
-                            {/* Tombol Hapus di Bawah */}
-                            <button 
-                                onClick={async () => {
-                                    await deleteDoc(item.id);
-                                    setChecklist(checklist.filter(i => i.id !== item.id));
-                                }} 
-                                className="text-rose-400 hover:text-rose-600 text-sm font-bold transition-all text-center w-full"
-                            >
-                                ✕
-                            </button>
-                        </div>
-                    ))}
+                {item.fileName && <p className="text-[9px] font-bold text-indigo-400 mt-1 uppercase truncate max-w-[150px]">{item.fileName}</p>}
+            </div>
+            <div className="flex gap-2">
+                <button onClick={() => handleFileUpload(item.id)} className="p-3 bg-white rounded-xl text-indigo-500 shadow-sm hover:bg-indigo-50" title="Upload Document"><Upload size={16} /></button>
+                {item.fileUrl && (
+                    <a href={item.fileUrl} download={item.fileName || "document"} className="p-3 bg-white rounded-xl text-emerald-500 shadow-sm hover:bg-emerald-50" title="Download Document"><Download size={16} /></a>
+                )}
+            </div>
+        </div>
+        
+        {/* Tombol X mini di pojok kanan atas */}
+        <button 
+            onClick={async () => {
+                await deleteDoc(item.id);
+                setChecklist(checklist.filter(i => i.id !== item.id));
+            }} 
+            className="absolute -top-2 -right-2 w-6 h-6 bg-rose-400 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-all opacity-0 group-hover:opacity-100"
+        >
+            ✕
+        </button>
+    </div>
+))}
                 </div>
             </div>
 
