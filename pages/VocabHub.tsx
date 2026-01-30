@@ -1,6 +1,6 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { BrainCircuit, PlusCircle, Trash2, Languages, RotateCw, ChevronLeft, ChevronRight, Volume2, Edit3, X, GripVertical, Download, Upload, UserCircle, UserCircle2, ArrowLeftRight } from 'lucide-react';
+import { supabase } from '../supabase';
 
 interface Vocab {
     id: number;
@@ -25,16 +25,101 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [flashIndex, setFlashIndex] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
     
-    // Fitur: Gender TTS & Flip Mode
     const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
     const [flipMode, setFlipMode] = useState<'JPtoID' | 'IDtoJP'>('JPtoID');
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
-    // --- TTS VOICE LOADING ---
+    // 🔥 LOAD DATA FROM SUPABASE
+    useEffect(() => {
+        loadVocabFromSupabase();
+    }, []);
+
+    const loadVocabFromSupabase = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('vocab')
+                .select('*')
+                .order('id', { ascending: true });
+
+            if (error) {
+                console.error('Error loading vocab:', error);
+                return;
+            }
+
+            if (data) {
+                setVocabList(data);
+            }
+        } catch (err) {
+            console.error('Error:', err);
+        }
+    };
+
+    // 🔥 SAVE TO SUPABASE
+    const saveToSupabase = async (newVocab: Omit<Vocab, 'id'>) => {
+        try {
+            const { data, error } = await supabase
+                .from('vocab')
+                .insert([newVocab])
+                .select();
+
+            if (error) {
+                console.error('Error saving:', error);
+                alert('Gagal menyimpan: ' + error.message);
+                return null;
+            }
+
+            return data[0];
+        } catch (err) {
+            console.error('Error:', err);
+            return null;
+        }
+    };
+
+    // 🔥 UPDATE TO SUPABASE
+    const updateToSupabase = async (id: number, updates: Partial<Vocab>) => {
+        try {
+            const { error } = await supabase
+                .from('vocab')
+                .update(updates)
+                .eq('id', id);
+
+            if (error) {
+                console.error('Error updating:', error);
+                alert('Gagal update: ' + error.message);
+                return false;
+            }
+
+            return true;
+        } catch (err) {
+            console.error('Error:', err);
+            return false;
+        }
+    };
+
+    // 🔥 DELETE FROM SUPABASE
+    const deleteFromSupabase = async (id: number) => {
+        try {
+            const { error } = await supabase
+                .from('vocab')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                console.error('Error deleting:', error);
+                alert('Gagal hapus: ' + error.message);
+                return false;
+            }
+
+            return true;
+        } catch (err) {
+            console.error('Error:', err);
+            return false;
+        }
+    };
+
     useEffect(() => {
         const loadVoices = () => {
             const allVoices = window.speechSynthesis.getVoices();
-            // Ambil semua suara Jepang
             const japaneseVoices = allVoices.filter(v => v.lang.startsWith('ja'));
             console.log("Available Japanese Voices:", japaneseVoices.map(v => v.name));
             setAvailableVoices(japaneseVoices);
@@ -59,15 +144,43 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
         setIsFlipped(false);
     }, [selectedCategory]);
 
-    const handleSaveVocab = () => {
-        if (!newWord.trim() || !newMeaning.trim()) return;
-        if (editingId !== null) {
-            setVocabList(vocabList.map(v => v.id === editingId ? { ...v, word: newWord, meaning: newMeaning, category: newCategory || 'Umum' } : v));
-            setEditingId(null);
-        } else {
-            setVocabList([...vocabList, { id: Date.now(), word: newWord, meaning: newMeaning, category: newCategory || 'Umum' }]);
+    const handleSaveVocab = async () => {
+        if (!newWord.trim() || !newMeaning.trim()) {
+            alert('Kata dan Arti harus diisi!');
+            return;
         }
-        setNewWord(''); setNewMeaning('');
+
+        if (editingId !== null) {
+            // UPDATE
+            const updates = { word: newWord, meaning: newMeaning, category: newCategory || 'Umum' };
+            const success = await updateToSupabase(editingId, updates);
+            
+            if (success) {
+                setVocabList(vocabList.map(v => v.id === editingId ? { ...v, ...updates } : v));
+                setEditingId(null);
+                setNewWord('');
+                setNewMeaning('');
+            }
+        } else {
+            // INSERT
+            const newVocab = { word: newWord, meaning: newMeaning, category: newCategory || 'Umum' };
+            const savedData = await saveToSupabase(newVocab);
+            
+            if (savedData) {
+                setVocabList([...vocabList, savedData]);
+                setNewWord('');
+                setNewMeaning('');
+            }
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Yakin ingin menghapus kata ini?')) return;
+        
+        const success = await deleteFromSupabase(id);
+        if (success) {
+            setVocabList(vocabList.filter(v => v.id !== id));
+        }
     };
 
     const speak = (text: string) => {
@@ -79,7 +192,6 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
         utterance.rate = 0.85;
 
         if (availableVoices.length > 0) {
-            // Kamus kata kunci suara
             const femaleKeywords = ['female', 'ayumi', 'haruka', 'kyoko', 'mizuki', 'sayaka', 'nanako', 'google 日本語'];
             const maleKeywords = ['male', 'ichiro', 'otoya', 'keita', 'takumi', 'keisuke'];
 
@@ -89,16 +201,13 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
                     femaleKeywords.some(key => v.name.toLowerCase().includes(key))
                 );
             } else {
-                // Pencarian suara cowok lebih teliti
                 selectedVoice = availableVoices.find(v => 
                     maleKeywords.some(key => v.name.toLowerCase().includes(key))
                 );
             }
             
-            // Jika tidak ketemu yang spesifik sesuai gender, pakai yang pertama saja (fallback)
             utterance.voice = selectedVoice || availableVoices[0];
             
-            // Debugging (opsional, bisa dilihat di console jika suara tetap cewek)
             if (selectedVoice) console.log(`Using voice: ${selectedVoice.name}`);
         }
         
@@ -121,7 +230,7 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
                     <h3 className="text-xl font-black text-indigo-600 flex items-center gap-3"><Languages /> Daftar Kotoba</h3>
                     
                     <div ref={formRef} className={`p-6 rounded-[35px] border-2 transition-all space-y-3 ${editingId ? 'bg-emerald-50 border-emerald-200' : 'bg-indigo-50/50 border-indigo-100'}`}>
-                        {editingId && <button onClick={() => setEditingId(null)} className="float-right text-emerald-400"><X size={16}/></button>}
+                        {editingId && <button onClick={() => { setEditingId(null); setNewWord(''); setNewMeaning(''); }} className="float-right text-emerald-400"><X size={16}/></button>}
                         <input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Kategori (Umum, Kerja, Medis...)" className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner" />
                         <input value={newWord} onChange={(e) => setNewWord(e.target.value)} placeholder="Kata Jepang" className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner" />
                         <input value={newMeaning} onChange={(e) => setNewMeaning(e.target.value)} placeholder="Arti" className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner" />
@@ -149,7 +258,7 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
                                 <div className="flex items-center gap-1">
                                     <button onClick={() => speak(item.word)} className="p-3 text-indigo-300 hover:text-indigo-600"><Volume2 size={16} /></button>
                                     <button onClick={() => { setEditingId(item.id); setNewWord(item.word); setNewMeaning(item.meaning); setNewCategory(item.category); }} className="p-3 text-gray-300 hover:text-gray-900"><Edit3 size={16} /></button>
-                                    <button onClick={() => setVocabList(vocabList.filter(v => v.id !== item.id))} className="text-rose-200 p-3 hover:text-rose-500"><Trash2 size={16} /></button>
+                                    <button onClick={() => handleDelete(item.id)} className="text-rose-200 p-3 hover:text-rose-500"><Trash2 size={16} /></button>
                                 </div>
                             </div>
                         ))}
@@ -161,7 +270,7 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
                     
                     <div className="w-full flex justify-between items-center relative z-10">
                         <button onClick={() => setFlipMode(flipMode === 'JPtoID' ? 'IDtoJP' : 'JPtoID')} className="flex items-center gap-3 bg-white/10 px-6 py-3 rounded-2xl text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all">
-                            <ArrowLeftRight size={16} /> {flipMode === 'JPtoID' ? 'JP ➔ ID' : 'ID ➔ JP'}
+                            <ArrowLeftRight size={16} /> {flipMode === 'JPtoID' ? 'JP → ID' : 'ID → JP'}
                         </button>
                         <div className="flex bg-white/10 p-2 rounded-2xl gap-2">
                              <button onClick={() => setVoiceGender('female')} className={`p-2.5 rounded-xl transition-all ${voiceGender === 'female' ? 'bg-white text-indigo-600 scale-110' : 'text-indigo-200'}`} title="Suara Cewe"><UserCircle size={20}/></button>
@@ -177,7 +286,7 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
                                         <h4 className="font-black text-gray-900 text-6xl tracking-tight leading-tight">
                                             {flipMode === 'JPtoID' ? currentCard.word : currentCard.meaning}
                                         </h4>
-                                        <p className="mt-12 text-indigo-300 text-[10px] font-black uppercase tracking-widest flex items-center gap-3"><RotateCw size={16}/> Klik kartu untuk memutar</p>
+                                        <p className="mt-12 text-indigo-300 text-[10px] font-black uppercase tracking-widest flex items-center gap-3"><RotateCcw size={16}/> Klik kartu untuk memutar</p>
                                     </div>
                                     <div className="absolute inset-0 backface-hidden my-rotate-y-180 bg-emerald-500 rounded-[64px] flex flex-col items-center justify-center p-12 text-center text-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]">
                                         <h4 className="font-black text-5xl tracking-tight leading-tight">
