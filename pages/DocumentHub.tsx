@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { ShieldCheck, PlusCircle, CheckSquare, Upload, Trash2, Download, StickyNote, Edit3, CheckCircle, Lock } from 'lucide-react';
 
