@@ -132,7 +132,7 @@ const saveManual = async () => {
                 <div className="lg:col-span-1 bg-white p-10 rounded-[48px] border border-gray-100 space-y-8 h-fit shadow-sm">
                     <h3 className="text-xl font-black text-indigo-600 flex items-center gap-3"><Upload size={20}/> Impor Massal</h3>
                     <p className="text-[10px] text-gray-400 font-bold leading-relaxed">Format Baris: <code className="bg-gray-100 px-1">Kategori, Soal, Jepang, Romaji, Indo, Waktu</code></p>
-                    <textarea value={bulkCsv} onChange={(e) => setBulkCsv(e.target.value)} className="w-full h-48 p-6 bg-gray-50 rounded-[30px] text-xs font-bold outline-none border-none resize-none shadow-inner" placeholder="Pribadi, Siapa nama anda?, Nama wa Jati desu, Nama wa..., Nama saya Jati, 30" />
+                    <textarea value={bulkCsv} onChange={(e) => setBulkCsv(e.target.value)} className="w-full h-48 p-6 bg-gray-50 rounded-[30px] text-xs font-bold outline-none border-none resize-none shadow-inner" placeholder="Perkenalan diri, Onamae wa nan desuka?, 私の名前はJatiです, Watashi no namae wa Jati desu, Nama saya Jati, 30" />
                     <button onClick={async () => {
                         const rows = bulkCsv.split('\n').filter(r => r.trim());
                         const newQ = rows.map(r => {
