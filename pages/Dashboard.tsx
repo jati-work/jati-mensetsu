@@ -54,13 +54,25 @@ const Dashboard: React.FC<Props> = ({ userName, roadmapSteps, setRoadmapSteps, t
         await supabase.from('roadmap_steps').delete().eq('id', id);
     };
 
-    const saveSettings = async () => {
-        await supabase.from('user_settings').upsert({
+const saveSettings = async () => {
+    console.log('🔥 SAVING SETTINGS:', { targetDate, certStatus }); // DEBUG
+    
+    try {
+        const { data, error } = await supabase.from('user_settings').upsert({
             user_id: 'default-user',
             target_date: targetDate,
             cert_status: certStatus
         });
-    };
+        
+        if (error) {
+            console.error('❌ ERROR SAVING:', error);
+        } else {
+            console.log('✅ SAVED SUCCESSFULLY:', data);
+        }
+    } catch (err) {
+        console.error('❌ SAVE FAILED:', err);
+    }
+};
 
     // Readiness score based ONLY on Recruitment Journey
     const readinessScore = useMemo(() => {
