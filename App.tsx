@@ -47,7 +47,7 @@ const App: React.FC = () => {
 
     // Cek konfigurasi Supabase
     useEffect(() => {
-        const url = (process.env.SUPABASE_URL || '');
+        const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '');
         setIsSupabaseConfigured(url.includes('supabase.co'));
     }, []);
 
