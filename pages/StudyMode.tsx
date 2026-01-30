@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { supabase } from '../supabase';
 import { GoogleGenAI } from "@google/genai";
 import { Volume2, Mic, Square as SquareIcon, Sparkles, ChevronRight, ChevronLeft, Timer, Shuffle, Coffee, UserCircle2, UserCircle, RotateCcw, Target, AlertCircle, PlusCircle, Trash2, StickyNote, Eye, EyeOff, CheckCircle2, Layers } from 'lucide-react';
 
@@ -48,6 +49,54 @@ const StudyMode: React.FC<Props> = ({ questions, setQuestions, interviewPoints, 
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
+
+    useEffect(() => {
+    // Auto-save interview points
+    const saveIP = setTimeout(async () => {
+        if (interviewPoints.length > 0) {
+            // Hapus semua data lama
+            await supabase.from('interview_points').delete().neq('id', 0);
+            // Insert data baru
+            for (const point of interviewPoints) {
+                await supabase.from('interview_points').insert({
+                    point: point.point || point
+                });
+            }
+        }
+    }, 2000);
+    return () => clearTimeout(saveIP);
+}, [interviewPoints]);
+
+useEffect(() => {
+    // Auto-save emergency phrases
+    const saveEP = setTimeout(async () => {
+        if (emergencyPhrases.length > 0) {
+            await supabase.from('emergency_phrases').delete().neq('id', 0);
+            for (const phrase of emergencyPhrases) {
+                await supabase.from('emergency_phrases').insert({
+                    phrase: phrase.phrase || phrase,
+                    translation: phrase.translation || ''
+                });
+            }
+        }
+    }, 2000);
+    return () => clearTimeout(saveEP);
+}, [emergencyPhrases]);
+
+useEffect(() => {
+    // Auto-save study notes
+    const saveSN = setTimeout(async () => {
+        if (studyNotes.length > 0) {
+            await supabase.from('study_notes').delete().neq('id', 0);
+            for (const note of studyNotes) {
+                await supabase.from('study_notes').insert({
+                    note: note.note || note
+                });
+            }
+        }
+    }, 2000);
+    return () => clearTimeout(saveSN);
+}, [studyNotes]);
 
     useEffect(() => {
         const loadVoices = () => {
