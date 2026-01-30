@@ -30,6 +30,8 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
     const [flipMode, setFlipMode] = useState<'JPtoID' | 'IDtoJP'>('JPtoID');
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+    const [draggedId, setDraggedId] = useState<number | null>(null);
+    const [bulkImport, setBulkImport] = useState('');
 
     useEffect(() => {
         loadVocab();
@@ -54,6 +56,35 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const deleteVocab = async (id: number) => {
         await supabase.from('vocab').delete().eq('id', id);
     };
+
+    const handleDragStart = (id: number) => setDraggedId(id);
+
+const handleDragOver = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    if (draggedId === null || draggedId === targetId) return;
+    const newList = [...vocabList];
+    const draggedIndex = newList.findIndex(v => v.id === draggedId);
+    const targetIndex = newList.findIndex(v => v.id === targetId);
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+        const item = newList[draggedIndex];
+        newList.splice(draggedIndex, 1);
+        newList.splice(targetIndex, 0, item);
+        setVocabList(newList);
+    }
+};
+
+const handleDragEnd = () => setDraggedId(null);
+
+const exportCsv = () => {
+    const header = "Kategori,Kata,Arti\n";
+    const rows = vocabList.map(v => `"${v.category}","${v.word}","${v.meaning}"`).join("\n");
+    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vocab_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+};
 
     // --- TTS VOICE LOADING ---
     useEffect(() => {
@@ -167,9 +198,21 @@ const handleSaveVocab = async () => {
                         ))}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-2">
-                        {filteredList.map((item) => (
-                            <div key={item.id} className="p-5 bg-white border border-gray-100 rounded-3xl flex items-center justify-between transition-all hover:shadow-lg">
+<div className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-2">
+    {filteredList.map((item) => (
+        <div 
+            key={item.id} 
+            draggable
+            onDragStart={() => handleDragStart(item.id)}
+            onDragOver={(e) => handleDragOver(e, item.id)}
+            onDragEnd={handleDragEnd}
+            className={`p-5 border rounded-3xl flex items-center justify-between transition-all cursor-grab active:cursor-grabbing ${
+                draggedId === item.id 
+                    ? 'opacity-30 scale-95 bg-gray-50 border-indigo-200' 
+                    : 'bg-white border-gray-100 hover:shadow-lg'
+            }`}
+        >
+            <GripVertical size={16} className="text-gray-200 mr-2" />
                                 <div>
                                     <span className="text-[7px] font-black uppercase px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-400">{item.category}</span>
                                     <p className="text-sm font-black text-gray-900 mt-1">{item.word}</p>
