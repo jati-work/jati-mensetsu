@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
 import { Trash2, Edit3, X, Plus, GripVertical, Download, Upload, Clock, Languages } from 'lucide-react';
-import { supabase } from '../supabase'; // sesuaikan path-nya
 
 interface Question {
     id: number;
@@ -26,97 +26,50 @@ const Management: React.FC<Props> = ({ questions, setQuestions }) => {
     const [addForm, setAddForm] = useState<Omit<Question, 'id' | 'mastered'>>({
         category: '', question: '', answerJapanese: '', answerRomaji: '', answerIndo: '', timeLimit: 30
     });
+
     const [draggedId, setDraggedId] = useState<number | null>(null);
 
-    // 🔥 LOAD DATA DARI SUPABASE SAAT COMPONENT MOUNT
+    // Load dari Supabase saat pertama kali
     useEffect(() => {
-        loadQuestionsFromSupabase();
+        loadQuestions();
     }, []);
 
-    // 🔥 FUNGSI LOAD DATA
-    const loadQuestionsFromSupabase = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('questions') // ganti dengan nama tabel yang sesuai
-                .select('*')
-                .order('id', { ascending: true });
-
-            if (error) {
-                console.error('Error loading questions:', error);
-                alert('Gagal memuat data dari database');
-                return;
-            }
-
-            if (data) {
-                setQuestions(data);
-            }
-        } catch (err) {
-            console.error('Error:', err);
+    const loadQuestions = async () => {
+        const { data, error } = await supabase
+            .from('questions')
+            .select('*')
+            .order('created_at', { ascending: true });
+        
+        if (data && data.length > 0) {
+            const loaded = data.map((item: any) => ({
+                id: item.id,
+                category: item.category,
+                question: item.question,
+                answerJapanese: item.answer_japanese,
+                answerRomaji: item.answer_romaji,
+                answerIndo: item.answer_indo,
+                mastered: item.mastered,
+                timeLimit: item.time_limit
+            }));
+            setQuestions(loaded);
         }
     };
 
-    // 🔥 FUNGSI SAVE KE SUPABASE
-    const saveToSupabase = async (newQuestion: Omit<Question, 'id'>) => {
-        try {
-            const { data, error } = await supabase
-                .from('questions')
-                .insert([newQuestion])
-                .select();
-
-            if (error) {
-                console.error('Error saving to Supabase:', error);
-                alert('Gagal menyimpan ke database: ' + error.message);
-                return null;
-            }
-
-            return data[0];
-        } catch (err) {
-            console.error('Error:', err);
-            alert('Terjadi kesalahan saat menyimpan');
-            return null;
-        }
+    const saveQuestion = async (q: Question) => {
+        await supabase.from('questions').upsert({
+            id: q.id,
+            category: q.category,
+            question: q.question,
+            answer_japanese: q.answerJapanese,
+            answer_romaji: q.answerRomaji,
+            answer_indo: q.answerIndo,
+            time_limit: q.timeLimit,
+            mastered: q.mastered
+        });
     };
 
-    // 🔥 FUNGSI UPDATE KE SUPABASE
-    const updateToSupabase = async (id: number, updates: Partial<Question>) => {
-        try {
-            const { error } = await supabase
-                .from('questions')
-                .update(updates)
-                .eq('id', id);
-
-            if (error) {
-                console.error('Error updating Supabase:', error);
-                alert('Gagal update database: ' + error.message);
-                return false;
-            }
-
-            return true;
-        } catch (err) {
-            console.error('Error:', err);
-            return false;
-        }
-    };
-
-    // 🔥 FUNGSI DELETE DARI SUPABASE
-    const deleteFromSupabase = async (id: number) => {
-        try {
-            const { error } = await supabase
-                .from('questions')
-                .delete()
-                .eq('id', id);
-
-            if (error) {
-                console.error('Error deleting from Supabase:', error);
-                alert('Gagal hapus dari database: ' + error.message);
-                return false;
-            }
-
-            return true;
-        } catch (err) {
-            console.error('Error:', err);
-            return false;
-        }
+    const deleteQuestion = async (id: number) => {
+        await supabase.from('questions').delete().eq('id', id);
     };
 
     const handleDragStart = (id: number) => setDraggedId(id);
@@ -135,88 +88,22 @@ const Management: React.FC<Props> = ({ questions, setQuestions }) => {
     };
     const handleDragEnd = () => setDraggedId(null);
 
-    // 🔥 EDIT DENGAN SAVE KE SUPABASE
-    const saveEdit = async () => {
-        if (editForm && editingId) {
-            const success = await updateToSupabase(editingId, editForm);
-            if (success) {
-                setQuestions(questions.map(q => q.id === editingId ? editForm : q));
-                setEditingId(null);
-            }
-        }
-    };
+const saveEdit = async () => {
+    if (editForm) {
+        await saveQuestion(editForm);
+        setQuestions(questions.map(q => q.id === editingId ? editForm : q));
+        setEditingId(null);
+    }
+};
 
-    // 🔥 TAMBAH MANUAL DENGAN SAVE KE SUPABASE
-    const saveManual = async () => {
-        if (!addForm.question || !addForm.answerJapanese) {
-            alert('Soal dan Jawaban Jepang harus diisi!');
-            return;
-        }
-
-        const newQuestion = { ...addForm, mastered: false };
-        const savedData = await saveToSupabase(newQuestion);
-        
-        if (savedData) {
-            setQuestions([...questions, savedData]);
-            setIsAddingManual(false);
-            setAddForm({ category: '', question: '', answerJapanese: '', answerRomaji: '', answerIndo: '', timeLimit: 30 });
-        }
-    };
-
-    // 🔥 DELETE DENGAN HAPUS DARI SUPABASE
-    const handleDelete = async (id: number) => {
-        if (!confirm('Yakin ingin menghapus pertanyaan ini?')) return;
-        
-        const success = await deleteFromSupabase(id);
-        if (success) {
-            setQuestions(questions.filter(i => i.id !== id));
-        }
-    };
-
-    // 🔥 BULK IMPORT DENGAN SAVE KE SUPABASE
-    const handleBulkImport = async () => {
-        const rows = bulkCsv.split('\n').filter(r => r.trim());
-        
-        if (rows.length === 0) {
-            alert('CSV kosong!');
-            return;
-        }
-
-        const newQuestions = rows.map(r => {
-            const p = r.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-            return { 
-                category: p[0] || 'Umum', 
-                question: p[1] || '?', 
-                answerJapanese: p[2] || '', 
-                answerRomaji: p[3] || '', 
-                answerIndo: p[4] || '', 
-                timeLimit: parseInt(p[5]) || 30, 
-                mastered: false 
-            };
-        });
-
-        try {
-            const { data, error } = await supabase
-                .from('questions')
-                .insert(newQuestions)
-                .select();
-
-            if (error) {
-                console.error('Error bulk import:', error);
-                alert('Gagal import: ' + error.message);
-                return;
-            }
-
-            if (data) {
-                setQuestions([...questions, ...data]);
-                setBulkCsv('');
-                alert(`Berhasil menambahkan ${data.length} pertanyaan!`);
-            }
-        } catch (err) {
-            console.error('Error:', err);
-            alert('Terjadi kesalahan saat import');
-        }
-    };
+const saveManual = async () => {
+    if (!addForm.question || !addForm.answerJapanese) return;
+    const newQ = { id: Date.now(), ...addForm, mastered: false };
+    await saveQuestion(newQ);
+    setQuestions([...questions, newQ]);
+    setIsAddingManual(false);
+    setAddForm({ category: '', question: '', answerJapanese: '', answerRomaji: '', answerIndo: '', timeLimit: 30 });
+};
 
     const exportCsv = () => {
         const header = "Kategori,Soal,Jepang,Romaji,Indo,Waktu\n";
@@ -246,7 +133,18 @@ const Management: React.FC<Props> = ({ questions, setQuestions }) => {
                     <h3 className="text-xl font-black text-indigo-600 flex items-center gap-3"><Upload size={20}/> Impor Massal</h3>
                     <p className="text-[10px] text-gray-400 font-bold leading-relaxed">Format Baris: <code className="bg-gray-100 px-1">Kategori, Soal, Jepang, Romaji, Indo, Waktu</code></p>
                     <textarea value={bulkCsv} onChange={(e) => setBulkCsv(e.target.value)} className="w-full h-48 p-6 bg-gray-50 rounded-[30px] text-xs font-bold outline-none border-none resize-none shadow-inner" placeholder="Pribadi, Siapa nama anda?, Nama wa Jati desu, Nama wa..., Nama saya Jati, 30" />
-                    <button onClick={handleBulkImport} className="w-full py-6 bg-gray-900 text-white rounded-[28px] font-black uppercase shadow-xl hover:bg-black transition-all">TAMBAH KE DATABASE</button>
+                    <button onClick={async () => {
+                        const rows = bulkCsv.split('\n').filter(r => r.trim());
+                        const newQ = rows.map(r => {
+                            const p = r.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                            return { id: Date.now() + Math.random(), category: p[0]||'Umum', question: p[1]||'?', answerJapanese: p[2]||'', answerRomaji: p[3]||'', answerIndo: p[4]||'', timeLimit: parseInt(p[5])||30, mastered: false };
+                        });
+for (const q of newQ) {
+        await saveQuestion(q);
+    }
+    setQuestions([...questions, ...newQ]);
+    setBulkCsv('');
+}}className="w-full py-6 bg-gray-900 text-white rounded-[28px] font-black uppercase shadow-xl hover:bg-black transition-all">TAMBAH KE DATABASE</button>
                 </div>
 
                 <div className="lg:col-span-2 space-y-6">
@@ -322,7 +220,10 @@ const Management: React.FC<Props> = ({ questions, setQuestions }) => {
                                         </div>
                                         <div className="flex flex-col gap-2">
                                             <button onClick={() => { setEditingId(q.id); setEditForm(q); }} className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-100 transition-all shadow-sm" title="Edit"><Edit3 size={18} /></button>
-                                            <button onClick={() => handleDelete(q.id)} className="p-4 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-100 hover:text-rose-600 transition-all shadow-sm" title="Hapus"><Trash2 size={18} /></button>
+<button onClick={async () => {
+    await deleteQuestion(q.id);
+    setQuestions(questions.filter(i => i.id !== q.id));
+}} className="p-4 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-100 hover:text-rose-600 transition-all shadow-sm" title="Hapus"><Trash2 size={18} /></button>
                                         </div>
                                     </div>
                                 )}
