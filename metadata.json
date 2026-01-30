@@ -1,0 +1,8 @@
+
+{
+  "name": "Jati Mensetsu",
+  "description": "Aplikasi latihan wawancara Care Giver Jepang untuk Dwianrita Farras Sejati.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

@@ -1,0 +1,23 @@
+
+{
+  "name": "Jati Mensetsu - Portal Persiapan",
+  "short_name": "Jati Mensetsu",
+  "description": "Portal persiapan Mensetsu Caregiver Jepang untuk Dwianrita Farras Sejati.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/jati-work/jati-mensetsu/main/images/jati-mensetsu-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/jati-work/jati-mensetsu/main/images/jati-mensetsu-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
