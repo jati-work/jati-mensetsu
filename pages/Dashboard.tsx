@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { ClipboardList, CheckCircle2, RotateCcw, Square, Trash2, Edit3 } from 'lucide-react';
 
@@ -80,21 +80,13 @@ const Dashboard: React.FC<Props> = ({ userName, roadmapSteps, setRoadmapSteps, t
                 <div className="bg-indigo-50 p-8 rounded-[40px] border border-indigo-100 cursor-pointer group" onClick={() => setEditingMetric('target')}>
                     <h4 className="text-indigo-400 text-[10px] font-black uppercase tracking-widest mb-4">Target Berangkat</h4>
                     {editingMetric === 'target' ? (
-                        <input autoFocus value={targetDate} onChange={async (e) => {
-    setTargetDate(e.target.value);
-    await saveSettings();
-}}
-    saveSettings();
-}} onBlur={() => setEditingMetric(null)} className="text-2xl font-black bg-transparent border-b-2 border-indigo-400 outline-none w-full" />
+                        <input autoFocus value={targetDate} onChange={(e) => setTargetDate(e.target.value)} onBlur={() => setEditingMetric(null)} className="text-2xl font-black bg-transparent border-b-2 border-indigo-400 outline-none w-full" />
                     ) : <p className="text-3xl font-black text-indigo-900">{targetDate} <Edit3 size={14} className="inline opacity-20 group-hover:opacity-100" /></p>}
                 </div>
                 <div className="bg-emerald-50 p-8 rounded-[40px] border border-emerald-100 cursor-pointer group" onClick={() => setEditingMetric('cert')}>
                     <h4 className="text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-4">Sertifikasi</h4>
                     {editingMetric === 'cert' ? (
-                        <input autoFocus value={certStatus} onChange={async (e) => {
-    setCertStatus(e.target.value);
-    await saveSettings();
-}} onBlur={() => setEditingMetric(null)} className="text-2xl font-black bg-transparent border-b-2 border-emerald-400 outline-none w-full" />
+                        <input autoFocus value={certStatus} onChange={(e) => setCertStatus(e.target.value)} onBlur={() => setEditingMetric(null)} className="text-2xl font-black bg-transparent border-b-2 border-emerald-400 outline-none w-full" />
                     ) : <p className="text-3xl font-black text-emerald-900">{certStatus} <Edit3 size={14} className="inline opacity-20 group-hover:opacity-100" /></p>}
                 </div>
                 <div className="bg-indigo-600 p-8 rounded-[40px] text-white shadow-xl flex flex-col justify-between">
