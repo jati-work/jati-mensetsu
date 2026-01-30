@@ -50,9 +50,21 @@ const DocumentHub: React.FC<Props> = ({ checklist, setChecklist, docNotes, setDo
         await supabase.from('documents').delete().eq('id', id);
     };
 
-    const saveNotes = async (content: string) => {
-        await supabase.from('doc_notes').upsert({ user_id: 'default-user', content });
-    };
+const saveNotes = async (content: string) => {
+    try {
+        const { error } = await supabase.from('doc_notes').upsert(
+            { user_id: 'default-user', content },
+            { onConflict: 'user_id' }
+        );
+        if (error) {
+            console.error('Error saving notes:', error);
+        } else {
+            console.log('Notes saved successfully!'); // Untuk debugging
+        }
+    } catch (err) {
+        console.error('Save notes failed:', err);
+    }
+};
 
 const handleFileUpload = (id: number) => {
     const input = document.createElement('input');
