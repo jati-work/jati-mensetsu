@@ -128,20 +128,36 @@ const saveManual = async () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 <div className="lg:col-span-1 bg-white p-10 rounded-[48px] border border-gray-100 space-y-8 h-fit shadow-sm">
                     <h3 className="text-xl font-black text-indigo-600 flex items-center gap-3"><Upload size={20}/> Impor Massal</h3>
-                    <p className="text-[10px] text-gray-400 font-bold leading-relaxed">Format Baris: <code className="bg-gray-100 px-1">Kategori, Soal, Jepang, Romaji, Indo, Waktu</code></p>
-                    <textarea value={bulkCsv} onChange={(e) => setBulkCsv(e.target.value)} className="w-full h-48 p-6 bg-gray-50 rounded-[30px] text-xs font-bold outline-none border-none resize-none shadow-inner" placeholder="Perkenalan diri, お名前は何ですか？, 私の名前はJatiです, Watashi no namae wa Jati desu, Nama saya Jati, 30" />
-                    <button onClick={async () => {
-                        const rows = bulkCsv.split('\n').filter(r => r.trim());
-                        const newQ = rows.map(r => {
-                            const p = r.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-                            return { id: Date.now() + Math.random(), category: p[0]||'Umum', question: p[1]||'?', answerJapanese: p[2]||'', answerRomaji: p[3]||'', answerIndo: p[4]||'', timeLimit: parseInt(p[5])||30, mastered: false };
-                        });
-for (const q of newQ) {
+                    <p className="text-[10px] text-gray-400 font-bold leading-relaxed">✨ Copy langsung dari Excel atau gunakan format: <code className="bg-gray-100 px-2 py-1 rounded">Kategori, Soal, Jepang, Romaji, Indo, Waktu</code></p>
+                    <textarea value={bulkCsv} onChange={(e) => setBulkCsv(e.target.value)} className="w-full h-48 p-6 bg-gray-50 rounded-[30px] text-xs font-bold outline-none border-none resize-none shadow-inner" placeholder="📋 Copy paste langsung dari Excel atau ketik manual:
+Perkenalan diri	お名前は何ですか？	私の名前はJatiです	Watashi no namae wa Jati desu	Nama saya Jati	30
+
+Format: Kategori, Soal, Jepang, Romaji, Indo, Waktu" />
+<button onClick={async () => {
+    const rows = bulkCsv.split('\n').filter(r => r.trim());
+    const newQ = rows.map(r => {
+        // Auto-detect: Tab dari Excel atau Comma dari CSV
+        const separator = r.includes('\t') ? '\t' : ',';
+        const p = r.split(separator).map(v => v.trim().replace(/^"|"$/g, ''));
+        
+        return { 
+            id: Date.now() + Math.random(), 
+            category: p[0] || 'Umum', 
+            question: p[1] || '?', 
+            answerJapanese: p[2] || '', 
+            answerRomaji: p[3] || '', 
+            answerIndo: p[4] || '', 
+            timeLimit: parseInt(p[5]) || 30, 
+            mastered: false 
+        };
+    });
+    
+    for (const q of newQ) {
         await saveQuestion(q);
     }
     setQuestions([...questions, ...newQ]);
     setBulkCsv('');
-}}className="w-full py-6 bg-gray-900 text-white rounded-[28px] font-black uppercase shadow-xl hover:bg-black transition-all">TAMBAH KE DATABASE</button>
+}} className="w-full py-6 bg-gray-900 text-white rounded-[28px] font-black uppercase shadow-xl hover:bg-black transition-all">TAMBAH KE DATABASE</button>
                 </div>
 
                 <div className="lg:col-span-2 space-y-6">
