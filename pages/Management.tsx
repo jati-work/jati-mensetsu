@@ -123,9 +123,6 @@ const saveManual = async () => {
                     <h1 className="text-4xl font-black text-gray-900">Database Management</h1>
                     <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">Tahan & Geser kartu untuk ganti urutan</p>
                 </div>
-                <button onClick={exportCsv} className="flex items-center gap-3 bg-emerald-50 text-emerald-600 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-all">
-                    <Download size={18} /> EXPORT CSV
-                </button>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -148,10 +145,17 @@ for (const q of newQ) {
                 </div>
 
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="flex justify-between items-center px-4">
-                        <h3 className="text-xl font-black">Pertanyaan ({questions.length})</h3>
-                        <button onClick={() => setIsAddingManual(true)} className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2"><Plus size={16} /> TAMBAH MANUAL</button>
-                    </div>
+<div className="flex justify-between items-center px-4">
+    <h3 className="text-xl font-black">Pertanyaan ({questions.length})</h3>
+    <div className="flex gap-4">
+        <button onClick={exportCsv} className="flex items-center gap-3 px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-all">
+            <Download size={18} /> EXPORT CSV
+        </button>
+        <button onClick={() => setIsAddingManual(true)} className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
+            <Plus size={16} /> TAMBAH MANUAL
+        </button>
+    </div>
+</div>
                     
                     <div className="space-y-6 max-h-[800px] overflow-y-auto custom-scroll pr-4">
                         {isAddingManual && (
