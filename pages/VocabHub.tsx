@@ -25,9 +25,21 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [flashIndex, setFlashIndex] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
     
-    // Fitur yang dikembalikan: Gender TTS & Flip Mode
+    // Fitur: Gender TTS & Flip Mode
     const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
     const [flipMode, setFlipMode] = useState<'JPtoID' | 'IDtoJP'>('JPtoID');
+    const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+
+    // --- TTS VOICE LOADING ---
+    useEffect(() => {
+        const loadVoices = () => {
+            const allVoices = window.speechSynthesis.getVoices();
+            const japaneseVoices = allVoices.filter(v => v.lang.startsWith('ja'));
+            setAvailableVoices(japaneseVoices);
+        };
+        loadVoices();
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+    }, []);
 
     // --- REORDER SHUFFLING LOGIC ---
     const [draggedId, setDraggedId] = useState<number | null>(null);
@@ -77,18 +89,31 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
 
     const speak = (text: string) => {
         if (!text) return;
-        window.speechSynthesis.cancel();
+        if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+        
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'ja-JP';
-        utterance.rate = 0.9;
-        const voices = window.speechSynthesis.getVoices();
-        const jaVoices = voices.filter(v => v.lang.startsWith('ja'));
-        if (jaVoices.length > 0) {
-            const v = voiceGender === 'female' ? 
-                jaVoices.find(v => v.name.toLowerCase().includes('female')) :
-                jaVoices.find(v => v.name.toLowerCase().includes('male'));
-            utterance.voice = v || jaVoices[0];
+        utterance.rate = 0.85;
+
+        if (availableVoices.length > 0) {
+            const femaleKeywords = ['female', 'haruka', 'kyoko', 'sayaka', 'nanako'];
+            const maleKeywords = ['male', 'ichiro', 'otoya', 'keita', 'puck'];
+
+            let selectedVoice = null;
+            if (voiceGender === 'female') {
+                selectedVoice = availableVoices.find(v => 
+                    femaleKeywords.some(key => v.name.toLowerCase().includes(key))
+                );
+            } else {
+                selectedVoice = availableVoices.find(v => 
+                    maleKeywords.some(key => v.name.toLowerCase().includes(key))
+                );
+            }
+            
+            // Jika tidak ketemu yang spesifik, pakai yang pertama tersedia
+            utterance.voice = selectedVoice || availableVoices[0];
         }
+        
         window.speechSynthesis.speak(utterance);
     };
 
