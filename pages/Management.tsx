@@ -23,10 +23,10 @@ const Management: React.FC<Props> = ({ questions, setQuestions }) => {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState<Question | null>(null);
     const [isAddingManual, setIsAddingManual] = useState(false);
-    const [addForm, setAddForm] = useState<Omit<Question, 'id' | 'mastered'>>({
-    const [searchQuery, setSearchQuery] = useState('');
-        category: '', question: '', answerJapanese: '', answerRomaji: '', answerIndo: '', timeLimit: 30
-    });
+const [addForm, setAddForm] = useState<Omit<Question, 'id' | 'mastered'>>({
+    category: '', question: '', answerJapanese: '', answerRomaji: '', answerIndo: '', timeLimit: 30
+});
+const [searchQuery, setSearchQuery] = useState('');
 
     const [draggedId, setDraggedId] = useState<number | null>(null);
 
