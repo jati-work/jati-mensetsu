@@ -38,7 +38,30 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [draggedId, setDraggedId] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showReview, setShowReview] = useState(false);
+    const [studyMode, setStudyMode] = useState<'casual' | 'exam' | 'random'>('casual');
+    const [timeLeft, setTimeLeft] = useState(15);
+    const [isTimerRunning, setIsTimerRunning] = useState(false);
 
+useEffect(() => {
+    let timer: any;
+    if (isTimerRunning && timeLeft > 0) {
+        timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    } else if (timeLeft === 0 && isTimerRunning) {
+        setIsTimerRunning(false);
+        setIsFlipped(true); // Auto flip kartu
+    }
+    return () => clearInterval(timer);
+}, [isTimerRunning, timeLeft]);
+
+// Reset timer saat ganti kartu
+useEffect(() => {
+    if (studyMode === 'exam') {
+        setTimeLeft(15);
+        setIsTimerRunning(true);
+    }
+    setIsFlipped(false);
+}, [flashIndex, studyMode]);
+    
     useEffect(() => {
         loadVocab();
     }, []);
@@ -268,6 +291,28 @@ const masteredPercentage = filteredList.length > 0
     </div>
 </div>
 
+{/* Mode Selector */}
+<div className="flex gap-3 justify-center">
+    <button 
+        onClick={() => { setStudyMode('casual'); setIsTimerRunning(false); }} 
+        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'casual' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+    >
+        ☕ SANTAI
+    </button>
+    <button 
+        onClick={() => { setStudyMode('exam'); setTimeLeft(15); setIsTimerRunning(true); }} 
+        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'exam' ? 'bg-rose-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+    >
+        ⏱️ UJIAN (15s)
+    </button>
+    <button 
+        onClick={() => { setStudyMode('random'); setFlashIndex(Math.floor(Math.random() * filteredList.length)); }} 
+        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'random' ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+    >
+        🎲 ACAK
+    </button>
+</div>
+            
             <div className="space-y-10">
                 <div className="bg-white p-8 md:p-10 rounded-[48px] border border-gray-100 space-y-8 shadow-sm flex flex-col slide-up">
                     <h3 className="text-xl font-black text-indigo-600 flex items-center gap-3"><Languages /> Daftar Kotoba</h3>
@@ -395,6 +440,12 @@ const masteredPercentage = filteredList.length > 0
 
                     {currentCard ? (
                         <div className="w-full max-w-lg space-y-12 relative z-10 flex flex-col items-center">
+                                    {/* Timer Display - Mode Ujian */}
+        {studyMode === 'exam' && (
+            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-rose-500 text-white px-6 py-2 rounded-full font-black text-lg shadow-xl z-20">
+                ⏱️ {timeLeft}s
+            </div>
+        )}
                             <div className="h-[450px] w-full perspective cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
                                 <div className={`relative h-full w-full transition-all duration-700 preserve-3d ${isFlipped ? 'my-rotate-y-180' : ''}`}>
                                     
@@ -450,6 +501,46 @@ const masteredPercentage = filteredList.length > 0
         </p>
     )}
 </div>
+                        
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-10">
+                                <button onClick={() => setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length)} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"><ChevronLeft size={32}/></button>
+
+{/* TAMBAH TOMBOL MASTERED */}
+    <button 
+        onClick={async () => {
+            const updated = vocabList.map(v => v.id === currentCard.id ? {...v, mastered: !v.mastered} : v);
+            setVocabList(updated);
+            const updatedVocab = updated.find(v => v.id === currentCard.id);
+            if (updatedVocab) await saveVocab(updatedVocab);
+        }} 
+        className={`p-5 rounded-3xl transition-all ${currentCard.mastered ? 'bg-emerald-500 text-white shadow-lg' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
+        title="Tandai Sudah Hafal"
+    >
+        <CheckCircle2 size={32} />
+    </button>
+    
+    <div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
+        <span className="text-white font-black text-xl">{flashIndex + 1} <span className="opacity-30 text-sm">/ {filteredList.length}</span></span>
+    </div>
+    <button onClick={() => {
+    if (studyMode === 'random') {
+        setFlashIndex(Math.floor(Math.random() * filteredList.length));
+    } else {
+        setFlashIndex((flashIndex + 1) % filteredList.length);
+    }
+}} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"><ChevronRight size={32}/></button>
+</div>
+                        </div>
+                    ) : (
+                        <div className="text-center p-24 bg-white/5 rounded-[80px] border border-white/10 backdrop-blur-lg">
+                           <BrainCircuit size={80} className="mx-auto text-indigo-300 opacity-20 animate-pulse" />
+                           <p className="text-white/40 mt-8 font-black uppercase tracking-[0.3em] text-sm">Pilih Kategori atau Tambah Kata Baru</p>
+                        </div>
+                    )}
+                    <div className="h-4"></div>
+                </div>
 
 {/* Tombol Review */}
 <button 
@@ -514,40 +605,7 @@ const masteredPercentage = filteredList.length > 0
         </div>
     </div>
 )}
-                                    
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-10">
-                                <button onClick={() => setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length)} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"><ChevronLeft size={32}/></button>
-
-{/* TAMBAH TOMBOL MASTERED */}
-    <button 
-        onClick={async () => {
-            const updated = vocabList.map(v => v.id === currentCard.id ? {...v, mastered: !v.mastered} : v);
-            setVocabList(updated);
-            const updatedVocab = updated.find(v => v.id === currentCard.id);
-            if (updatedVocab) await saveVocab(updatedVocab);
-        }} 
-        className={`p-5 rounded-3xl transition-all ${currentCard.mastered ? 'bg-emerald-500 text-white shadow-lg' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
-        title="Tandai Sudah Hafal"
-    >
-        <CheckCircle2 size={32} />
-    </button>
-    
-    <div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
-        <span className="text-white font-black text-xl">{flashIndex + 1} <span className="opacity-30 text-sm">/ {filteredList.length}</span></span>
-    </div>
-    <button onClick={() => setFlashIndex((flashIndex + 1) % filteredList.length)} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"><ChevronRight size={32}/></button>
-</div>
-                        </div>
-                    ) : (
-                        <div className="text-center p-24 bg-white/5 rounded-[80px] border border-white/10 backdrop-blur-lg">
-                           <BrainCircuit size={80} className="mx-auto text-indigo-300 opacity-20 animate-pulse" />
-                           <p className="text-white/40 mt-8 font-black uppercase tracking-[0.3em] text-sm">Pilih Kategori atau Tambah Kata Baru</p>
-                        </div>
-                    )}
-                    <div className="h-4"></div>
-                </div>
+                
             </div>
             <style>{`
                 .perspective { perspective: 2000px; }
