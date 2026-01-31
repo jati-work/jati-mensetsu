@@ -228,7 +228,7 @@ useEffect(() => {
         if (!audioChunksRef.current.length) return;
         setIsAnalyzing(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const ai = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
             const reader = new FileReader();
             reader.readAsDataURL(new Blob(audioChunksRef.current));
             reader.onloadend = async () => {
