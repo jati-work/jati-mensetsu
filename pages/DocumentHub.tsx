@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../supabase';
-import { ShieldCheck, PlusCircle, CheckSquare, Upload, Trash2, Download, StickyNote, Edit3, CheckCircle, Lock } from 'lucide-react';
+import { ShieldCheck, PlusCircle, CheckSquare, Upload, Trash2, Download, StickyNote, Edit3, CheckCircle, Lock, GripVertical } from 'lucide-react';
 
 interface Props {
     checklist: any[];
@@ -12,6 +12,7 @@ interface Props {
 
 const DocumentHub: React.FC<Props> = ({ checklist, setChecklist, docNotes, setDocNotes }) => {
     const [isEditing, setIsEditing] = useState(false);
+    const [draggedId, setDraggedId] = useState<number | null>(null);
 
     useEffect(() => {
         loadDocs();
@@ -82,6 +83,24 @@ const handleFileUpload = (id: number) => {
     input.click();
 };
 
+const handleDragStart = (id: number) => setDraggedId(id);
+
+const handleDragOver = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    if (draggedId === null || draggedId === targetId) return;
+    const newList = [...checklist];
+    const draggedIndex = newList.findIndex(d => d.id === draggedId);
+    const targetIndex = newList.findIndex(d => d.id === targetId);
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+        const item = newList[draggedIndex];
+        newList.splice(draggedIndex, 1);
+        newList.splice(targetIndex, 0, item);
+        setChecklist(newList);
+    }
+};
+
+const handleDragEnd = () => setDraggedId(null);
+    
     return (
         <div className="space-y-12 fade-in pb-20 pt-4 md:pt-0">
             <div className="space-y-2">
@@ -102,15 +121,26 @@ const handleFileUpload = (id: number) => {
                 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     {checklist.map(item => (
-        <div key={item.id} className="relative group"> {/* ← tambah group di sini */}
-            <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100 flex items-center gap-4 transition-all hover:bg-white hover:shadow-lg"> {/* ← hapus group dari sini */}
+        <div 
+    key={item.id} 
+    draggable
+    onDragStart={() => handleDragStart(item.id)}
+    onDragOver={(e) => handleDragOver(e, item.id)}
+    onDragEnd={handleDragEnd}
+    className={`relative group cursor-grab active:cursor-grabbing transition-all ${
+        draggedId === item.id ? 'opacity-30 scale-95' : ''
+    }`}
+>
+            <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100 flex items-center gap-4 transition-all hover:bg-white hover:shadow-lg">
+    <GripVertical size={20} className="text-gray-200" />
+    <button onClick={async () => {
                 {/* ... isi card ... */}
                 <button onClick={async () => {
 const updated = checklist.map(i => i.id === item.id ? {...i, isDone: !i.isDone} : i);
 setChecklist(updated);
 const updatedItem = updated.find(i => i.id === item.id);
 if (updatedItem) await saveDoc(updatedItem);
-}} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${item.isDone ? 'bg-emerald-500 text-white' : 'bg-white text-gray-200 border-2 border-gray-100'}`}><CheckSquare size={20} /></button>
+}} className={`w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center transition-all ${item.isDone ? 'bg-emerald-500 text-white' : 'bg-white text-gray-200 border-2 border-gray-100'}`}><CheckSquare size={20} /></button>
                 
                 <div className="flex-1">
                     <input value={item.label} onChange={(e) => {
