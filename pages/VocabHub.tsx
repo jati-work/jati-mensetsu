@@ -618,7 +618,7 @@ const masteredPercentage = filteredList.length > 0
                 .no-scrollbar::-webkit-scrollbar { display: none; }
             `}</style>
         </div>
-    );
+);
 };
 
 export default VocabHub;
