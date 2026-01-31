@@ -39,7 +39,7 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showReview, setShowReview] = useState(false);
     const [studyMode, setStudyMode] = useState<'casual' | 'exam' | 'random'>('casual');
-    const [timeLeft, setTimeLeft] = useState(15);
+    const [timeLeft, setTimeLeft] = useState(10);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
 
 useEffect(() => {
@@ -56,7 +56,7 @@ useEffect(() => {
 // Reset timer saat ganti kartu
 useEffect(() => {
     if (studyMode === 'exam') {
-        setTimeLeft(15);
+        setTimeLeft(10);
         setIsTimerRunning(true);
     }
     setIsFlipped(false);
