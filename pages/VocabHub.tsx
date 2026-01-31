@@ -363,10 +363,11 @@ const handleSaveVocab = async () => {
                         <div className="w-full max-w-lg space-y-12 relative z-10 flex flex-col items-center">
                             <div className="h-[450px] w-full perspective cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
                                 <div className={`relative h-full w-full transition-all duration-700 preserve-3d ${isFlipped ? 'my-rotate-y-180' : ''}`}>
-                                    <div className="absolute inset-0 backface-hidden bg-white rounded-[64px] flex flex-col items-center justify-center p-12 text-center shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border-b-8 border-indigo-100">
-                                        <h4 className="font-black text-gray-900 text-6xl tracking-tight leading-tight">
-                                            {flipMode === 'JPtoID' ? currentCard.word : currentCard.meaning}
-                                        </h4>
+                                    
+<div className="absolute inset-0 backface-hidden bg-white rounded-[64px] flex flex-col items-center justify-center p-12 text-center shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border-b-8 border-indigo-100">
+    <h4 className="font-black text-gray-900 text-6xl tracking-tight leading-tight">
+        {flipMode === 'JPtoID' ? currentCard.word : currentCard.meaning}
+    </h4>
 
     {/* TAMBAH CONTOH KALIMAT */}
     {flipMode === 'JPtoID' && currentCard.example_japanese && (
@@ -384,15 +385,12 @@ const handleSaveVocab = async () => {
         <RotateCw size={16}/> Klik kartu untuk memutar
     </p>
 </div>
-    
-                                        <p className="mt-12 text-indigo-300 text-[10px] font-black uppercase tracking-widest flex items-center gap-3"><RotateCw size={16}/> Klik kartu untuk memutar</p>
-                                    </div>
-                                    <div className="absolute inset-0 backface-hidden my-rotate-y-180 bg-emerald-500 rounded-[64px] flex flex-col items-center justify-center p-12 text-center text-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]">
-                                        <h4 className="font-black text-5xl tracking-tight leading-tight">
-                                            {flipMode === 'JPtoID' ? currentCard.meaning : currentCard.word}
-                                        </h4>
+<div className="absolute inset-0 backface-hidden my-rotate-y-180 bg-emerald-500 rounded-[64px] flex flex-col items-center justify-center p-12 text-center text-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]">
+    <h4 className="font-black text-5xl tracking-tight leading-tight">
+        {flipMode === 'JPtoID' ? currentCard.meaning : currentCard.word}
+    </h4>
 
-   {/* TAMBAH CONTOH KALIMAT */}
+    {/* TAMBAH CONTOH KALIMAT */}
     {flipMode === 'JPtoID' && currentCard.example_indo && (
         <p className="mt-6 text-sm font-bold text-white/80 italic leading-relaxed">
             "{currentCard.example_indo}"
@@ -408,11 +406,6 @@ const handleSaveVocab = async () => {
         <Volume2 size={32} />
     </button>
 </div>
-                                        
-                                        <button onClick={(e) => { e.stopPropagation(); speak(currentCard.word); }} className="mt-10 p-5 bg-white/20 rounded-full hover:bg-white/30 transition-all">
-                                            <Volume2 size={32} />
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-10">
