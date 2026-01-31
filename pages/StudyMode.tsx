@@ -308,7 +308,7 @@ useEffect(() => {
                 </div>
             ) : (
                 <>
-<div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar scroll-smooth">
+<div className="flex gap-2 overflow-x-auto pb-4 scroll-smooth">
     <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100">
         <div className="p-2 text-indigo-400 bg-white rounded-xl shadow-sm"><Layers size={16}/></div>
         {categories.map(cat => (
