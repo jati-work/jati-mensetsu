@@ -55,14 +55,17 @@ const Dashboard: React.FC<Props> = ({ userName, roadmapSteps, setRoadmapSteps, t
     };
 
 const saveSettings = async () => {
-    console.log('🔥 SAVING SETTINGS:', { targetDate, certStatus }); // DEBUG
+    console.log('🔥 SAVING SETTINGS:', { targetDate, certStatus });
     
     try {
-        const { data, error } = await supabase.from('user_settings').upsert({
-            user_id: 'default-user',
-            target_date: targetDate,
-            cert_status: certStatus
-        });
+        // UPDATE instead of UPSERT
+        const { data, error } = await supabase
+            .from('user_settings')
+            .update({
+                target_date: targetDate,
+                cert_status: certStatus
+            })
+            .eq('user_id', 'default-user');
         
         if (error) {
             console.error('❌ ERROR SAVING:', error);
