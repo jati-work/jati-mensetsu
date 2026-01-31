@@ -251,7 +251,7 @@ useEffect(() => {
             </div>
 
             {showStrategy ? (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 slide-up">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 slide-up">
                     <div className="bg-[#f0c3e6] p-8 rounded-[48px] shadow-lg border-4 border-white space-y-6">
                         <div className="flex justify-between items-center">
                             <h3 className="text-xl font-black text-gray-900 flex items-center gap-3"><Target size={20} /> POIN UTAMA</h3>
@@ -260,11 +260,11 @@ useEffect(() => {
                             {interviewPoints.map((point, i) => (
                                 <div key={i} className="relative group">
                                     <div className="flex gap-3">
-                                    <input value={point} onChange={(e) => {
-                                        const newPoints = [...interviewPoints];
-                                        newPoints[i] = e.target.value;
-                                        setInterviewPoints(newPoints);
-                                    }} placeholder="Poin penting..." className="flex-1 text-sm font-black text-gray-900 bg-white/20 p-4 rounded-xl border border-white/30 outline-none" />
+<textarea value={point} onChange={(e) => {
+    const newPoints = [...interviewPoints];
+    newPoints[i] = e.target.value;
+    setInterviewPoints(newPoints);
+}} placeholder="Poin penting..." className="flex-1 text-sm font-black text-gray-900 bg-white/20 p-4 rounded-xl border border-white/30 outline-none resize-none h-20" />
                                 </div>
                                 {/* Tombol delete */}
                                     <button 
@@ -321,11 +321,11 @@ useEffect(() => {
                             {studyNotes.map((note, i) => (
                                 <div key={i} className="relative group">
                                     <div className="flex gap-3">
-                                    <input value={note} onChange={(e) => {
-                                        const newNotes = [...studyNotes];
-                                        newNotes[i] = e.target.value;
-                                        setStudyNotes(newNotes);
-                                    }} placeholder="Catatan belajar..." className="flex-1 text-sm font-black text-gray-900 bg-white/20 p-4 rounded-xl border border-white/30 outline-none" />
+<textarea value={note} onChange={(e) => {
+    const newNotes = [...studyNotes];
+    newNotes[i] = e.target.value;
+    setStudyNotes(newNotes);
+}} placeholder="Catatan belajar..." className="flex-1 text-sm font-black text-gray-900 bg-white/20 p-4 rounded-xl border border-white/30 outline-none resize-none h-20" />
                                 </div>
                                     
                                     {/* Tombol delete */}
