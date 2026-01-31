@@ -308,16 +308,16 @@ useEffect(() => {
                 </div>
             ) : (
                 <>
-                    <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
-                        <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100">
-                            <div className="p-2 text-indigo-400 bg-white rounded-xl shadow-sm"><Layers size={16}/></div>
-                            {categories.map(cat => (
-                                <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase whitespace-nowrap transition-all ${selectedCategory === cat ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-indigo-400'}`}>
-                                    {cat}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+<div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar scroll-smooth">
+    <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100">
+        <div className="p-2 text-indigo-400 bg-white rounded-xl shadow-sm"><Layers size={16}/></div>
+        {categories.map(cat => (
+            <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase whitespace-nowrap transition-all ${selectedCategory === cat ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-indigo-400'}`}>
+                {cat}
+            </button>
+        ))}
+    </div>
+</div>
 
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
                         <div className="flex flex-wrap gap-2">
