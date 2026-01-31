@@ -1,15 +1,16 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
-import { BrainCircuit, PlusCircle, Trash2, Languages, RotateCw, ChevronLeft, ChevronRight, Volume2, Edit3, X, GripVertical, Download, Upload, UserCircle, UserCircle2, ArrowLeftRight, Search } from 'lucide-react';
+import { BrainCircuit, PlusCircle, Trash2, Languages, RotateCw, ChevronLeft, ChevronRight, Volume2, Edit3, X, GripVertical, Download, Upload, UserCircle, UserCircle2, ArrowLeftRight, Search, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface Vocab {
     id: number;
     word: string;
     meaning: string;
     category: string;
-    example_japanese?: string;  // TAMBAH INI
-    example_indo?: string;       // TAMBAH INI
+    example_japanese?: string;
+    example_indo?: string;
+    mastered?: boolean;  // TAMBAH INI
 }
 
 interface Props {
@@ -36,6 +37,7 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
     const [draggedId, setDraggedId] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showReview, setShowReview] = useState(false);
 
     useEffect(() => {
         loadVocab();
@@ -50,7 +52,8 @@ const loadVocab = async () => {
             meaning: v.meaning,
             category: v.category,
             example_japanese: v.example_japanese || '',  // TAMBAH INI
-            example_indo: v.example_indo || ''            // TAMBAH INI
+            example_indo: v.example_indo || '',
+            mastered: v.mastered || false  // TAMBAH INI
         })));
     }
 };
@@ -62,7 +65,8 @@ const saveVocab = async (v: Vocab) => {
         meaning: v.meaning,
         category: v.category,
         example_japanese: v.example_japanese,  // TAMBAH INI
-        example_indo: v.example_indo            // TAMBAH INI
+        example_indo: v.example_indo,
+        mastered: v.mastered || false  // TAMBAH INI
     });
 };
 
@@ -89,8 +93,8 @@ const handleDragOver = (e: React.DragEvent, targetId: number) => {
 const handleDragEnd = () => setDraggedId(null);
 
 const exportCsv = () => {
-    const header = "Kategori,Kata,Arti\n";
-    const rows = vocabList.map(v => `"${v.category}","${v.word}","${v.meaning}"`).join("\n");
+    const header = "Kategori,Kata,Arti,Contoh_Jepang,Contoh_Indo\n";
+    const rows = vocabList.map(v => `"${v.category}","${v.word}","${v.meaning}","${v.example_japanese || ''}","${v.example_indo || ''}"`).join("\n");
     const blob = new Blob([header + rows], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -109,12 +113,14 @@ const importCsv = () => {
             const text = await file.text();
             const rows = text.split('\n').filter(r => r.trim()).slice(1); // Skip header
             const newVocabs = rows.map(r => {
-                const p = r.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                const p = r.split(',').map(v => v.trim().replace(/^"|"$/g, ''))        
                 return { 
                     id: Date.now() + Math.random(), 
                     category: p[0] || 'Umum', 
                     word: p[1] || '', 
-                    meaning: p[2] || '' 
+                    meaning: p[2] || '',
+                    example_japanese: p[3] || '',
+                    example_indo: p[4] || ''
                 };
             });
             
@@ -238,6 +244,13 @@ const handleSaveVocab = async () => {
 
     const currentCard = filteredList[flashIndex];
 
+// Statistik untuk Review
+const masteredVocab = filteredList.filter(v => v.mastered);
+const notMasteredVocab = filteredList.filter(v => !v.mastered);
+const masteredPercentage = filteredList.length > 0 
+    ? Math.round((masteredVocab.length / filteredList.length) * 100) 
+    : 0;
+    
     return (
         <div className="space-y-12 fade-in pb-20 pt-4 md:pt-0">
 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -320,12 +333,33 @@ const handleSaveVocab = async () => {
                     : 'bg-white border-gray-100 hover:shadow-lg'
             }`}
         >
-            <GripVertical size={16} className="text-gray-200 mr-2" />
-                                <div>
-                                    <span className="text-[7px] font-black uppercase px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-400">{item.category}</span>
-                                    <p className="text-sm font-black text-gray-900 mt-1">{item.word}</p>
-                                    <p className="text-[10px] font-bold text-gray-400 italic">"{item.meaning}"</p>
-                                </div>
+<GripVertical size={16} className="text-gray-200 mr-2 flex-shrink-0" />
+
+{/* Kolom Kiri: Kata & Arti */}
+<div className="flex-1 min-w-0">
+    <span className="text-[7px] font-black uppercase px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-400">{item.category}</span>
+    <p className="text-sm font-black text-gray-900 mt-1">{item.word}</p>
+    <p className="text-[10px] font-bold text-gray-400 italic">"{item.meaning}"</p>
+</div>
+
+{/* Kolom Kanan: Contoh Kalimat (kalau ada) */}
+{(item.example_japanese || item.example_indo) && (
+    <div className="flex-1 min-w-0 pl-4 border-l border-gray-100">
+        {item.example_japanese && (
+            <div className="mb-2">
+                <p className="text-[7px] font-black uppercase text-indigo-400 mb-0.5">CONTOH JEPANG</p>
+                <p className="text-xs font-bold text-gray-600 truncate">{item.example_japanese}</p>
+            </div>
+        )}
+        {item.example_indo && (
+            <div>
+                <p className="text-[7px] font-black uppercase text-emerald-400 mb-0.5">CONTOH INDO</p>
+                <p className="text-xs font-bold text-gray-500 italic truncate">"{item.example_indo}"</p>
+            </div>
+        )}
+    </div>
+)}
+
                                 <div className="flex items-center gap-1">
                                     <button onClick={() => speak(item.word)} className="p-3 text-indigo-300 hover:text-indigo-600"><Volume2 size={16} /></button>
                                     <button onClick={() => { 
@@ -365,18 +399,25 @@ const handleSaveVocab = async () => {
                                 <div className={`relative h-full w-full transition-all duration-700 preserve-3d ${isFlipped ? 'my-rotate-y-180' : ''}`}>
                                     
 <div className="absolute inset-0 backface-hidden bg-white rounded-[64px] flex flex-col items-center justify-center p-12 text-center shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border-b-8 border-indigo-100">
-    <h4 className="font-black text-gray-900 text-6xl tracking-tight leading-tight">
+    {/* TTS Button - Pojok Kanan Atas */}
+    <button 
+        onClick={(e) => { e.stopPropagation(); speak(currentCard.word); }} 
+        className="absolute top-6 right-6 p-3 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-all shadow-sm"
+    >
+        <Volume2 size={20} />
+    </button>
+    
+    <h4 className="font-black text-gray-900 text-5xl tracking-tight leading-tight break-words max-w-full px-4">
         {flipMode === 'JPtoID' ? currentCard.word : currentCard.meaning}
     </h4>
-
-    {/* TAMBAH CONTOH KALIMAT */}
+    
     {flipMode === 'JPtoID' && currentCard.example_japanese && (
-        <p className="mt-6 text-sm font-bold text-gray-400 italic leading-relaxed">
+        <p className="mt-6 text-sm font-bold text-gray-400 italic leading-relaxed break-words max-w-full px-4">
             "{currentCard.example_japanese}"
         </p>
     )}
     {flipMode === 'IDtoJP' && currentCard.example_indo && (
-        <p className="mt-6 text-sm font-bold text-gray-400 italic leading-relaxed">
+        <p className="mt-6 text-sm font-bold text-gray-400 italic leading-relaxed break-words max-w-full px-4">
             "{currentCard.example_indo}"
         </p>
     )}
@@ -386,35 +427,118 @@ const handleSaveVocab = async () => {
     </p>
 </div>
 <div className="absolute inset-0 backface-hidden my-rotate-y-180 bg-emerald-500 rounded-[64px] flex flex-col items-center justify-center p-12 text-center text-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]">
-    <h4 className="font-black text-5xl tracking-tight leading-tight">
+    {/* TTS Button - Pojok Kanan Atas */}
+    <button 
+        onClick={(e) => { e.stopPropagation(); speak(currentCard.word); }} 
+        className="absolute top-6 right-6 p-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-all"
+    >
+        <Volume2 size={20} />
+    </button>
+    
+    <h4 className="font-black text-4xl tracking-tight leading-tight break-words max-w-full px-4">
         {flipMode === 'JPtoID' ? currentCard.meaning : currentCard.word}
     </h4>
-
-    {/* TAMBAH CONTOH KALIMAT */}
+    
     {flipMode === 'JPtoID' && currentCard.example_indo && (
-        <p className="mt-6 text-sm font-bold text-white/80 italic leading-relaxed">
+        <p className="mt-6 text-sm font-bold text-white/80 italic leading-relaxed break-words max-w-full px-4">
             "{currentCard.example_indo}"
         </p>
     )}
     {flipMode === 'IDtoJP' && currentCard.example_japanese && (
-        <p className="mt-6 text-sm font-bold text-white/80 italic leading-relaxed">
+        <p className="mt-6 text-sm font-bold text-white/80 italic leading-relaxed break-words max-w-full px-4">
             "{currentCard.example_japanese}"
         </p>
     )}
-    
-    <button onClick={(e) => { e.stopPropagation(); speak(currentCard.word); }} className="mt-10 p-5 bg-white/20 rounded-full hover:bg-white/30 transition-all">
-        <Volume2 size={32} />
-    </button>
 </div>
+
+{/* Tombol Review */}
+<button 
+    onClick={() => setShowReview(!showReview)} 
+    className="w-full py-4 bg-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+>
+    <CheckCircle2 size={18} />
+    {showReview ? 'SEMBUNYIKAN REVIEW' : '📊 LIHAT REVIEW HAFALAN'}
+</button>
+
+{/* Review Section */}
+{showReview && (
+    <div className="bg-white p-8 rounded-[48px] border border-gray-100 space-y-6 slide-up">
+        <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-black text-gray-900">Review Hafalan Vocab</h3>
+            <div className="text-right">
+                <p className="text-4xl font-black text-indigo-600">{masteredPercentage}%</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tingkat Hafalan</p>
+            </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Sudah Dihafal */}
+            <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
+                <div className="flex items-center gap-2 mb-4">
+                    <CheckCircle2 className="text-emerald-500" size={20} />
+                    <h4 className="font-black text-emerald-700">SUDAH DIHAFAL ({masteredVocab.length})</h4>
+                </div>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {masteredVocab.length > 0 ? (
+                        masteredVocab.map(v => (
+                            <div key={v.id} className="bg-white p-3 rounded-xl">
+                                <p className="text-sm font-black text-gray-900">{v.word}</p>
+                                <p className="text-xs text-gray-500 italic">"{v.meaning}"</p>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-emerald-400 text-xs italic">Belum ada vocab yang dihafal</p>
+                    )}
+                </div>
+            </div>
+            
+            {/* Belum Dihafal */}
+            <div className="bg-rose-50 p-6 rounded-3xl border border-rose-100">
+                <div className="flex items-center gap-2 mb-4">
+                    <AlertCircle className="text-rose-500" size={20} />
+                    <h4 className="font-black text-rose-700">PERLU DIULANG ({notMasteredVocab.length})</h4>
+                </div>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {notMasteredVocab.length > 0 ? (
+                        notMasteredVocab.map(v => (
+                            <div key={v.id} className="bg-white p-3 rounded-xl">
+                                <p className="text-sm font-black text-gray-900">{v.word}</p>
+                                <p className="text-xs text-gray-500 italic">"{v.meaning}"</p>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-rose-400 text-xs italic">Semua vocab sudah dihafal! 🎉</p>
+                    )}
+                </div>
+            </div>
+        </div>
+    </div>
+)}
+                                    
                                 </div>
                             </div>
                             <div className="flex items-center gap-10">
                                 <button onClick={() => setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length)} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"><ChevronLeft size={32}/></button>
-                                <div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
-                                    <span className="text-white font-black text-xl">{flashIndex + 1} <span className="opacity-30 text-sm">/ {filteredList.length}</span></span>
-                                </div>
-                                <button onClick={() => setFlashIndex((flashIndex + 1) % filteredList.length)} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"><ChevronRight size={32}/></button>
-                            </div>
+
+{/* TAMBAH TOMBOL MASTERED */}
+    <button 
+        onClick={async () => {
+            const updated = vocabList.map(v => v.id === currentCard.id ? {...v, mastered: !v.mastered} : v);
+            setVocabList(updated);
+            const updatedVocab = updated.find(v => v.id === currentCard.id);
+            if (updatedVocab) await saveVocab(updatedVocab);
+        }} 
+        className={`p-5 rounded-3xl transition-all ${currentCard.mastered ? 'bg-emerald-500 text-white shadow-lg' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
+        title="Tandai Sudah Hafal"
+    >
+        <CheckCircle2 size={32} />
+    </button>
+    
+    <div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
+        <span className="text-white font-black text-xl">{flashIndex + 1} <span className="opacity-30 text-sm">/ {filteredList.length}</span></span>
+    </div>
+    <button onClick={() => setFlashIndex((flashIndex + 1) % filteredList.length)} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"><ChevronRight size={32}/></button>
+</div>
                         </div>
                     ) : (
                         <div className="text-center p-24 bg-white/5 rounded-[80px] border border-white/10 backdrop-blur-lg">
