@@ -8,6 +8,8 @@ interface Vocab {
     word: string;
     meaning: string;
     category: string;
+    example_japanese?: string;  // TAMBAH INI
+    example_indo?: string;       // TAMBAH INI
 }
 
 interface Props {
@@ -19,6 +21,8 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [newWord, setNewWord] = useState('');
     const [newMeaning, setNewMeaning] = useState('');
     const [newCategory, setNewCategory] = useState('Umum');
+    const [newExampleJapanese, setNewExampleJapanese] = useState('');
+    const [newExampleIndo, setNewExampleIndo] = useState('');
     const [editingId, setEditingId] = useState<number | null>(null);
     const formRef = useRef<HTMLDivElement>(null);
 
@@ -37,21 +41,30 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
         loadVocab();
     }, []);
 
-    const loadVocab = async () => {
-        const { data } = await supabase.from('vocab').select('*').order('created_at', { ascending: true });
-        if (data) {
-            setVocabList(data.map((v: any) => ({
-                id: v.id,
-                word: v.word,
-                meaning: v.meaning,
-                category: v.category
-            })));
-        }
-    };
+const loadVocab = async () => {
+    const { data } = await supabase.from('vocab').select('*').order('created_at', { ascending: true });
+    if (data) {
+        setVocabList(data.map((v: any) => ({
+            id: v.id,
+            word: v.word,
+            meaning: v.meaning,
+            category: v.category,
+            example_japanese: v.example_japanese || '',  // TAMBAH INI
+            example_indo: v.example_indo || ''            // TAMBAH INI
+        })));
+    }
+};
 
-    const saveVocab = async (v: Vocab) => {
-        await supabase.from('vocab').upsert(v);
-    };
+const saveVocab = async (v: Vocab) => {
+    await supabase.from('vocab').upsert({
+        id: v.id,
+        word: v.word,
+        meaning: v.meaning,
+        category: v.category,
+        example_japanese: v.example_japanese,  // TAMBAH INI
+        example_indo: v.example_indo            // TAMBAH INI
+    });
+};
 
     const deleteVocab = async (id: number) => {
         await supabase.from('vocab').delete().eq('id', id);
@@ -158,16 +171,34 @@ const filteredList = useMemo(() => {
 const handleSaveVocab = async () => {
     if (!newWord.trim() || !newMeaning.trim()) return;
     if (editingId !== null) {
-        const updated = { id: editingId, word: newWord, meaning: newMeaning, category: newCategory || 'Umum' };
+        const updated = { 
+            id: editingId, 
+            word: newWord, 
+            meaning: newMeaning, 
+            category: newCategory || 'Umum',
+            example_japanese: newExampleJapanese,  // TAMBAH INI
+            example_indo: newExampleIndo            // TAMBAH INI
+        };
         await saveVocab(updated);
         setVocabList(vocabList.map(v => v.id === editingId ? updated : v));
         setEditingId(null);
     } else {
-        const newVocab = { id: Date.now(), word: newWord, meaning: newMeaning, category: newCategory || 'Umum' };
+        const newVocab = { 
+            id: Date.now(), 
+            word: newWord, 
+            meaning: newMeaning, 
+            category: newCategory || 'Umum',
+            example_japanese: newExampleJapanese,  // TAMBAH INI
+            example_indo: newExampleIndo            // TAMBAH INI
+        };
         await saveVocab(newVocab);
         setVocabList([...vocabList, newVocab]);
     }
-    setNewWord(''); setNewMeaning('');
+    // Reset semua field
+    setNewWord(''); 
+    setNewMeaning(''); 
+    setNewExampleJapanese('');  // TAMBAH INI
+    setNewExampleIndo('');      // TAMBAH INI
 };
 
     const speak = (text: string) => {
@@ -233,6 +264,21 @@ const handleSaveVocab = async () => {
                         <input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Kategori (Umum, Kerja, Medis...)" className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner" />
                         <input value={newWord} onChange={(e) => setNewWord(e.target.value)} placeholder="Kata Jepang" className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner" />
                         <input value={newMeaning} onChange={(e) => setNewMeaning(e.target.value)} placeholder="Arti" className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner" />
+
+{/* TAMBAH 2 TEXTAREA INI */}
+<textarea 
+    value={newExampleJapanese} 
+    onChange={(e) => setNewExampleJapanese(e.target.value)} 
+    placeholder="Contoh kalimat Jepang (opsional)" 
+    className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner resize-none h-20" 
+/>
+<textarea 
+    value={newExampleIndo} 
+    onChange={(e) => setNewExampleIndo(e.target.value)} 
+    placeholder="Contoh kalimat Indonesia (opsional)" 
+    className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner resize-none h-20" 
+/>
+                        
                         <button onClick={handleSaveVocab} className={`w-full p-5 rounded-2xl text-white font-black text-[10px] tracking-widest transition-all active:scale-95 ${editingId ? 'bg-emerald-500' : 'bg-indigo-600'}`}>
                             {editingId ? 'SIMPAN PERUBAHAN' : 'TAMBAH KATA'}
                         </button>
@@ -282,7 +328,14 @@ const handleSaveVocab = async () => {
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <button onClick={() => speak(item.word)} className="p-3 text-indigo-300 hover:text-indigo-600"><Volume2 size={16} /></button>
-                                    <button onClick={() => { setEditingId(item.id); setNewWord(item.word); setNewMeaning(item.meaning); setNewCategory(item.category); }} className="p-3 text-gray-300 hover:text-gray-900"><Edit3 size={16} /></button>
+                                    <button onClick={() => { 
+    setEditingId(item.id); 
+    setNewWord(item.word); 
+    setNewMeaning(item.meaning); 
+    setNewCategory(item.category);
+    setNewExampleJapanese(item.example_japanese || '');  // TAMBAH INI
+    setNewExampleIndo(item.example_indo || '');          // TAMBAH INI
+}} className="p-3 text-gray-300 hover:text-gray-900"><Edit3 size={16} /></button>
                                     <button onClick={async () => {
     await deleteVocab(item.id);
     setVocabList(vocabList.filter(v => v.id !== item.id));
@@ -314,12 +367,48 @@ const handleSaveVocab = async () => {
                                         <h4 className="font-black text-gray-900 text-6xl tracking-tight leading-tight">
                                             {flipMode === 'JPtoID' ? currentCard.word : currentCard.meaning}
                                         </h4>
+
+    {/* TAMBAH CONTOH KALIMAT */}
+    {flipMode === 'JPtoID' && currentCard.example_japanese && (
+        <p className="mt-6 text-sm font-bold text-gray-400 italic leading-relaxed">
+            "{currentCard.example_japanese}"
+        </p>
+    )}
+    {flipMode === 'IDtoJP' && currentCard.example_indo && (
+        <p className="mt-6 text-sm font-bold text-gray-400 italic leading-relaxed">
+            "{currentCard.example_indo}"
+        </p>
+    )}
+    
+    <p className="mt-12 text-indigo-300 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
+        <RotateCw size={16}/> Klik kartu untuk memutar
+    </p>
+</div>
+    
                                         <p className="mt-12 text-indigo-300 text-[10px] font-black uppercase tracking-widest flex items-center gap-3"><RotateCw size={16}/> Klik kartu untuk memutar</p>
                                     </div>
                                     <div className="absolute inset-0 backface-hidden my-rotate-y-180 bg-emerald-500 rounded-[64px] flex flex-col items-center justify-center p-12 text-center text-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]">
                                         <h4 className="font-black text-5xl tracking-tight leading-tight">
                                             {flipMode === 'JPtoID' ? currentCard.meaning : currentCard.word}
                                         </h4>
+
+   {/* TAMBAH CONTOH KALIMAT */}
+    {flipMode === 'JPtoID' && currentCard.example_indo && (
+        <p className="mt-6 text-sm font-bold text-white/80 italic leading-relaxed">
+            "{currentCard.example_indo}"
+        </p>
+    )}
+    {flipMode === 'IDtoJP' && currentCard.example_japanese && (
+        <p className="mt-6 text-sm font-bold text-white/80 italic leading-relaxed">
+            "{currentCard.example_japanese}"
+        </p>
+    )}
+    
+    <button onClick={(e) => { e.stopPropagation(); speak(currentCard.word); }} className="mt-10 p-5 bg-white/20 rounded-full hover:bg-white/30 transition-all">
+        <Volume2 size={32} />
+    </button>
+</div>
+                                        
                                         <button onClick={(e) => { e.stopPropagation(); speak(currentCard.word); }} className="mt-10 p-5 bg-white/20 rounded-full hover:bg-white/30 transition-all">
                                             <Volume2 size={32} />
                                         </button>
