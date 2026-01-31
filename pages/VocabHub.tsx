@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { supabase } from '../supabase';
-import { BrainCircuit, PlusCircle, Trash2, Languages, RotateCw, ChevronLeft, ChevronRight, Volume2, Edit3, X, GripVertical, Download, Upload, UserCircle, UserCircle2, ArrowLeftRight } from 'lucide-react';
+import { BrainCircuit, PlusCircle, Trash2, Languages, RotateCw, ChevronLeft, ChevronRight, Volume2, Edit3, X, GripVertical, Download, Upload, UserCircle, UserCircle2, ArrowLeftRight, Search } from 'lucide-react';
 
 interface Vocab {
     id: number;
@@ -31,6 +31,7 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [flipMode, setFlipMode] = useState<'JPtoID' | 'IDtoJP'>('JPtoID');
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
     const [draggedId, setDraggedId] = useState<number | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         loadVocab();
@@ -131,11 +132,23 @@ const importCsv = () => {
         return ['Semua', ...cats];
     }, [vocabList]);
 
-    const filteredList = useMemo(() => {
-        return selectedCategory === 'Semua' 
-            ? vocabList 
-            : vocabList.filter(v => v.category === selectedCategory);
-    }, [vocabList, selectedCategory]);
+const filteredList = useMemo(() => {
+    let filtered = selectedCategory === 'Semua' 
+        ? vocabList 
+        : vocabList.filter(v => v.category === selectedCategory);
+    
+    // Apply search filter
+    if (searchQuery) {
+        const search = searchQuery.toLowerCase();
+        filtered = filtered.filter(v => 
+            v.word.toLowerCase().includes(search) ||
+            v.meaning.toLowerCase().includes(search) ||
+            v.category.toLowerCase().includes(search)
+        );
+    }
+    
+    return filtered;
+}, [vocabList, selectedCategory, searchQuery]);
 
     useEffect(() => {
         setFlashIndex(0);
@@ -211,8 +224,8 @@ const handleSaveVocab = async () => {
     </div>
 </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-5 gap-10">
-                <div className="xl:col-span-2 bg-white p-8 md:p-10 rounded-[48px] border border-gray-100 space-y-8 shadow-sm flex flex-col h-[800px] slide-up">
+            <div className="space-y-10">
+                <div className="bg-white p-8 md:p-10 rounded-[48px] border border-gray-100 space-y-8 shadow-sm flex flex-col slide-up">
                     <h3 className="text-xl font-black text-indigo-600 flex items-center gap-3"><Languages /> Daftar Kotoba</h3>
                     
                     <div ref={formRef} className={`p-6 rounded-[35px] border-2 transition-all space-y-3 ${editingId ? 'bg-emerald-50 border-emerald-200' : 'bg-indigo-50/50 border-indigo-100'}`}>
@@ -235,7 +248,19 @@ const handleSaveVocab = async () => {
     </div>
 </div>
 
-<div className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-2">
+{/* Search Bar */}
+<div className="relative">
+    <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+    <input 
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="🔍 Cari kata atau arti..."
+        className="w-full pl-14 pr-6 py-4 bg-gray-50 rounded-[24px] font-bold text-xs outline-none border-2 border-transparent focus:border-indigo-200 focus:bg-white transition-all shadow-inner"
+    />
+</div>
+                    
+<div className="max-h-[400px] overflow-y-auto custom-scroll space-y-3 pr-2">
     {filteredList.map((item) => (
         <div 
             key={item.id} 
@@ -268,7 +293,7 @@ const handleSaveVocab = async () => {
                     </div>
                 </div>
 
-                <div className="xl:col-span-3 bg-indigo-600 p-8 md:p-14 rounded-[64px] shadow-2xl flex flex-col items-center justify-between h-[800px] relative overflow-hidden">
+                <div className="bg-indigo-600 p-8 md:p-14 rounded-[64px] shadow-2xl flex flex-col items-center justify-between h-[800px] relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent"></div>
                     
                     <div className="w-full flex justify-between items-center relative z-10">
