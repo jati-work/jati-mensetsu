@@ -48,7 +48,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isSupabaseConfigured }) => {
                         onClick={handleSubmit} 
                         className="w-full py-5 bg-indigo-600 text-white rounded-[32px] font-black text-lg shadow-xl hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-3"
                     >
-                        MASUK <ArrowRight size={20} />
+                        MASUK
                     </button>
                 </div>
             </div>
