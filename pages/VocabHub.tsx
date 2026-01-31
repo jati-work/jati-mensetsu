@@ -545,7 +545,7 @@ const masteredPercentage = filteredList.length > 0
 {/* Tombol Review */}
 <button 
     onClick={() => setShowReview(!showReview)} 
-    className="w-full py-4 bg-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+    className="w-full py-4 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center justify-center gap-2"
 >
     <CheckCircle2 size={18} />
     {showReview ? 'SEMBUNYIKAN REVIEW' : '📊 LIHAT REVIEW HAFALAN'}
