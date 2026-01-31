@@ -135,7 +135,7 @@ const handleDragEnd = () => setDraggedId(null);
     <GripVertical size={20} className="text-gray-200" />
     <button onClick={async () => {
                 {/* ... isi card ... */}
-                <button onClick={async () => {
+<button onClick={async () => {
 const updated = checklist.map(i => i.id === item.id ? {...i, isDone: !i.isDone} : i);
 setChecklist(updated);
 const updatedItem = updated.find(i => i.id === item.id);
