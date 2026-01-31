@@ -236,8 +236,6 @@ const handleSaveVocab = async () => {
 </div>
 
 <div className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-2">
-
-<div className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-2">
     {filteredList.map((item) => (
         <div 
             key={item.id} 
