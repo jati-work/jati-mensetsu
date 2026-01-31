@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../supabase';
-import { ClipboardList, CheckCircle2, RotateCcw, Square, Trash2, Edit3 } from 'lucide-react';
+import { ClipboardList, CheckCircle2, RotateCcw, Square, Trash2, Edit3, GripVertical } from 'lucide-react';
 
 interface Props {
     userName: string;
@@ -16,6 +16,7 @@ interface Props {
 
 const Dashboard: React.FC<Props> = ({ userName, roadmapSteps, setRoadmapSteps, targetDate, setTargetDate, certStatus, setCertStatus }) => {
     const [editingMetric, setEditingMetric] = useState<null | 'target' | 'cert'>(null);
+    const [draggedId, setDraggedId] = useState<number | null>(null);
 
     useEffect(() => {
         loadRoadmap();
@@ -77,6 +78,29 @@ const saveSettings = async () => {
     }
 };
 
+const handleDragStart = (id: number) => setDraggedId(id);
+
+const handleDragOver = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    if (draggedId === null || draggedId === targetId) return;
+    const newList = [...roadmapSteps];
+    const draggedIndex = newList.findIndex(s => s.id === draggedId);
+    const targetIndex = newList.findIndex(s => s.id === targetId);
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+        const item = newList[draggedIndex];
+        newList.splice(draggedIndex, 1);
+        newList.splice(targetIndex, 0, item);
+        setRoadmapSteps(newList);
+        
+        // Save all steps with updated order
+        newList.forEach(async (step, index) => {
+            await supabase.from('roadmap_steps').update({ order_index: index }).eq('id', step.id);
+        });
+    }
+};
+
+const handleDragEnd = () => setDraggedId(null);
+    
     // Readiness score based ONLY on Recruitment Journey
     const readinessScore = useMemo(() => {
         if (!roadmapSteps.length) return 0;
@@ -132,7 +156,17 @@ const saveSettings = async () => {
                 <h3 className="text-xl font-black mb-10 flex items-center gap-3"><ClipboardList className="text-indigo-600" /> Recruitment Journey</h3>
                 <div className="space-y-6">
                     {roadmapSteps.map(step => (
-                        <div key={step.id} className="flex items-center gap-6 group">
+                        <div 
+    key={step.id} 
+    draggable
+    onDragStart={() => handleDragStart(step.id)}
+    onDragOver={(e) => handleDragOver(e, step.id)}
+    onDragEnd={handleDragEnd}
+    className={`flex items-center gap-6 group cursor-grab active:cursor-grabbing transition-all ${
+        draggedId === step.id ? 'opacity-30 scale-95' : ''
+    }`}
+>
+                            <GripVertical size={24} className="text-gray-200" />
                             <div onClick={async () => {
     const updated = roadmapSteps.map(s => s.id === step.id ? {...s, status: s.status === 'done' ? 'ongoing' : s.status === 'ongoing' ? 'pending' : 'done'} : s);
     setRoadmapSteps(updated);
