@@ -82,15 +82,18 @@ const loadVocab = async () => {
 };
 
 const saveVocab = async (v: Vocab) => {
-    await supabase.from('vocab').upsert({
+    const { data, error } = await supabase.from('vocab').upsert({
         id: v.id,
         word: v.word,
         meaning: v.meaning,
         category: v.category,
-        example_japanese: v.example_japanese,  // TAMBAH INI
+        example_japanese: v.example_japanese,
         example_indo: v.example_indo,
-        mastered: v.mastered || false  // TAMBAH INI
-    });
+        mastered: v.mastered || false
+    }).select();
+    
+    if (error) console.error('Error saving vocab:', error);
+    return data ? data[0] : null;
 };
 
     const deleteVocab = async (id: number) => {
@@ -212,17 +215,17 @@ const handleSaveVocab = async () => {
         setVocabList(vocabList.map(v => v.id === editingId ? updated : v));
         setEditingId(null);
     } else {
-        const newVocab = { 
-            id: Date.now(), 
-            word: newWord, 
-            meaning: newMeaning, 
-            category: newCategory || 'Umum',
-            example_japanese: newExampleJapanese,  // TAMBAH INI
-            example_indo: newExampleIndo            // TAMBAH INI
-        };
-        await saveVocab(newVocab);
-        setVocabList([...vocabList, newVocab]);
-    }
+const newVocab = { 
+    word: newWord, 
+    meaning: newMeaning, 
+    category: newCategory || 'Umum',
+    example_japanese: newExampleJapanese,
+    example_indo: newExampleIndo
+};
+const savedVocab = await saveVocab(newVocab);
+if (savedVocab) {
+    setVocabList([...vocabList, savedVocab]);
+}
     // Reset semua field
     setNewWord(''); 
     setNewMeaning(''); 
