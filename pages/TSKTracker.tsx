@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabase';
-import { PlusCircle, Trash2, Wallet, MessageCircle, TrendingUp, RefreshCw, XCircle, Briefcase, Bell } from 'lucide-react';
+import { PlusCircle, Trash2, Wallet, MessageCircle, TrendingUp, RefreshCw, XCircle, Briefcase, Bell, GripVertical } from 'lucide-react';
 
 interface Round {
     id: number;
@@ -28,6 +28,7 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
     const [exchangeRate, setExchangeRate] = useState(105.5);
     const [lastFetch, setLastFetch] = useState<string>('Manual');
     const [isFetching, setIsFetching] = useState(false);
+    const [draggedId, setDraggedId] = useState<number | null>(null);
 
     useEffect(() => {
         loadTSK();
@@ -161,6 +162,30 @@ const handleAddTsk = async () => {
     setTskList([newTsk, ...tskList]);
 };
 
+const handleDragStart = (id: number) => {
+        setDraggedId(id);
+    };
+
+    const handleDragOver = (e: React.DragEvent, targetId: number) => {
+        e.preventDefault();
+        if (draggedId === null || draggedId === targetId) return;
+        
+        const newList = [...tskList];
+        const draggedIndex = newList.findIndex(t => t.id === draggedId);
+        const targetIndex = newList.findIndex(t => t.id === targetId);
+        
+        if (draggedIndex !== -1 && targetIndex !== -1) {
+            const item = newList[draggedIndex];
+            newList.splice(draggedIndex, 1);
+            newList.splice(targetIndex, 0, item);
+            setTskList(newList);
+        }
+    };
+
+    const handleDragEnd = () => {
+        setDraggedId(null);
+    };
+    
     return (
         <div className="space-y-10 fade-in pb-20 pt-10 md:pt-0">
             {/* Header & Kurs Section */}
@@ -208,7 +233,21 @@ const handleAddTsk = async () => {
                     </div>
                 )}
                 {tskList.map(tsk => (
-                    <div key={tsk.id} className="bg-white p-8 md:p-10 rounded-[56px] shadow-sm border border-gray-100 space-y-10 group relative slide-up">
+                    <div 
+    key={tsk.id} 
+    draggable
+    onDragStart={() => handleDragStart(tsk.id)}
+    onDragOver={(e) => handleDragOver(e, tsk.id)}
+    onDragEnd={handleDragEnd}
+    className={`bg-white p-8 md:p-10 rounded-[56px] shadow-sm border space-y-10 group relative slide-up cursor-move transition-all ${
+        draggedId === tsk.id ? 'opacity-50 scale-95 border-indigo-300' : 'border-gray-100'
+    }`}
+>
+                        {/* Drag Handle */}
+                        <div className="absolute -left-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <GripVertical size={24} className="text-gray-300" />
+                        </div>
+                        
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                             {/* Info Dasar */}
                             <div className="space-y-4">
