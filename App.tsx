@@ -169,42 +169,6 @@ const loadAllData = async () => {
     }
 };
 
-    // Auto-sync data - TANPA AUTH CHECK
-// ========================================
-// AUTO-SYNC DATA (useEffect yang BENAR)
-// ========================================
-useEffect(() => {
-    if (!isLoggedIn || !isSupabaseConfigured) return;
-    
-    const syncTimer = setTimeout(async () => {
-        setIsSyncing(true);
-        try {
-            // Sync user settings
-            await supabase.from('user_settings')
-                .upsert({
-                    user_id: 'default-user',
-                    user_name: userName,
-                    target_date: targetDate,
-                    cert_status: certStatus
-                });
-
-            // Sync doc notes
-            await supabase.from('doc_notes')
-                .upsert({
-                    user_id: 'default-user',
-                    content: docNotes
-                });
-
-        } catch (err) {
-            console.error("Sync Error:", err);
-        } finally {
-            setIsSyncing(false);
-        }
-    }, 3000);
-
-    return () => clearTimeout(syncTimer);
-}, [userName, targetDate, certStatus, docNotes, isLoggedIn, isSupabaseConfigured]);
-
 // ========================================
 // LOAD DATA AWAL (useEffect yang BENAR)
 // ========================================
