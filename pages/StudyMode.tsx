@@ -38,6 +38,7 @@ const StudyMode: React.FC<Props> = ({ questions, setQuestions, interviewPoints, 
     const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
     const [aiFeedback, setAiFeedback] = useState<string | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [showReview, setShowReview] = useState(false);
     const [showStrategy, setShowStrategy] = useState(false);
     
     // Feature States
@@ -242,6 +243,12 @@ useEffect(() => {
     const progressPercentage = filteredQuestions.length > 0 ? ((currentIndex + 1) / filteredQuestions.length) * 100 : 0;
     const currentQ = filteredQuestions[currentIndex];
 
+const masteredQuestions = filteredQuestions.filter(q => q.mastered);
+const notMasteredQuestions = filteredQuestions.filter(q => !q.mastered);
+const masteredPercentage = filteredQuestions.length > 0 
+    ? Math.round((masteredQuestions.length / filteredQuestions.length) * 100) 
+    : 0;
+    
     return (
         <div className="fade-in space-y-8 pb-20">
             <div className="flex justify-center">
@@ -457,8 +464,72 @@ useEffect(() => {
                                     ></div>
                                 </div>
                             </div>
+                            
+                            {/* ========== TOMBOL REVIEW - TAMBAHKAN DI SINI ========== */}
+                            <button 
+                                onClick={() => setShowReview(!showReview)} 
+                                className="w-full py-4 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center justify-center gap-2"
+                            >
+                                <CheckCircle2 size={18} />
+                                {showReview ? 'SEMBUNYIKAN REVIEW' : '📊 LIHAT REVIEW HASIL BELAJAR'}
+                            </button>
+                            
                         </div>
                     </div>
+                    
+                    {/* ========== SECTION REVIEW - TAMBAHKAN DI SINI ========== */}
+                    {showReview && (
+                        <div className="bg-white p-8 rounded-[48px] border border-gray-100 space-y-6 slide-up">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-2xl font-black text-gray-900">Review Hasil Belajar</h3>
+                                <div className="text-right">
+                                    <p className="text-4xl font-black text-indigo-600">{masteredPercentage}%</p>
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tingkat Penguasaan</p>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Sudah Dikuasai */}
+                                <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <CheckCircle2 className="text-emerald-500" size={20} />
+                                        <h4 className="font-black text-emerald-700">SUDAH DIKUASAI ({masteredQuestions.length})</h4>
+                                    </div>
+                                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                        {masteredQuestions.length > 0 ? (
+                                            masteredQuestions.map(q => (
+                                                <div key={q.id} className="bg-white p-3 rounded-xl text-xs font-bold text-gray-700">
+                                                    {q.question}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-emerald-400 text-xs italic">Belum ada soal yang dikuasai</p>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                {/* Belum Dikuasai */}
+                                <div className="bg-rose-50 p-6 rounded-3xl border border-rose-100">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <AlertCircle className="text-rose-500" size={20} />
+                                        <h4 className="font-black text-rose-700">PERLU LATIHAN LAGI ({notMasteredQuestions.length})</h4>
+                                    </div>
+                                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                        {notMasteredQuestions.length > 0 ? (
+                                            notMasteredQuestions.map(q => (
+                                                <div key={q.id} className="bg-white p-3 rounded-xl text-xs font-bold text-gray-700">
+                                                    {q.question}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-rose-400 text-xs italic">Semua soal sudah dikuasai! 🎉</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
                 </>
             )}
             <style>{`
