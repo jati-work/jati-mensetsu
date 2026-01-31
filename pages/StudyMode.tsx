@@ -51,13 +51,11 @@ const StudyMode: React.FC<Props> = ({ questions, setQuestions, interviewPoints, 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
 
-    useEffect(() => {
-    // Auto-save interview points
+useEffect(() => {
     const saveIP = setTimeout(async () => {
-        if (interviewPoints.length > 0) {
-            // Hapus semua data lama
+        // TAMBAH KONDISI INI - jangan save kalau data kosong atau cuma string kosong
+        if (interviewPoints.length > 0 && interviewPoints.some(p => (p.point || p).trim() !== '')) {
             await supabase.from('interview_points').delete().neq('id', 0);
-            // Insert data baru
             for (const point of interviewPoints) {
                 await supabase.from('interview_points').insert({
                     point: point.point || point
@@ -69,9 +67,9 @@ const StudyMode: React.FC<Props> = ({ questions, setQuestions, interviewPoints, 
 }, [interviewPoints]);
 
 useEffect(() => {
-    // Auto-save emergency phrases
     const saveEP = setTimeout(async () => {
-        if (emergencyPhrases.length > 0) {
+        // TAMBAH KONDISI INI
+        if (emergencyPhrases.length > 0 && emergencyPhrases.some(p => (p.phrase || p).trim() !== '')) {
             await supabase.from('emergency_phrases').delete().neq('id', 0);
             for (const phrase of emergencyPhrases) {
                 await supabase.from('emergency_phrases').insert({
@@ -85,9 +83,9 @@ useEffect(() => {
 }, [emergencyPhrases]);
 
 useEffect(() => {
-    // Auto-save study notes
     const saveSN = setTimeout(async () => {
-        if (studyNotes.length > 0) {
+        // TAMBAH KONDISI INI
+        if (studyNotes.length > 0 && studyNotes.some(n => (n.note || n).trim() !== '')) {
             await supabase.from('study_notes').delete().neq('id', 0);
             for (const note of studyNotes) {
                 await supabase.from('study_notes').insert({
@@ -98,6 +96,20 @@ useEffect(() => {
     }, 2000);
     return () => clearTimeout(saveSN);
 }, [studyNotes]);
+
+useEffect(() => {
+    // Auto-save questions mastered status
+    const saveQuestions = setTimeout(async () => {
+        if (questions.length > 0) {
+            for (const q of questions) {
+                await supabase.from('questions').update({ 
+                    mastered: q.mastered 
+                }).eq('id', q.id);
+            }
+        }
+    }, 2000);
+    return () => clearTimeout(saveQuestions);
+}, [questions]);
 
     useEffect(() => {
         const loadVoices = () => {
