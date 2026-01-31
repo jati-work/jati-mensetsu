@@ -94,7 +94,7 @@ const saveVocab = async (v: Vocab) => {
     
     if (error) console.error('Error saving vocab:', error);
     return data ? data[0] : null;
-};
+};  // ← PASTIKAN ADA TITIK KOMA INI!
 
     const deleteVocab = async (id: number) => {
         await supabase.from('vocab').delete().eq('id', id);
