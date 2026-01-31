@@ -214,25 +214,26 @@ const handleSaveVocab = async () => {
         await saveVocab(updated);
         setVocabList(vocabList.map(v => v.id === editingId ? updated : v));
         setEditingId(null);
-    } else {
-const newVocab = { 
-    word: newWord, 
-    meaning: newMeaning, 
-    category: newCategory || 'Umum',
-    example_japanese: newExampleJapanese,
-    example_indo: newExampleIndo
-};
-const savedVocab = await saveVocab(newVocab);
-if (savedVocab) {
-    setVocabList([...vocabList, savedVocab]);
-}
+} else {
+        const newVocab = { 
+            word: newWord, 
+            meaning: newMeaning, 
+            category: newCategory || 'Umum',
+            example_japanese: newExampleJapanese,
+            example_indo: newExampleIndo
+        };
+        const savedVocab = await saveVocab(newVocab);
+        if (savedVocab) {
+            setVocabList([...vocabList, savedVocab]);
+        }
+    }  // ← TAMBAH KURUNG KURAWAL INI!
+    
     // Reset semua field
     setNewWord(''); 
     setNewMeaning(''); 
-    setNewExampleJapanese('');  // TAMBAH INI
-    setNewExampleIndo('');      // TAMBAH INI
+    setNewExampleJapanese('');
+    setNewExampleIndo('');
 };
-
     const speak = (text: string) => {
         if (!text) return;
         if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
