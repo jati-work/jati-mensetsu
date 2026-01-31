@@ -225,13 +225,17 @@ const handleSaveVocab = async () => {
                         </button>
                     </div>
 
-                    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                        {categories.map(cat => (
-                            <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-50 text-gray-400'}`}>
-                                {cat}
-                            </button>
-                        ))}
-                    </div>
+<div className="relative">
+    <div className="flex gap-2 overflow-x-auto pb-2 scroll-smooth">
+        {categories.map(cat => (
+            <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-50 text-gray-400'}`}>
+                {cat}
+            </button>
+        ))}
+    </div>
+    {/* Gradient fade di kanan */}
+    <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
+</div>
 
 <div className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-2">
     {filteredList.map((item) => (
