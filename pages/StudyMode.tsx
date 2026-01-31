@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { supabase } from '../supabase';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Volume2, Mic, Square as SquareIcon, Sparkles, ChevronRight, ChevronLeft, Timer, Shuffle, Coffee, UserCircle2, UserCircle, RotateCcw, Target, AlertCircle, PlusCircle, Trash2, StickyNote, Eye, EyeOff, CheckCircle2, Layers } from 'lucide-react';
 
 interface Props {
