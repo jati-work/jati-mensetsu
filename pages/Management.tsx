@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
-import { Trash2, Edit3, X, Plus, GripVertical, Download, Upload, Clock, Languages } from 'lucide-react';
+import { Trash2, Edit3, X, Plus, GripVertical, Download, Upload, Clock, Languages, Search } from 'lucide-react';t';
 
 interface Question {
     id: number;
@@ -24,6 +24,7 @@ const Management: React.FC<Props> = ({ questions, setQuestions }) => {
     const [editForm, setEditForm] = useState<Question | null>(null);
     const [isAddingManual, setIsAddingManual] = useState(false);
     const [addForm, setAddForm] = useState<Omit<Question, 'id' | 'mastered'>>({
+    const [searchQuery, setSearchQuery] = useState('');
         category: '', question: '', answerJapanese: '', answerRomaji: '', answerIndo: '', timeLimit: 30
     });
 
@@ -125,8 +126,8 @@ const saveManual = async () => {
                 </div>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                <div className="lg:col-span-1 bg-white p-10 rounded-[48px] border border-gray-100 space-y-8 h-fit shadow-sm">
+            <div className="space-y-10">
+                <div className="bg-white p-10 rounded-[48px] border border-gray-100 space-y-8 shadow-sm">
                     <h3 className="text-xl font-black text-indigo-600 flex items-center gap-3"><Upload size={20}/> Impor Massal</h3>
                     <p className="text-[10px] text-gray-400 font-bold leading-relaxed">✨ Copy langsung dari Excel atau gunakan format: <code className="bg-gray-100 px-2 py-1 rounded">Kategori, Soal, Jepang, Romaji, Indo, Waktu</code></p>
                     <textarea value={bulkCsv} onChange={(e) => setBulkCsv(e.target.value)} className="w-full h-48 p-6 bg-gray-50 rounded-[30px] text-xs font-bold outline-none border-none resize-none shadow-inner" placeholder="📋 Copy paste langsung dari Excel atau ketik manual:
@@ -160,7 +161,7 @@ Format: Kategori, Soal, Jepang, Romaji, Indo, Waktu" />
 }} className="w-full py-6 bg-gray-900 text-white rounded-[28px] font-black uppercase shadow-xl hover:bg-black transition-all">TAMBAH KE DATABASE</button>
                 </div>
 
-                <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-6">
 <div className="flex justify-between items-center px-4">
     <h3 className="text-xl font-black">Pertanyaan ({questions.length})</h3>
     <div className="flex gap-4">
@@ -172,8 +173,22 @@ Format: Kategori, Soal, Jepang, Romaji, Indo, Waktu" />
         </button>
     </div>
 </div>
-                    
-                    <div className="space-y-6 max-h-[800px] overflow-y-auto custom-scroll pr-4">
+
+{/* Search Bar */}
+<div className="px-4">
+    <div className="relative">
+        <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+        <input 
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="🔍 Cari pertanyaan, kategori, atau jawaban..."
+            className="w-full pl-16 pr-6 py-5 bg-gray-50 rounded-[28px] font-bold text-sm outline-none border-2 border-transparent focus:border-indigo-200 focus:bg-white transition-all shadow-inner"
+        />
+    </div>
+</div>
+
+<div className="space-y-6 max-h-[800px] overflow-y-auto custom-scroll pr-4">
                         {isAddingManual && (
                             <div className="p-8 rounded-[45px] border-4 border-dashed border-indigo-100 bg-indigo-50/20 slide-up space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
@@ -191,7 +206,17 @@ Format: Kategori, Soal, Jepang, Romaji, Indo, Waktu" />
                             </div>
                         )}
 
-                        {questions.map((q) => (
+                        {questions.filter(q => {
+    if (!searchQuery) return true;
+    const search = searchQuery.toLowerCase();
+    return (
+        q.question.toLowerCase().includes(search) ||
+        q.category.toLowerCase().includes(search) ||
+        q.answerJapanese.toLowerCase().includes(search) ||
+        q.answerRomaji.toLowerCase().includes(search) ||
+        q.answerIndo.toLowerCase().includes(search)
+    );
+}).map((q) => (
                             <div 
                                 key={q.id} 
                                 draggable 
