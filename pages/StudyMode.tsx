@@ -272,7 +272,7 @@ useEffect(() => {
                                             const updated = interviewPoints.filter((_, idx) => idx !== i);
                                             setInterviewPoints(updated);
                                         }} 
-                                        className="absolute -top-2 -right-2 w-6 h-6 bg-rose-400 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-all opacity-0 group-hover:opacity-100"
+                                        className="absolute -top-3 -right-3 w-7 h-7 bg-rose-400 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md transition-all opacity-0 group-hover:opacity-100"
                                     >
                                         ✕
                                     </button>
@@ -303,7 +303,7 @@ useEffect(() => {
                 const updated = emergencyPhrases.filter((_, idx) => idx !== i);
                 setEmergencyPhrases(updated);
             }} 
-            className="absolute -top-2 -right-2 w-6 h-6 bg-rose-400 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-all opacity-0 group-hover:opacity-100"
+            className="absolute -top-3 -right-3 w-7 h-7 bg-rose-400 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md transition-all opacity-0 group-hover:opacity-100"
         >
             ✕
         </button>
@@ -334,7 +334,7 @@ useEffect(() => {
                 const updated = studyNotes.filter((_, idx) => idx !== i);
                 setStudyNotes(updated);
             }} 
-            className="absolute -top-2 -right-2 w-6 h-6 bg-rose-400 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-all opacity-0 group-hover:opacity-100"
+            className="absolute -top-3 -right-3 w-7 h-7 bg-rose-400 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md transition-all opacity-0 group-hover:opacity-100"
         >
             ✕
         </button>
