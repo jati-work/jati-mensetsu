@@ -218,35 +218,43 @@ const filteredList = useMemo(() => {
 
 const handleSaveVocab = async () => {
     if (!newWord.trim() || !newMeaning.trim()) return;
+    
     if (editingId !== null) {
-        const updated = { 
+        // EDIT MODE
+        const updated: Vocab = { 
             id: editingId, 
             word: newWord, 
             meaning: newMeaning, 
             category: newCategory || 'Umum',
-            example_japanese: newExampleJapanese,  // TAMBAH INI
-            example_indo: newExampleIndo            // TAMBAH INI
+            example_japanese: newExampleJapanese,
+            example_indo: newExampleIndo,
+            mastered: false  // Tambah ini
         };
-        await saveVocab(updated);
-        setVocabList(vocabList.map(v => v.id === editingId ? updated : v));
+        const savedVocab = await saveVocab(updated);
+        if (savedVocab) {
+            setVocabList(vocabList.map(v => v.id === editingId ? savedVocab : v));
+        }
         setEditingId(null);
-} else {
+    } else {
+        // ADD NEW MODE
         const newVocab = { 
             word: newWord, 
             meaning: newMeaning, 
             category: newCategory || 'Umum',
             example_japanese: newExampleJapanese,
-            example_indo: newExampleIndo
+            example_indo: newExampleIndo,
+            mastered: false  // Tambah ini
         };
-        const savedVocab = await saveVocab(newVocab);
+        const savedVocab = await saveVocab(newVocab as Vocab);
         if (savedVocab) {
             setVocabList([...vocabList, savedVocab]);
         }
-    }  // ← TAMBAH KURUNG KURAWAL INI!
+    }
     
     // Reset semua field
     setNewWord(''); 
     setNewMeaning(''); 
+    setNewCategory('Umum');
     setNewExampleJapanese('');
     setNewExampleIndo('');
 };
