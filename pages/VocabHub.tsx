@@ -82,19 +82,35 @@ const loadVocab = async () => {
 };
 
 const saveVocab = async (v: Vocab) => {
-    const { data, error } = await supabase.from('vocab').upsert({
-        id: v.id,
-        word: v.word,
-        meaning: v.meaning,
-        category: v.category,
-        example_japanese: v.example_japanese,
-        example_indo: v.example_indo,
-        mastered: v.mastered || false
-    }).select();
-    
-    if (error) console.error('Error saving vocab:', error);
-    return data ? data[0] : null;
-};  // ← PASTIKAN ADA TITIK KOMA INI!
+    // Kalau ada ID (edit), pakai update. Kalau nggak ada ID (baru), pakai insert
+    if (v.id) {
+        // UPDATE data yang sudah ada
+        const { data, error } = await supabase.from('vocab').update({
+            word: v.word,
+            meaning: v.meaning,
+            category: v.category,
+            example_japanese: v.example_japanese,
+            example_indo: v.example_indo,
+            mastered: v.mastered || false
+        }).eq('id', v.id).select();
+        
+        if (error) console.error('Error updating vocab:', error);
+        return data ? data[0] : null;
+    } else {
+        // INSERT data baru (tanpa ID, biar Supabase auto-generate)
+        const { data, error } = await supabase.from('vocab').insert({
+            word: v.word,
+            meaning: v.meaning,
+            category: v.category,
+            example_japanese: v.example_japanese,
+            example_indo: v.example_indo,
+            mastered: v.mastered || false
+        }).select();
+        
+        if (error) console.error('Error inserting vocab:', error);
+        return data ? data[0] : null;
+    }
+};
 
     const deleteVocab = async (id: number) => {
         await supabase.from('vocab').delete().eq('id', id);
@@ -304,10 +320,10 @@ const masteredPercentage = filteredList.length > 0
         ☕ SANTAI
     </button>
     <button 
-        onClick={() => { setStudyMode('exam'); setTimeLeft(15); setIsTimerRunning(true); }} 
+        onClick={() => { setStudyMode('exam'); setTimeLeft(10); setIsTimerRunning(true); }} 
         className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'exam' ? 'bg-rose-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
     >
-        ⏱️ UJIAN (15s)
+        ⏱️ UJIAN (10s)
     </button>
     <button 
         onClick={() => { setStudyMode('random'); setFlashIndex(Math.floor(Math.random() * filteredList.length)); }} 
