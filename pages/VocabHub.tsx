@@ -233,9 +233,6 @@ const handleSaveVocab = async () => {
             </button>
         ))}
     </div>
-    {/* Gradient fade di kanan */}
-    <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
-</div>
 
 <div className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-2">
     {filteredList.map((item) => (
