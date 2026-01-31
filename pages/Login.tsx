@@ -29,7 +29,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isSupabaseConfigured }) => {
                 </div>
 
                 <div className={`mx-auto flex items-center justify-center gap-2 px-4 py-2 rounded-full border w-fit ${isSupabaseConfigured ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
-                    {isSupabaseConfigured ? <Cloud size={14} className="text-emerald-500"/> : <CloudOff size={14} className="text-rose-400"/>}
+                    {isSupabaseConfigured ? <className="text-emerald-500"/> : <className="text-rose-400"/>}
                     <span className={`text-[9px] font-black uppercase tracking-tighter ${isSupabaseConfigured ? 'text-emerald-600' : 'text-rose-500'}`}>
                         {isSupabaseConfigured ? 'Connected' : 'Local Mode'}
                     </span>
