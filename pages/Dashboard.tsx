@@ -122,8 +122,8 @@ const saveSettings = async () => {
 />
                     ) : <p className="text-3xl font-black text-emerald-900">{certStatus} <Edit3 size={14} className="inline opacity-20 group-hover:opacity-100" /></p>}
                 </div>
-<div className="bg-indigo-600 p-8 rounded-[40px] text-white shadow-xl flex flex-col justify-center items-center">
-    <h4 className="text-indigo-200 text-[10px] font-black uppercase tracking-widest mb-2">Readiness</h4>
+<div className="bg-indigo-600 p-8 rounded-[40px] text-white shadow-xl">
+    <h4 className="text-indigo-200 text-[10px] font-black uppercase tracking-widest mb-4">Readiness</h4>
     <p className="text-3xl font-black">{readinessScore}%</p>
 </div>
             </div>
