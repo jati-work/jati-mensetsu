@@ -257,8 +257,29 @@ useEffect(() => {
                             <h3 className="text-xl font-black text-gray-900 flex items-center gap-3"><Target size={20} /> POIN UTAMA</h3>
                         </div>
                         <div className="space-y-3">
-                            {interviewPoints.map((point, i) => (
-                                <div key={i} className="flex gap-3 group">
+{interviewPoints.map((point, i) => (
+    <div key={i} className="relative group">
+        <div className="flex gap-3">
+            <input value={point} onChange={(e) => {
+                const newPoints = [...interviewPoints];
+                newPoints[i] = e.target.value;
+                setInterviewPoints(newPoints);
+            }} placeholder="Poin penting..." className="flex-1 text-sm font-black text-gray-900 bg-white/20 p-4 rounded-xl border border-white/30 outline-none" />
+        </div>
+        
+        {/* Tombol delete */}
+        <button 
+            onClick={() => {
+                const updated = interviewPoints.filter((_, idx) => idx !== i);
+                setInterviewPoints(updated);
+            }} 
+            className="absolute -top-2 -right-2 w-6 h-6 bg-rose-400 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-all opacity-0 group-hover:opacity-100"
+        >
+            ✕
+        </button>
+    </div>
+))}
+                                      
                                     <input value={point} onChange={(e) => {
                                         const newPoints = [...interviewPoints];
                                         newPoints[i] = e.target.value;
@@ -275,15 +296,29 @@ useEffect(() => {
                             <h3 className="text-xl font-black text-gray-900 flex items-center gap-3"><AlertCircle size={20} /> KATA DARURAT</h3>
                         </div>
                         <div className="space-y-3">
-                            {emergencyPhrases.map((phrase, i) => (
-                                <div key={i} className="flex gap-3 group">
-                                    <textarea value={phrase} onChange={(e) => {
-                                        const newPhrases = [...emergencyPhrases];
-                                        newPhrases[i] = e.target.value;
-                                        setEmergencyPhrases(newPhrases);
-                                    }} placeholder="Frasa penyelamat..." className="flex-1 text-sm font-black text-gray-900 bg-white/20 p-4 rounded-xl border border-white/30 outline-none resize-none h-20" />
-                                </div>
-                            ))}
+{emergencyPhrases.map((phrase, i) => (
+    <div key={i} className="relative group">
+        <div className="flex gap-3">
+            <textarea value={phrase} onChange={(e) => {
+                const newPhrases = [...emergencyPhrases];
+                newPhrases[i] = e.target.value;
+                setEmergencyPhrases(newPhrases);
+            }} placeholder="Frasa penyelamat..." className="flex-1 text-sm font-black text-gray-900 bg-white/20 p-4 rounded-xl border border-white/30 outline-none resize-none h-20" />
+        </div>
+        
+        {/* Tombol delete */}
+        <button 
+            onClick={() => {
+                const updated = emergencyPhrases.filter((_, idx) => idx !== i);
+                setEmergencyPhrases(updated);
+            }} 
+            className="absolute -top-2 -right-2 w-6 h-6 bg-rose-400 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-all opacity-0 group-hover:opacity-100"
+        >
+            ✕
+        </button>
+    </div>
+))}
+            
                             <button onClick={() => setEmergencyPhrases([...emergencyPhrases, ""])} className="w-full p-3 bg-white/40 rounded-xl flex justify-center"><PlusCircle size={20}/></button>
                         </div>
                     </div>
@@ -293,15 +328,29 @@ useEffect(() => {
                             <h3 className="text-xl font-black text-gray-900 flex items-center gap-3"><StickyNote size={20} /> CATATAN LAIN</h3>
                         </div>
                         <div className="space-y-3">
-                            {studyNotes.map((note, i) => (
-                                <div key={i} className="flex gap-3 group">
-                                    <input value={note} onChange={(e) => {
-                                        const newNotes = [...studyNotes];
-                                        newNotes[i] = e.target.value;
-                                        setStudyNotes(newNotes);
-                                    }} placeholder="Catatan belajar..." className="flex-1 text-sm font-black text-gray-900 bg-white/20 p-4 rounded-xl border border-white/30 outline-none" />
-                                </div>
-                            ))}
+{studyNotes.map((note, i) => (
+    <div key={i} className="relative group">
+        <div className="flex gap-3">
+            <input value={note} onChange={(e) => {
+                const newNotes = [...studyNotes];
+                newNotes[i] = e.target.value;
+                setStudyNotes(newNotes);
+            }} placeholder="Catatan belajar..." className="flex-1 text-sm font-black text-gray-900 bg-white/20 p-4 rounded-xl border border-white/30 outline-none" />
+        </div>
+        
+        {/* Tombol delete */}
+        <button 
+            onClick={() => {
+                const updated = studyNotes.filter((_, idx) => idx !== i);
+                setStudyNotes(updated);
+            }} 
+            className="absolute -top-2 -right-2 w-6 h-6 bg-rose-400 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-all opacity-0 group-hover:opacity-100"
+        >
+            ✕
+        </button>
+    </div>
+))}
+    
                             <button onClick={() => setStudyNotes([...studyNotes, ""])} className="w-full p-3 bg-white/40 rounded-xl flex justify-center"><PlusCircle size={20}/></button>
                         </div>
                     </div>
