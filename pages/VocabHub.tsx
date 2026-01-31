@@ -81,7 +81,7 @@ const loadVocab = async () => {
     }
 };
 
-const saveVocab = async (v: Partial<Vocab> & { word: string; meaning: string; category: string }) => {
+const saveVocab = async (v: any) => {
     // Kalau ada ID (edit), pakai update. Kalau nggak ada ID (baru), pakai insert
     if (v.id) {
         // UPDATE data yang sudah ada
