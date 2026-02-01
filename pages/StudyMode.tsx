@@ -115,30 +115,41 @@ useEffect(() => {
             setTimeLeft(prev => {
                 const newTime = prev - 1;
                 
-                // Sound effect
+                // Sound effect dengan delay biar animasi keliatan dulu
                 if (newTime <= 5 && newTime >= 1) {
-                    playBeep(800, 100); // Beep dari 5 sampai 1
+                    setTimeout(() => playBeep(800, 100), 200); // Delay 200ms
+                } else if (newTime === 0) {
+                    setTimeout(() => playBeep(400, 500), 200); // Delay 200ms
                 }
                 
                 return newTime;
             });
         }, 1000);
-    } else if (timeLeft === 0 && isTimerRunning) {
-        // Play buzzer pas 0
-        playBeep(400, 500);
+} else if (timeLeft === 0 && isTimerRunning) {
+    // Play buzzer pas 0
+    playBeep(400, 500);
+    
+    // Delay 800ms biar user liat angka 0 dulu
+    setTimeout(() => {
+        setIsTimerRunning(false);
         
-        // Delay 500ms biar user liat angka 0 dulu, baru pindah
-        setTimeout(() => {
-            setIsTimerRunning(false);
-            
-            // Auto next card setelah timer habis
-            if (mode === 'random' || mode === 'examRandom') {
-                setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
-            } else {
-                setCurrentIndex((currentIndex + 1) % filteredQuestions.length);
-            }
-        }, 500);
-    }
+        // Cek apakah ini kartu terakhir
+        if (currentIndex === filteredQuestions.length - 1) {
+            alert('🎉 Yeayy! Kamu sudah menyelesaikan semua soal!');
+            setReviewType(null);
+            setSelectedCategory('Semua');
+            setCurrentIndex(0);
+            return;
+        }
+        
+        // Auto next card setelah timer habis
+        if (mode === 'random' || mode === 'examRandom') {
+            setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
+        } else {
+            setCurrentIndex(currentIndex + 1); // Hapus % filteredQuestions.length biar gak loop
+        }
+    }, 800);
+}
     return () => clearInterval(timer);
 }, [isTimerRunning, timeLeft, currentIndex, filteredQuestions.length, mode]);
 
@@ -223,7 +234,6 @@ if (epData && epData.length > 0) {
         } else if (timeLeft === 0 && isTimerRunning) {
             setIsTimerRunning(false);
             if (isRecording) stopRecordingProcess();
-            setShowAnswer(true);
         }
         return () => clearInterval(timer);
     }, [isTimerRunning, timeLeft, isRecording]);
@@ -334,10 +344,19 @@ const startReview = (type: 'mastered' | 'needsReview') => {
     };
 
 const nextQuestion = () => {
+    // Cek apakah ini kartu terakhir
+    if (currentIndex === filteredQuestions.length - 1) {
+        alert('🎉 Yeayy! Kamu sudah menyelesaikan semua soal!');
+        setReviewType(null); // Reset review mode
+        setSelectedCategory('Semua'); // Kembali ke semua kategori
+        setCurrentIndex(0); // Reset ke awal
+        return;
+    }
+    
     if (mode === 'random' || mode === 'examRandom') {
         setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
     } else {
-        setCurrentIndex((currentIndex + 1) % filteredQuestions.length);
+        setCurrentIndex(currentIndex + 1); // Gak pakai modulo biar gak loop
     }
     setShowAnswer(false);
     setAiFeedback(null);
@@ -345,21 +364,7 @@ const nextQuestion = () => {
     
     // Reset timer untuk soal berikutnya
     if ((mode === 'exam' || mode === 'examRandom') && filteredQuestions[currentIndex + 1]) {
-        setTimeLeft(filteredQuestions[(currentIndex + 1) % filteredQuestions.length].timeLimit);
-        setIsTimerRunning(true);
-    }
-};
-
-const prevQuestion = () => {
-    setCurrentIndex((currentIndex - 1 + filteredQuestions.length) % filteredQuestions.length);
-    setShowAnswer(false);
-    setAiFeedback(null);
-    setRecordedAudioUrl(null);
-    
-    // Reset timer untuk soal sebelumnya
-    if (mode === 'exam' || mode === 'examRandom') {
-        const prevIdx = (currentIndex - 1 + filteredQuestions.length) % filteredQuestions.length;
-        setTimeLeft(filteredQuestions[prevIdx].timeLimit);
+        setTimeLeft(filteredQuestions[currentIndex + 1].timeLimit);
         setIsTimerRunning(true);
     }
 };
