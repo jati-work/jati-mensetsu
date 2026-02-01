@@ -1044,16 +1044,26 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     </div>
 )}
                                     
-                            <div className="flex items-center gap-10">
-                                <button onClick={() => setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length)} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"></div>  // Counter
+<div className="flex items-center gap-10">
+    <button 
+        onClick={() => setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length)} 
+        className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"
+    >
+        <ChevronLeft size={32} />
+    </button>
     
-    {/* TARUH KODE BARU DI SINI */}
     {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length ? (
-        <button onClick={resetQuiz} ...>
+        <button 
+            onClick={resetQuiz} 
+            className="p-5 bg-emerald-500 text-white rounded-3xl hover:bg-emerald-600 transition-all"
+        >
             <RotateCw size={32} />
         </button>
     ) : (
-        <button onClick={nextQuestion} ...>
+        <button 
+            onClick={nextQuestion} 
+            className="p-5 bg-white text-indigo-600 rounded-3xl hover:bg-indigo-50 transition-all"
+        >
             <ChevronRight size={32} />
         </button>
     )}
