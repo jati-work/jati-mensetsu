@@ -19,6 +19,7 @@ const StudyMode: React.FC<Props> = ({ questions, setQuestions, interviewPoints, 
     // Selection States
     const [selectedCategory, setSelectedCategory] = useState('Semua');
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [reviewType, setReviewType] = useState<'mastered' | 'needsReview' | null>(null);
 
     // Filter Logic
 const filteredQuestions = useMemo(() => {
@@ -49,7 +50,6 @@ const filteredQuestions = useMemo(() => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [showReview, setShowReview] = useState(false);
     const [showStrategy, setShowStrategy] = useState(false);
-    const [reviewType, setReviewType] = useState<'mastered' | 'needsReview' | null>(null);
     
     // Feature States
     const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
