@@ -572,13 +572,22 @@ const masteredPercentage = filteredQuestions.length > 0
                                 </div>
                             </div>
 
-                            {reviewType && (
-    <button 
-        onClick={() => setReviewType(null)} 
-        className="w-full py-4 bg-gray-100 text-gray-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
-    >
-        ← KEMBALI KE SEMUA SOAL
-    </button>
+{/* Indikator Mode Review */}
+{reviewType && (
+    <div className="bg-white p-4 rounded-3xl border-2 border-indigo-200 flex items-center justify-between">
+        <div>
+            <p className="text-sm font-bold text-gray-500">Mode Review Aktif:</p>
+            <p className="text-lg font-black text-indigo-600">
+                {reviewType === 'mastered' ? '✅ Sudah Dikuasai' : '🔄 Perlu Diulang'}
+            </p>
+        </div>
+        <button 
+            onClick={() => setReviewType(null)}
+            className="px-4 py-2 bg-rose-500 text-white rounded-xl font-bold text-xs hover:bg-rose-600 transition-all"
+        >
+            ✕ Keluar Mode Review
+        </button>
+    </div>
 )}
                             
                             {/* ========== TOMBOL REVIEW - TAMBAHKAN DI SINI ========== */}
