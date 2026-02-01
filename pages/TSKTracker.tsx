@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabase';
-import { PlusCircle, Trash2, Wallet, MessageCircle, TrendingUp, RefreshCw, XCircle, Briefcase, Bell, GripVertical } from 'lucide-react';
+import { PlusCircle, Trash2, Wallet, MessageCircle, TrendingUp, RefreshCw, XCircle, Briefcase, Bell, GripVertical, Search } from 'lucide-react';
 
 interface Round {
     id: number;
@@ -29,6 +29,7 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
     const [lastFetch, setLastFetch] = useState<string>('Manual');
     const [isFetching, setIsFetching] = useState(false);
     const [draggedId, setDraggedId] = useState<number | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const handleDragStart = (id: number) => setDraggedId(id);
 
@@ -187,30 +188,6 @@ const handleAddTsk = async () => {
     await saveTSK(newTsk);
     setTskList([newTsk, ...tskList]);
 };
-
-const handleDragStart = (id: number) => {
-        setDraggedId(id);
-    };
-
-    const handleDragOver = (e: React.DragEvent, targetId: number) => {
-        e.preventDefault();
-        if (draggedId === null || draggedId === targetId) return;
-        
-        const newList = [...tskList];
-        const draggedIndex = newList.findIndex(t => t.id === draggedId);
-        const targetIndex = newList.findIndex(t => t.id === targetId);
-        
-        if (draggedIndex !== -1 && targetIndex !== -1) {
-            const item = newList[draggedIndex];
-            newList.splice(draggedIndex, 1);
-            newList.splice(targetIndex, 0, item);
-            setTskList(newList);
-        }
-    };
-
-    const handleDragEnd = () => {
-        setDraggedId(null);
-    };
     
     return (
         <div className="space-y-10 fade-in pb-20 pt-10 md:pt-0">
@@ -238,6 +215,21 @@ const handleDragStart = (id: number) => {
                 </div>
             </div>
 
+            {/* Search Bar */}
+            <div className="bg-white p-6 rounded-[40px] border border-gray-100 shadow-sm">
+                <div className="relative">
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
+                    <input 
+                        type="text" 
+                        value={searchQuery} 
+                        onChange={(e) => setSearchQuery(e.target.value)} 
+                        placeholder="Cari TSK berdasarkan nama, status, catatan..." 
+                        className="w-full pl-16 pr-6 py-4 bg-gray-50 rounded-3xl font-bold text-sm outline-none focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all"
+                    />
+                </div>
+            </div>
+
+            
             {/* Notification Banner */}
             {nextInterview && (
                 <div className="bg-rose-50 border-2 border-rose-100 p-8 rounded-[48px] flex items-center gap-8 animate-in slide-in-from-top duration-500 shadow-sm">
@@ -258,7 +250,16 @@ const handleDragStart = (id: number) => {
                         <p className="text-gray-300 text-xs mt-1">Klik tombol di atas untuk mulai memantau TSK.</p>
                     </div>
                 )}
-                {tskList.map(tsk => (
+                {tskList.filter(tsk => {
+    if (!searchQuery) return true;
+    const search = searchQuery.toLowerCase();
+    return (
+        tsk.name.toLowerCase().includes(search) ||
+        tsk.status.toLowerCase().includes(search) ||
+        tsk.notes.toLowerCase().includes(search) ||
+        tsk.retro.toLowerCase().includes(search)
+    );
+}).map(tsk => (
                     <div 
     key={tsk.id} 
     draggable
