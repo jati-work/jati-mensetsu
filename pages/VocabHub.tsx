@@ -484,18 +484,19 @@ const exportExcel = async () => {
 const handleSaveVocab = async () => {
     if (!newWord.trim() || !newMeaning.trim()) return;
     
-    // Cek duplikat berdasarkan word (case-insensitive & trim)
-    const normalizedNewWord = newWord.trim().toLowerCase();
-    
     if (editingId !== null) {
-        // EDIT MODE - cek duplikat kecuali diri sendiri
+        // EDIT MODE - cek duplikat SEMUA FIELD kecuali diri sendiri
         const duplicate = vocabList.find(v => 
             v.id !== editingId && 
-            v.word.trim().toLowerCase() === normalizedNewWord
+            v.word.trim().toLowerCase() === newWord.trim().toLowerCase() &&
+            v.meaning.trim().toLowerCase() === newMeaning.trim().toLowerCase() &&
+            v.category.trim().toLowerCase() === (newCategory || 'Umum').trim().toLowerCase() &&
+            (v.example_japanese || '').trim().toLowerCase() === (newExampleJapanese || '').trim().toLowerCase() &&
+            (v.example_indo || '').trim().toLowerCase() === (newExampleIndo || '').trim().toLowerCase()
         );
         
         if (duplicate) {
-            alert(`❌ Kata "${newWord}" sudah ada di database!\n\nKata yang sama: "${duplicate.word}"\nArti: "${duplicate.meaning}"\nKategori: ${duplicate.category}`);
+            alert(`❌ Data vocab ini sudah ada di database!\n\nKata: "${duplicate.word}"\nArti: "${duplicate.meaning}"\nKategori: ${duplicate.category}\n\nSemua field harus berbeda untuk menambah vocab baru.`);
             return;
         }
         
@@ -516,13 +517,17 @@ const handleSaveVocab = async () => {
         setLastEditedId(editingId);
         setEditingId(null);
     } else {
-        // ADD NEW MODE - cek duplikat
+        // ADD NEW MODE - cek duplikat SEMUA FIELD
         const duplicate = vocabList.find(v => 
-            v.word.trim().toLowerCase() === normalizedNewWord
+            v.word.trim().toLowerCase() === newWord.trim().toLowerCase() &&
+            v.meaning.trim().toLowerCase() === newMeaning.trim().toLowerCase() &&
+            v.category.trim().toLowerCase() === (newCategory || 'Umum').trim().toLowerCase() &&
+            (v.example_japanese || '').trim().toLowerCase() === (newExampleJapanese || '').trim().toLowerCase() &&
+            (v.example_indo || '').trim().toLowerCase() === (newExampleIndo || '').trim().toLowerCase()
         );
         
         if (duplicate) {
-            alert(`❌ Kata "${newWord}" sudah ada di database!\n\nKata yang sama: "${duplicate.word}"\nArti: "${duplicate.meaning}"\nKategori: ${duplicate.category}`);
+            alert(`❌ Data vocab ini sudah ada di database!\n\nKata: "${duplicate.word}"\nArti: "${duplicate.meaning}"\nKategori: ${duplicate.category}\n\nSemua field harus berbeda untuk menambah vocab baru.`);
             return;
         }
         
@@ -534,6 +539,20 @@ const handleSaveVocab = async () => {
             example_indo: newExampleIndo,
             mastered: false
         };
+        const savedVocab = await saveVocab(newVocab as Vocab);
+        if (savedVocab) {
+            setVocabList([...vocabList, savedVocab]);
+        }
+    }
+    
+    // Reset semua field
+    setNewWord(''); 
+    setNewMeaning('');
+    setNewCategory('');
+    setNewExampleJapanese('');
+    setNewExampleIndo('');
+};
+    
         const savedVocab = await saveVocab(newVocab as Vocab);
         if (savedVocab) {
             setVocabList([...vocabList, savedVocab]);
