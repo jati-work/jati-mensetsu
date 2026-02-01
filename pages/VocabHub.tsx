@@ -1045,13 +1045,12 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
                                 
 <div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
     <span className="text-white font-black text-xl">
-        {(studyMode === 'random' || studyMode === 'examRandom') ? answeredCount + 1 : flashIndex + 1}
+        {flashIndex + 1}
         <span className="opacity-30 text-sm"> / {filteredList.length}</span>
     </span>
 </div>
 <button onClick={() => {
     if (studyMode === 'random' || studyMode === 'examRandom') {
-        // Hitung sudah jawab berapa (termasuk yang sekarang)
         const currentAnswered = answeredCount + 1;
         
         if (currentAnswered >= filteredList.length) {
@@ -1059,7 +1058,7 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
             setAnsweredCount(0);
             setFlashIndex(Math.floor(Math.random() * filteredList.length));
         } else {
-            // Masih ada soal - lanjut ke random berikutnya
+            // Masih ada soal - update progress dan lanjut
             setAnsweredCount(currentAnswered);
             setFlashIndex(Math.floor(Math.random() * filteredList.length));
         }
@@ -1068,11 +1067,11 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     }
 }} 
 className={`p-5 rounded-3xl transition-all ${
-    (studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length
+    (studyMode === 'random' || studyMode === 'examRandom') && answeredCount + 1 >= filteredList.length
     ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
     : 'bg-white text-indigo-600 hover:bg-indigo-50'
 }`}>
-    {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length
+    {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount + 1 >= filteredList.length
         ? <RotateCw size={32}/> 
         : <ChevronRight size={32}/>
     }
