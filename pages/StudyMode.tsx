@@ -115,41 +115,38 @@ useEffect(() => {
             setTimeLeft(prev => {
                 const newTime = prev - 1;
                 
-                // Sound effect dengan delay biar animasi keliatan dulu
+                // Sound effect dengan delay lebih panjang biar animasi keliatan
                 if (newTime <= 5 && newTime >= 1) {
-                    setTimeout(() => playBeep(800, 100), 200); // Delay 200ms
+                    setTimeout(() => playBeep(800, 150), 400); // Delay 400ms, durasi 150ms
                 } else if (newTime === 0) {
-                    setTimeout(() => playBeep(400, 500), 200); // Delay 200ms
+                    setTimeout(() => playBeep(400, 600), 400); // Delay 400ms, durasi 600ms
                 }
                 
                 return newTime;
             });
         }, 1000);
-} else if (timeLeft === 0 && isTimerRunning) {
-    // Play buzzer pas 0
-    playBeep(400, 500);
-    
-    // Delay 800ms biar user liat angka 0 dulu
-    setTimeout(() => {
-        setIsTimerRunning(false);
-        
-        // Cek apakah ini kartu terakhir
-        if (currentIndex === filteredQuestions.length - 1) {
-            alert('🎉 Yeayy! Kamu sudah menyelesaikan semua soal!');
-            setReviewType(null);
-            setSelectedCategory('Semua');
-            setCurrentIndex(0);
-            return;
-        }
-        
-        // Auto next card setelah timer habis
-        if (mode === 'random' || mode === 'examRandom') {
-            setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
-        } else {
-            setCurrentIndex(currentIndex + 1); // Hapus % filteredQuestions.length biar gak loop
-        }
-    }, 800);
-}
+    } else if (timeLeft === 0 && isTimerRunning) {
+        // Delay 1000ms (1 detik) biar user bener-bener liat angka 0
+        setTimeout(() => {
+            setIsTimerRunning(false);
+            
+            // Cek apakah ini kartu terakhir
+            if (currentIndex === filteredQuestions.length - 1) {
+                alert('🎉 Yeayy! Kamu sudah menyelesaikan semua soal!');
+                setReviewType(null);
+                setSelectedCategory('Semua');
+                setCurrentIndex(0);
+                return;
+            }
+            
+            // Auto next card setelah timer habis
+            if (mode === 'random' || mode === 'examRandom') {
+                setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
+            } else {
+                setCurrentIndex(currentIndex + 1);
+            }
+        }, 1000); // Dari 800ms jadi 1000ms
+    }
     return () => clearInterval(timer);
 }, [isTimerRunning, timeLeft, currentIndex, filteredQuestions.length, mode]);
 
