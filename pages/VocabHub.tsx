@@ -552,7 +552,7 @@ const masteredPercentage = filteredList.length > 0
     className="hidden"
 />
 </label>
-        <button onClick={exportCsv} className="flex items-center gap-3 bg-emerald-50 text-emerald-600 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-all">
+        <button onClick={exportExcel} className="flex items-center gap-3 bg-emerald-50 text-emerald-600 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-all">
             <Download size={18} /> EXPORT EXCEL
         </button>
     </div>
