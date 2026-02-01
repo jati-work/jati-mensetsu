@@ -21,7 +21,7 @@ interface Props {
 const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [newWord, setNewWord] = useState('');
     const [newMeaning, setNewMeaning] = useState('');
-    const [newCategory, setNewCategory] = useState('Umum');
+    const [newCategory, setNewCategory] = useState('');
     const [newExampleJapanese, setNewExampleJapanese] = useState('');
     const [newExampleIndo, setNewExampleIndo] = useState('');
     const [editingId, setEditingId] = useState<number | null>(null);
