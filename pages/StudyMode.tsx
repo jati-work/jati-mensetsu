@@ -347,31 +347,41 @@ const nextQuestion = () => {
     // Cek apakah ini kartu terakhir
     if (currentIndex === filteredQuestions.length - 1) {
         alert('🎉 Yeayy! Kamu sudah menyelesaikan semua soal!');
-        setReviewType(null); // Reset review mode
-        setSelectedCategory('Semua'); // Kembali ke semua kategori
-        setCurrentIndex(0); // Reset ke awal
-        return;
-    }
-
-    const prevQuestion = () => {
-    // Cek apakah ini kartu pertama
-    if (currentIndex === 0) {
-        alert('Ini sudah soal pertama!');
+        setReviewType(null);
+        setSelectedCategory('Semua');
+        setCurrentIndex(0);
         return;
     }
     
     if (mode === 'random' || mode === 'examRandom') {
         setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
     } else {
-        setCurrentIndex(currentIndex + 1); // Gak pakai modulo biar gak loop
+        setCurrentIndex(currentIndex + 1);
     }
     setShowAnswer(false);
     setAiFeedback(null);
     setRecordedAudioUrl(null);
     
-    // Reset timer untuk soal berikutnya
     if ((mode === 'exam' || mode === 'examRandom') && filteredQuestions[currentIndex + 1]) {
         setTimeLeft(filteredQuestions[currentIndex + 1].timeLimit);
+        setIsTimerRunning(true);
+    }
+};
+
+const prevQuestion = () => {
+    if (currentIndex === 0) {
+        alert('Ini sudah soal pertama!');
+        return;
+    }
+    
+    setCurrentIndex(currentIndex - 1);
+    setShowAnswer(false);
+    setAiFeedback(null);
+    setRecordedAudioUrl(null);
+    
+    if (mode === 'exam' || mode === 'examRandom') {
+        const prevIdx = currentIndex - 1;
+        setTimeLeft(filteredQuestions[prevIdx].timeLimit);
         setIsTimerRunning(true);
     }
 };
