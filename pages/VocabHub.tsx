@@ -54,6 +54,8 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [reviewType, setReviewType] = useState<'mastered' | 'needsReview' | null>(null);
     const [answeredCount, setAnsweredCount] = useState(0);
     const [originalIndex, setOriginalIndex] = useState(0);
+    const [shuffledQueue, setShuffledQueue] = useState<number[]>([]);
+    const [queueIndex, setQueueIndex] = useState(0);
 
 const playBeep = (frequency: number = 800, duration: number = 100) => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -130,6 +132,17 @@ useEffect(() => {
     
     return () => clearInterval(timer);
 }, [isTimerRunning, timeLeft, flashIndex, filteredList.length, studyMode]);
+
+// Shuffle queue saat mode random dimulai
+useEffect(() => {
+    if (studyMode === 'random' || studyMode === 'examRandom') {
+        const shuffled = [...Array(filteredList.length).keys()].sort(() => Math.random() - 0.5);
+        setShuffledQueue(shuffled);
+        setQueueIndex(0);
+        setFlashIndex(shuffled[0] || 0);
+        setAnsweredCount(0);
+    }
+}, [studyMode, filteredList.length]);
 
 // Reset timer saat ganti kartu
 useEffect(() => {
@@ -638,9 +651,12 @@ const startReview = (type: 'mastered' | 'needsReview') => {
 // TAMBAH DI SINI ↓
 const nextQuestion = () => {
     if (studyMode === 'random' || studyMode === 'examRandom') {
-        const newAnsweredCount = answeredCount + 1;
-        setAnsweredCount(newAnsweredCount);
-        setFlashIndex(Math.floor(Math.random() * filteredList.length));
+        const newQueueIndex = queueIndex + 1;
+        if (newQueueIndex < shuffledQueue.length) {
+            setQueueIndex(newQueueIndex);
+            setFlashIndex(shuffledQueue[newQueueIndex]);
+            setAnsweredCount(newQueueIndex);
+        }
     } else {
         setFlashIndex((flashIndex + 1) % filteredList.length);
     }
@@ -649,13 +665,17 @@ const nextQuestion = () => {
 
 const resetQuiz = () => {
     setAnsweredCount(0);
-    setFlashIndex(0);  // TAMBAH INI - reset ke awal
     setIsFlipped(false);
     
-    // Kalau mode random, shuffle ulang
     if (studyMode === 'random' || studyMode === 'examRandom') {
+        // Shuffle ulang
         const shuffled = [...Array(filteredList.length).keys()].sort(() => Math.random() - 0.5);
-        // Set shuffled queue kalau ada
+        setShuffledQueue(shuffled);
+        setQueueIndex(0);
+        setFlashIndex(shuffled[0] || 0);
+    } else {
+        // Mode santai/exam: reset ke awal
+        setFlashIndex(0);
     }
 };
     
@@ -787,18 +807,18 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     >
         ⏱️ UJIAN (10s)
     </button>
-    <button 
-        onClick={() => { setStudyMode('random'); setFlashIndex(Math.floor(Math.random() * filteredList.length)); }} 
-        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'random' ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
-    >
-        🎲 ACAK
-    </button>
-    <button 
-        onClick={() => { setStudyMode('examRandom'); setTimeLeft(10); setIsTimerRunning(true); setFlashIndex(Math.floor(Math.random() * filteredList.length)); }} 
-        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'examRandom' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
-    >
-        🎯 UJIAN ACAK
-    </button>
+<button 
+    onClick={() => setStudyMode('random')} 
+    className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'random' ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+>
+    🎲 ACAK
+</button>
+<button 
+    onClick={() => setStudyMode('examRandom')} 
+    className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'examRandom' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+>
+    🎯 UJIAN ACAK
+</button>
 </div>
             
             <div className="space-y-10">
