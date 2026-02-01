@@ -101,31 +101,13 @@ useEffect(() => {
     setIsFlipped(false);
 }, [flashIndex, studyMode]);
     
-    useEffect(() => {
-        loadVocab();
-    }, []);
-
-const startReview = (type: 'mastered' | 'needsReview') => {
-    const vocabsToReview = type === 'mastered' 
-        ? masteredVocab 
-        : notMasteredVocab;
-    
-    if (vocabsToReview.length === 0) {
-        alert(type === 'mastered' 
-            ? 'Belum ada vocab yang dihafal untuk direview!' 
-            : 'Belum ada vocab yang perlu diulang!');
-        return;
-    }
-    
-    setReviewType(type);
-    setIsReviewing(true);
-};
-
-const saveVocab = async (v: any) => {
+useEffect(() => {
+    loadVocab();
+}, []);
 
 // AUTO SCROLL #1: Saat MULAI EDIT → scroll ke kotak edit
 useEffect(() => {
-    if (editingId !== null && formRef.current) {  // ✅ BENAR: pakai formRef
+    if (editingId !== null && formRef.current) {
         setTimeout(() => {
             formRef.current?.scrollIntoView({ 
                 behavior: 'smooth', 
@@ -553,12 +535,29 @@ const handleSaveVocab = async () => {
 
     const currentCard = filteredList[flashIndex];
 
-    // Statistik untuk Review
+// Statistik untuk Review
 const masteredVocab = filteredList.filter(v => v.mastered);
 const notMasteredVocab = filteredList.filter(v => !v.mastered);
 const masteredPercentage = filteredList.length > 0 
     ? Math.round((masteredVocab.length / filteredList.length) * 100) 
     : 0;
+
+// TAMBAHKAN FUNGSI INI DI SINI (SETELAH masteredVocab didefinisikan)
+const startReview = (type: 'mastered' | 'needsReview') => {
+    const vocabsToReview = type === 'mastered' 
+        ? masteredVocab 
+        : notMasteredVocab;
+    
+    if (vocabsToReview.length === 0) {
+        alert(type === 'mastered' 
+            ? 'Belum ada vocab yang dihafal untuk direview!' 
+            : 'Belum ada vocab yang perlu diulang!');
+        return;
+    }
+    
+    setReviewType(type);
+    setIsReviewing(true);
+};
 
 // Mode Review Khusus
 if (isReviewing && reviewType) {
