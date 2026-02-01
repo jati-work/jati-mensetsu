@@ -385,7 +385,7 @@ Format: Kategori, Soal, Jepang, Romaji, Indo, Waktu" />
 <div className="flex justify-between items-center px-4">
     <h3 className="text-xl font-black">Pertanyaan ({questions.length})</h3>
     <div className="flex gap-4">
-        <button onClick={exportCsv} className="flex items-center gap-3 px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-all">
+        <button onClick={exportExcel} className="flex items-center gap-3 px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-all">
             <Download size={18} /> EXPORT EXCEL
         </button>
         <button onClick={() => setIsAddingManual(true)} className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
