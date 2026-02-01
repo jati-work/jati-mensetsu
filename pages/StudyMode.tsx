@@ -97,6 +97,35 @@ useEffect(() => {
     return () => clearTimeout(saveSN);
 }, [studyNotes]);
 
+// ========== TIMER COUNTDOWN ==========
+useEffect(() => {
+    let timer: any;
+    if (isTimerRunning && timeLeft > 0) {
+        timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    } else if (timeLeft === 0 && isTimerRunning) {
+        setIsTimerRunning(false);
+        
+        // Auto next card setelah timer habis
+        if (mode === 'random') {
+            setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
+        } else {
+            setCurrentIndex((currentIndex + 1) % filteredQuestions.length);
+        }
+    }
+    return () => clearInterval(timer);
+}, [isTimerRunning, timeLeft, currentIndex, filteredQuestions.length, mode]);
+
+// Reset timer saat ganti soal atau mode
+useEffect(() => {
+    if (mode === 'exam' && filteredQuestions[currentIndex]) {
+        setTimeLeft(filteredQuestions[currentIndex].timeLimit);
+        setIsTimerRunning(true);
+    } else {
+        setIsTimerRunning(false);
+    }
+    setShowAnswer(false);
+}, [currentIndex, mode, filteredQuestions]);
+
 useEffect(() => {
     // Auto-save questions mastered status
     const saveQuestions = setTimeout(async () => {
@@ -242,21 +271,36 @@ if (epData && epData.length > 0) {
         setTimeLeft(currentQ?.timeLimit || 30);
     };
 
-    const nextQuestion = () => {
-        if (filteredQuestions.length === 0) return;
-        resetSession();
-        if (mode === 'random') {
-            setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
-        } else {
-            setCurrentIndex((currentIndex + 1) % filteredQuestions.length);
-        }
-    };
+const nextQuestion = () => {
+    if (mode === 'random') {
+        setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
+    } else {
+        setCurrentIndex((currentIndex + 1) % filteredQuestions.length);
+    }
+    setShowAnswer(false);
+    setAiFeedback(null);
+    setRecordedAudioUrl(null);
+    
+    // Reset timer untuk soal berikutnya
+    if (mode === 'exam' && filteredQuestions[currentIndex + 1]) {
+        setTimeLeft(filteredQuestions[(currentIndex + 1) % filteredQuestions.length].timeLimit);
+        setIsTimerRunning(true);
+    }
+};
 
-    const prevQuestion = () => {
-        if (filteredQuestions.length === 0) return;
-        resetSession();
-        setCurrentIndex((currentIndex - 1 + filteredQuestions.length) % filteredQuestions.length);
-    };
+const prevQuestion = () => {
+    setCurrentIndex((currentIndex - 1 + filteredQuestions.length) % filteredQuestions.length);
+    setShowAnswer(false);
+    setAiFeedback(null);
+    setRecordedAudioUrl(null);
+    
+    // Reset timer untuk soal sebelumnya
+    if (mode === 'exam') {
+        const prevIdx = (currentIndex - 1 + filteredQuestions.length) % filteredQuestions.length;
+        setTimeLeft(filteredQuestions[prevIdx].timeLimit);
+        setIsTimerRunning(true);
+    }
+};
 
     const analyzeAnswer = async () => {
         if (!audioChunksRef.current.length) return;
