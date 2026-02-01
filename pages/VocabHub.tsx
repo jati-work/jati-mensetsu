@@ -50,6 +50,8 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [studyMode, setStudyMode] = useState<'casual' | 'exam' | 'random' | 'examRandom'>('casual');
     const [timeLeft, setTimeLeft] = useState(10);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
+    const [isReviewing, setIsReviewing] = useState(false);
+    const [reviewType, setReviewType] = useState<'mastered' | 'needsReview' | null>(null);
 
 // ========== PASTE FILTEREDLIST DI SINI (BARIS 57-58) ==========
 const filteredList = useMemo(() => {
@@ -150,6 +152,22 @@ const loadVocab = async () => {
             mastered: v.mastered || false
         })));
     }
+};
+
+const startReview = (type: 'mastered' | 'needsReview') => {
+    const vocabsToReview = type === 'mastered' 
+        ? masteredVocab 
+        : notMasteredVocab;
+    
+    if (vocabsToReview.length === 0) {
+        alert(type === 'mastered' 
+            ? 'Belum ada vocab yang dihafal untuk direview!' 
+            : 'Belum ada vocab yang perlu diulang!');
+        return;
+    }
+    
+    setReviewType(type);
+    setIsReviewing(true);
 };
 
 const saveVocab = async (v: any) => {
@@ -539,6 +557,10 @@ const notMasteredVocab = filteredList.filter(v => !v.mastered);
 const masteredPercentage = filteredList.length > 0 
     ? Math.round((masteredVocab.length / filteredList.length) * 100) 
     : 0;
+
+// Mode Review Khusus
+if (isReviewing && reviewType) {
+    const vocabsToReview = reviewType === 'mastered' ? masteredVocab : notMasteredVocab;
     
     return (
         <>
@@ -916,7 +938,10 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Sudah Dihafal */}
-            <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
+<div 
+    onClick={() => startReview('mastered')}
+    className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 cursor-pointer hover:bg-emerald-100 transition-all"
+>
                 <div className="flex items-center gap-2 mb-4">
                     <CheckCircle2 className="text-emerald-500" size={20} />
                     <h4 className="font-black text-emerald-700">SUDAH DIHAFAL ({masteredVocab.length})</h4>
@@ -936,7 +961,10 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
             </div>
             
             {/* Belum Dihafal */}
-            <div className="bg-rose-50 p-6 rounded-3xl border border-rose-100">
+<div 
+    onClick={() => startReview('needsReview')}
+    className="bg-rose-50 p-6 rounded-3xl border border-rose-100 cursor-pointer hover:bg-rose-100 transition-all"
+>
                 <div className="flex items-center gap-2 mb-4">
                     <AlertCircle className="text-rose-500" size={20} />
                     <h4 className="font-black text-rose-700">PERLU DIULANG ({notMasteredVocab.length})</h4>
