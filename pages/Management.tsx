@@ -247,16 +247,24 @@ const handleBulkAdd = async () => {
     }
 };
     
-    const exportCsv = () => {
-        const header = "Kategori,Soal,Jepang,Romaji,Indo,Waktu\n";
-        const rows = questions.map(q => `"${q.category}","${q.question}","${q.answerJapanese}","${q.answerRomaji}","${q.answerIndo}",${q.timeLimit}`).join("\n");
-        const blob = new Blob([header + rows], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `database_mensetsu_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-    };
+const exportExcel = async () => {
+    const XLSX = await import('xlsx');
+    
+    const exportData = questions.map(q => ({
+        'Kategori': q.category,
+        'Soal': q.question,
+        'Jepang': q.answerJapanese,
+        'Romaji': q.answerRomaji,
+        'Indo': q.answerIndo,
+        'Waktu': q.timeLimit
+    }));
+    
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+    
+    XLSX.writeFile(workbook, `database_mensetsu_${new Date().toISOString().split('T')[0]}.xlsx`);
+};
 
 // Modal Loading & Results
     const renderImportModal = () => {
@@ -378,7 +386,7 @@ Format: Kategori, Soal, Jepang, Romaji, Indo, Waktu" />
     <h3 className="text-xl font-black">Pertanyaan ({questions.length})</h3>
     <div className="flex gap-4">
         <button onClick={exportCsv} className="flex items-center gap-3 px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-all">
-            <Download size={18} /> EXPORT CSV
+            <Download size={18} /> EXPORT EXCEL
         </button>
         <button onClick={() => setIsAddingManual(true)} className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
             <Plus size={16} /> TAMBAH MANUAL
