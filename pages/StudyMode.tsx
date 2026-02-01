@@ -114,6 +114,19 @@ useEffect(() => {
         timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (timeLeft === 0 && isTimerRunning) {
         setIsTimerRunning(false);
+
+               // TAMBAH INI - Sound effect
+                if (newTime <= 5 && newTime > 0) {
+                    playBeep(800, 100); // Beep setiap detik
+                } else if (newTime === 0) {
+                    playBeep(400, 500); // Buzzer pas habis (nada lebih rendah & panjang)
+                }
+                
+                return newTime;
+            });
+        }, 1000);
+    } else if (timeLeft === 0 && isTimerRunning) {
+        setIsTimerRunning(false);
         
         // Auto next card setelah timer habis
         if (mode === 'random' || mode === 'examRandom') {
@@ -240,6 +253,24 @@ if (epData && epData.length > 0) {
         window.speechSynthesis.speak(utterance);
     };
 
+const playBeep = (frequency: number = 800, duration: number = 100) => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration / 1000);
+};
+    
 const startReview = (type: 'mastered' | 'needsReview') => {
     const filtered = type === 'mastered' 
         ? questions.filter(q => q.mastered)
