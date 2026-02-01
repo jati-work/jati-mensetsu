@@ -39,6 +39,12 @@ const existingCategories = useMemo(() => {
     return Array.from(new Set(questions.map(q => q.category))).filter(cat => cat.trim() !== '');
 }, [questions]);
 
+// Helper function untuk truncate text yang terlalu panjang
+const truncateText = (text: string, maxLength: number = 50) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+};
+
     const [draggedId, setDraggedId] = useState<number | null>(null);
 
     // Load dari Supabase saat pertama kali
@@ -135,6 +141,21 @@ const saveQuestion = async (q: Question) => {
 
 const saveEdit = async () => {
     if (editForm) {
+        // Validasi duplikat - cek semua field kecuali timeLimit & mastered
+        const duplicate = questions.find(q => 
+            q.id !== editingId && 
+            q.category.trim().toLowerCase() === editForm.category.trim().toLowerCase() &&
+            q.question.trim().toLowerCase() === editForm.question.trim().toLowerCase() &&
+            q.answerJapanese.trim().toLowerCase() === editForm.answerJapanese.trim().toLowerCase() &&
+            q.answerRomaji.trim().toLowerCase() === editForm.answerRomaji.trim().toLowerCase() &&
+            q.answerIndo.trim().toLowerCase() === editForm.answerIndo.trim().toLowerCase()
+        );
+        
+        if (duplicate) {
+            alert(`❌ Data soal ini sudah ada di database!\n\nKategori: ${duplicate.category}\nSoal: "${truncateText(duplicate.question, 60)}"\n\nSemua field (kecuali waktu) harus berbeda untuk menambah soal baru.`);
+            return;
+        }
+        
         await saveQuestion(editForm);
         setQuestions(questions.map(q => q.id === editingId ? editForm : q));
         
@@ -144,11 +165,36 @@ const saveEdit = async () => {
         setEditingId(null);
     }
 };
-
+    
 const saveManual = async () => {
     if (!addForm.question || !addForm.answerJapanese) return;
+    
+    // Validasi duplikat - cek semua field kecuali timeLimit & mastered
+    const duplicate = questions.find(q => 
+        q.category.trim().toLowerCase() === addForm.category.trim().toLowerCase() &&
+        q.question.trim().toLowerCase() === addForm.question.trim().toLowerCase() &&
+        q.answerJapanese.trim().toLowerCase() === addForm.answerJapanese.trim().toLowerCase() &&
+        q.answerRomaji.trim().toLowerCase() === addForm.answerRomaji.trim().toLowerCase() &&
+        q.answerIndo.trim().toLowerCase() === addForm.answerIndo.trim().toLowerCase()
+    );
+    
+    if (duplicate) {
+        alert(`❌ Data soal ini sudah ada di database!\n\nKategori: ${duplicate.category}\nSoal: "${truncateText(duplicate.question, 60)}"\n\nSemua field (kecuali waktu) harus berbeda untuk menambah soal baru.`);
+        return;
+    }
+    
     const newQ = { id: Date.now(), ...addForm, mastered: false };
-    await saveQuestion(newQ);
+    await supabase.from('questions').insert({
+        id: newQ.id,
+        category: newQ.category,
+        question: newQ.question,
+        answer_japanese: newQ.answerJapanese,
+        answer_romaji: newQ.answerRomaji,
+        answer_indo: newQ.answerIndo,
+        time_limit: newQ.timeLimit,
+        mastered: false,
+        order_index: questions.length
+    });
     setQuestions([...questions, newQ]);
     setIsAddingManual(false);
     setAddForm({ category: '', question: '', answerJapanese: '', answerRomaji: '', answerIndo: '', timeLimit: 30 });
