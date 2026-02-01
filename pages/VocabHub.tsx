@@ -563,6 +563,52 @@ const masteredPercentage = filteredList.length > 0
 // Mode Review Khusus
 if (isReviewing && reviewType) {
     const vocabsToReview = reviewType === 'mastered' ? masteredVocab : notMasteredVocab;
+
+    
+    return (
+        <>
+            {renderImportModal()}
+            <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-50 p-8">
+                <div className="max-w-4xl mx-auto space-y-6">
+                    <button 
+                        onClick={() => setIsReviewing(false)}
+                        className="px-6 py-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all font-bold flex items-center gap-2"
+                    >
+                        <ChevronLeft size={20} />
+                        Kembali ke Review
+                    </button>
+                    
+                    <div className="bg-white p-8 rounded-3xl shadow-xl">
+                        <h2 className="text-3xl font-black mb-2">
+                            {reviewType === 'mastered' ? '✅ Review Vocab yang Sudah Dihafal' : '🔄 Review Vocab yang Perlu Diulang'}
+                        </h2>
+                        <p className="text-gray-600 mb-6">
+                            Total: {vocabsToReview.length} vocab dari kategori <span className="font-bold text-indigo-600">{selectedCategory}</span>
+                        </p>
+                        
+                        <div className="grid gap-4">
+                            {vocabsToReview.map((vocab) => (
+                                <div key={vocab.id} className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl border-2 border-indigo-100 hover:border-indigo-300 transition-all">
+                                    <p className="font-black text-2xl text-gray-900 mb-2">{vocab.word}</p>
+                                    <p className="text-gray-600 text-lg mb-3">"{vocab.meaning}"</p>
+                                    {vocab.example_japanese && (
+                                        <p className="text-sm text-gray-500 italic mb-1">🇯🇵 {vocab.example_japanese}</p>
+                                    )}
+                                    {vocab.example_indo && (
+                                        <p className="text-sm text-gray-500 italic">🇮🇩 {vocab.example_indo}</p>
+                                    )}
+                                    <div className="mt-3 text-xs font-bold text-indigo-600 uppercase tracking-wider">
+                                        {vocab.category}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}
     
     return (
         <>
