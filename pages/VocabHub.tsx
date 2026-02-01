@@ -539,20 +539,7 @@ const handleSaveVocab = async () => {
             example_indo: newExampleIndo,
             mastered: false
         };
-        const savedVocab = await saveVocab(newVocab as Vocab);
-        if (savedVocab) {
-            setVocabList([...vocabList, savedVocab]);
-        }
-    }
-    
-    // Reset semua field
-    setNewWord(''); 
-    setNewMeaning('');
-    setNewCategory('');
-    setNewExampleJapanese('');
-    setNewExampleIndo('');
-};
-    
+        
         const savedVocab = await saveVocab(newVocab as Vocab);
         if (savedVocab) {
             setVocabList([...vocabList, savedVocab]);
