@@ -352,6 +352,13 @@ const nextQuestion = () => {
         setCurrentIndex(0); // Reset ke awal
         return;
     }
+
+    const prevQuestion = () => {
+    // Cek apakah ini kartu pertama
+    if (currentIndex === 0) {
+        alert('Ini sudah soal pertama!');
+        return;
+    }
     
     if (mode === 'random' || mode === 'examRandom') {
         setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
