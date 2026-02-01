@@ -198,28 +198,31 @@ const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
         setImportResults(null);
         setShowImportModal(true);
         
-        const text = await file.text();
-        const lines = text.split('\n').filter(line => line.trim());
+        // Import library XLSX
+        const XLSX = await import('xlsx');
         
         setImportProgress(10);
         
-        // Parse CSV
-const parsedData = lines.slice(1).map((line, index) => { // Skip header
-    const separator = line.includes('\t') ? '\t' : ',';
-    const parts = line.split(separator).map(v => v.trim().replace(/^"|"$/g, ''));
-    
-    return {
-        category: parts[0] || 'Umum',
-        word: parts[1] || '',
-        meaning: parts[2] || '',
-        example_japanese: parts[3] || '',
-        example_indo: parts[4] || '',
-        mastered: false,
-        order_index: vocabList.length + index
-    };
-}).filter(item => item.word && item.meaning);
+        // Baca file Excel
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
         
         setImportProgress(30);
+        
+        // Parse data dari Excel
+        const parsedData = jsonData.map((row: any, index) => ({
+            category: row.Category || row.category || 'Umum',
+            word: row.Word || row.word || '',
+            meaning: row.Meaning || row.meaning || '',
+            example_japanese: row['Example Japanese'] || row.example_japanese || '',
+            example_indo: row['Example Indo'] || row.example_indo || '',
+            mastered: false,
+            order_index: vocabList.length + index
+        })).filter(item => item.word && item.meaning);
+        
+        setImportProgress(50);
         
         // Cek duplikat berdasarkan word
         const existingWords = new Set(vocabList.map(v => v.word.trim().toLowerCase()));
@@ -229,8 +232,6 @@ const parsedData = lines.slice(1).map((line, index) => { // Skip header
         const duplicates = parsedData.filter(item => 
             existingWords.has(item.word.trim().toLowerCase())
         );
-        
-        setImportProgress(50);
         
         const successList: string[] = [];
         const failedList: string[] = [];
@@ -379,45 +380,26 @@ const renderImportModal = () => {
     );
 };
     
-const exportCsv = () => {
-    const header = "Kategori,Kata,Arti,Contoh_Jepang,Contoh_Indo\n";
-    const rows = vocabList.map(v => `"${v.category}","${v.word}","${v.meaning}","${v.example_japanese || ''}","${v.example_indo || ''}"`).join("\n");
-    const blob = new Blob([header + rows], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `vocab_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-};
-
-const importCsv = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.csv';
-    input.onchange = async (e: any) => {
-        const file = e.target.files[0];
-        if (file) {
-            const text = await file.text();
-            const rows = text.split('\n').filter(r => r.trim()).slice(1); // Skip header
-            const newVocabs = rows.map(r => {
-                const p = r.split(',').map(v => v.trim().replace(/^"|"$/g, ''))        
-                return { 
-                    id: Date.now() + Math.random(), 
-                    category: p[0] || 'Umum', 
-                    word: p[1] || '', 
-                    meaning: p[2] || '',
-                    example_japanese: p[3] || '',
-                    example_indo: p[4] || ''
-                };
-            });
-            
-            for (const v of newVocabs) {
-                await saveVocab(v);
-            }
-            setVocabList([...vocabList, ...newVocabs]);
-        }
-    };
-    input.click();
+const exportExcel = async () => {
+    // Import library XLSX
+    const XLSX = await import('xlsx');
+    
+    // Siapkan data
+    const exportData = vocabList.map(v => ({
+        'Category': v.category,
+        'Word': v.word,
+        'Meaning': v.meaning,
+        'Example Japanese': v.example_japanese || '',
+        'Example Indo': v.example_indo || ''
+    }));
+    
+    // Buat worksheet dan workbook
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Vocab');
+    
+    // Download
+    XLSX.writeFile(workbook, `vocab_${new Date().toISOString().split('T')[0]}.xlsx`);
 };
 
     // --- TTS VOICE LOADING ---
@@ -562,16 +544,16 @@ const masteredPercentage = filteredList.length > 0
     </div>
     <div className="flex gap-4">
 <label className="flex items-center gap-3 px-6 py-3 bg-indigo-50 text-indigo-600 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-indigo-100 transition-all cursor-pointer">
-    <Upload size={18} /> IMPORT CSV
-    <input 
-        type="file" 
-        accept=".csv,.txt" 
-        onChange={handleFileImport}
-        className="hidden"
-    />
+    <Upload size={18} /> IMPORT EXCEL
+<input 
+    type="file" 
+    accept=".xlsx,.xls"    // ← Excel aja
+    onChange={handleFileImport}
+    className="hidden"
+/>
 </label>
         <button onClick={exportCsv} className="flex items-center gap-3 bg-emerald-50 text-emerald-600 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-all">
-            <Download size={18} /> EXPORT CSV
+            <Download size={18} /> EXPORT EXCEL
         </button>
     </div>
 </div>
@@ -583,7 +565,7 @@ const masteredPercentage = filteredList.length > 0
             <Upload className="text-indigo-600" size={20} />
         </div>
         <div className="flex-1">
-            <h4 className="font-black text-indigo-900 text-sm mb-2">📋 Format File CSV untuk Import</h4>
+            <h4 className="font-black text-indigo-900 text-sm mb-2">📋 Format File EXCEL untuk Import</h4>
             <div className="space-y-2 text-xs font-bold text-indigo-700">
                 <p className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
