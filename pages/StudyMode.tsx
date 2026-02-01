@@ -492,6 +492,24 @@ const masteredPercentage = filteredQuestions.length > 0
                         </div>
                     </div>
 
+{/* Indikator Mode Review */}
+{reviewType && (
+    <div className="bg-white p-4 rounded-3xl border-2 border-indigo-200 flex items-center justify-between slide-up">
+        <div>
+            <p className="text-sm font-bold text-gray-500">Mode Review Aktif:</p>
+            <p className="text-lg font-black text-indigo-600">
+                {reviewType === 'mastered' ? '🔵 Sudah Dikuasai' : '🔄 Perlu Diulang'}
+            </p>
+        </div>
+        <button 
+            onClick={() => setReviewType(null)}
+            className="px-4 py-2 bg-rose-500 text-white rounded-xl font-bold text-xs hover:bg-rose-600 transition-all"
+        >
+            ✕ Keluar Mode Review
+        </button>
+    </div>
+)}
+                    
                     <div className="bg-white p-10 md:p-14 rounded-[64px] shadow-sm border border-gray-100 min-h-[550px] flex flex-col justify-between relative overflow-hidden slide-up">
                         {(mode === 'exam' || mode === 'examRandom') && (
                             <div className="absolute top-10 right-10 flex items-center gap-3 bg-rose-50 px-6 py-3 rounded-full border border-rose-100">
@@ -571,24 +589,6 @@ const masteredPercentage = filteredQuestions.length > 0
                                     ></div>
                                 </div>
                             </div>
-
-{/* Indikator Mode Review */}
-{reviewType && (
-    <div className="bg-white p-4 rounded-3xl border-2 border-indigo-200 flex items-center justify-between">
-        <div>
-            <p className="text-sm font-bold text-gray-500">Mode Review Aktif:</p>
-            <p className="text-lg font-black text-indigo-600">
-                {reviewType === 'mastered' ? '✅ Sudah Dikuasai' : '🔄 Perlu Diulang'}
-            </p>
-        </div>
-        <button 
-            onClick={() => setReviewType(null)}
-            className="px-4 py-2 bg-rose-500 text-white rounded-xl font-bold text-xs hover:bg-rose-600 transition-all"
-        >
-            ✕ Keluar Mode Review
-        </button>
-    </div>
-)}
                             
                             {/* ========== TOMBOL REVIEW - TAMBAHKAN DI SINI ========== */}
                             <button 
