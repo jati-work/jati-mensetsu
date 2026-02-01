@@ -1029,32 +1029,22 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
                             </div>  {/* ← Penutup div h-[450px] perspective */}
 
 {/* Progress Bar */}
-{(studyMode === 'random' || studyMode === 'examRandom') && (
-    <div className="w-full max-w-lg mx-auto mb-6 bg-white/5 p-4 rounded-3xl border-2 border-white/20 backdrop-blur-sm">
+<div className="w-full max-w-lg mx-auto mb-6 bg-white/5 p-4 rounded-3xl border-2 border-white/20 backdrop-blur-sm">
         <div className="bg-white/20 rounded-full h-4 overflow-hidden border border-white/30 shadow-inner">
             <div 
                 className="bg-gradient-to-r from-emerald-300 via-emerald-400 to-emerald-500 h-full transition-all duration-300 shadow-lg"
                 style={{ width: `${(answeredCount / filteredList.length) * 100}%` }}
             />
         </div>
-        <div className="flex justify-between mt-3 text-xs text-white font-black">
-            <span>PROGRESS: {answeredCount} SOAL DIJAWAB</span>
-            <span className="text-emerald-300">{answeredCount} / {filteredList.length}</span>
-        </div>
+<div className="flex justify-between mt-3 text-xs text-white font-black">
+    <span>PROGRESS: {(studyMode === 'random' || studyMode === 'examRandom') ? `${answeredCount} SOAL DIJAWAB` : `${flashIndex + 1} SOAL DIJAWAB`}</span>
+    <span className="text-emerald-300">{(studyMode === 'random' || studyMode === 'examRandom') ? answeredCount : flashIndex + 1} / {filteredList.length}</span>
+</div>
     </div>
-)}
                                     
-{/* Navigasi & Kontrol - URUTAN DIPERBAIKI */}
+{/* Navigasi & Kontrol */}
 <div className="flex items-center gap-6 justify-center">
-    {/* Tombol PREV */}
-    <button 
-        onClick={() => setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length)} 
-        className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"
-    >
-        <ChevronLeft size={32} />
-    </button>
-    
-    {/* Tombol MASTERED - DIPINDAH KE SINI */}
+    {/* Tombol MASTERED */}
     <button 
         onClick={async () => {
             const updated = vocabList.map(v => v.id === currentCard.id ? {...v, mastered: !v.mastered} : v);
@@ -1067,14 +1057,6 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     >
         <CheckCircle2 size={32} />
     </button>
-    
-    {/* Counter - DIPINDAH KE SINI */}
-    <div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
-        <span className="text-white font-black text-xl">
-            {flashIndex + 1}
-            <span className="opacity-30 text-sm"> / {filteredList.length}</span>
-        </span>
-    </div>
     
     {/* Tombol NEXT / REFRESH */}
     {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length ? (
