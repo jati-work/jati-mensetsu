@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '../supabase';
 import { Trash2, Edit3, X, Plus, GripVertical, Download, Upload, Clock, Languages, Search } from 'lucide-react';
 
@@ -26,6 +26,8 @@ const Management: React.FC<Props> = ({ questions, setQuestions }) => {
 const [addForm, setAddForm] = useState<Omit<Question, 'id' | 'mastered'>>({
     category: '', question: '', answerJapanese: '', answerRomaji: '', answerIndo: '', timeLimit: 30
 });
+const editedCardRef = useRef<HTMLDivElement | null>(null);
+const [lastEditedId, setLastEditedId] = useState<number | null>(null);
 const [searchQuery, setSearchQuery] = useState('');
 const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
 
@@ -40,6 +42,31 @@ const existingCategories = useMemo(() => {
     useEffect(() => {
         loadQuestions();
     }, []);
+
+    // AUTO SCROLL #1: Saat MULAI EDIT → scroll ke kotak edit
+useEffect(() => {
+    if (editingId !== null && editedCardRef.current) {
+        setTimeout(() => {
+            editedCardRef.current?.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }, 100);
+    }
+}, [editingId]);
+
+// AUTO SCROLL #2: Saat SELESAI SAVE → scroll ke log yang baru di-edit
+useEffect(() => {
+    if (lastEditedId !== null && editedCardRef.current) {
+        setTimeout(() => {
+            editedCardRef.current?.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            setLastEditedId(null);
+        }, 100);
+    }
+}, [lastEditedId]);
 
     const loadQuestions = async () => {
         const { data, error } = await supabase
@@ -99,6 +126,10 @@ const saveEdit = async () => {
     if (editForm) {
         await saveQuestion(editForm);
         setQuestions(questions.map(q => q.id === editingId ? editForm : q));
+        
+        // Simpan ID untuk trigger scroll setelah save
+        setLastEditedId(editingId);
+        
         setEditingId(null);
     }
 };
@@ -256,14 +287,15 @@ Format: Kategori, Soal, Jepang, Romaji, Indo, Waktu" />
         q.answerIndo.toLowerCase().includes(search)
     );
 }).map((q) => (
-                            <div 
-                                key={q.id} 
-                                draggable 
-                                onDragStart={() => handleDragStart(q.id)}
-                                onDragOver={(e) => handleDragOver(e, q.id)}
-                                onDragEnd={handleDragEnd}
-                                className={`p-8 rounded-[45px] border transition-all cursor-grab active:cursor-grabbing ${draggedId === q.id ? 'opacity-20 scale-95 border-indigo-300 shadow-inner' : 'bg-white border-gray-100 shadow-sm hover:border-indigo-100 hover:shadow-md'}`}
-                            >
+<div 
+    key={q.id}
+    ref={q.id === editingId || q.id === lastEditedId ? editedCardRef : null}
+    draggable 
+    onDragStart={() => handleDragStart(q.id)}
+    onDragOver={(e) => handleDragOver(e, q.id)}
+    onDragEnd={handleDragEnd}
+    className={`p-8 rounded-[45px] border transition-all cursor-grab active:cursor-grabbing ${draggedId === q.id ? 'opacity-20 scale-95 border-indigo-300 shadow-inner' : 'bg-white border-gray-100 shadow-sm hover:border-indigo-100 hover:shadow-md'}`}
+>
                                 {editingId === q.id ? (
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
