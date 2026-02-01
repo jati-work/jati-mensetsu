@@ -649,8 +649,14 @@ const nextQuestion = () => {
 
 const resetQuiz = () => {
     setAnsweredCount(0);
-    setFlashIndex(Math.floor(Math.random() * filteredList.length));
+    setFlashIndex(0);  // TAMBAH INI - reset ke awal
     setIsFlipped(false);
+    
+    // Kalau mode random, shuffle ulang
+    if (studyMode === 'random' || studyMode === 'examRandom') {
+        const shuffled = [...Array(filteredList.length).keys()].sort(() => Math.random() - 0.5);
+        // Set shuffled queue kalau ada
+    }
 };
     
 // Mode Review Khusus
@@ -1048,7 +1054,7 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 </div>
 <div className="flex justify-between mt-3 text-xs text-white font-black">
     <span>PROGRESS: {(studyMode === 'random' || studyMode === 'examRandom') ? `${answeredCount} SOAL DIJAWAB` : `${flashIndex + 1} SOAL DIJAWAB`}</span>
-    <span className="text-emerald-300">{(studyMode === 'random' || studyMode === 'examRandom') ? answeredCount : flashIndex + 1} / {filteredList.length}</span>
+    <span className="text-emerald-300">{flashIndex + 1} / {filteredList.length}</span>
 </div>
     </div>
                                     
