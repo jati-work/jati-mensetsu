@@ -981,8 +981,23 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     )}
 </div>
                         
-                                </div>
-                            </div>
+
+{/* Progress Bar - TARUH DI SINI */}
+{(studyMode === 'random' || studyMode === 'examRandom') && (
+    <div className="w-full max-w-lg mx-auto mb-4">
+        <div className="bg-white/10 rounded-full h-3 overflow-hidden">
+            <div 
+                className="bg-gradient-to-r from-indigo-400 to-indigo-600 h-full transition-all duration-300"
+                style={{ width: `${(answeredCount / filteredList.length) * 100}%` }}
+            />
+        </div>
+        <div className="flex justify-between mt-2 text-xs text-white/50 font-bold">
+            <span>PROGRESS: {answeredCount} SOAL DIJAWAB</span>
+            <span>{answeredCount} / {filteredList.length}</span>
+        </div>
+    </div>
+)}
+                                    
                             <div className="flex items-center gap-10">
                                 <button onClick={() => setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length)} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"><ChevronLeft size={32}/></button>
 
@@ -999,23 +1014,6 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     >
         <CheckCircle2 size={32} />
     </button>
-
-{(studyMode === 'random' || studyMode === 'examRandom') && (
-    <div className="w-full max-w-lg mx-auto mb-4">
-        <div className="bg-white/10 rounded-full h-3 overflow-hidden">
-            <div 
-                className="bg-gradient-to-r from-indigo-400 to-indigo-600 h-full transition-all duration-300"
-                style={{ width: `${(answeredCount / filteredList.length) * 100}%` }}
-            />
-        </div>
-        <div className="flex justify-between mt-2 text-xs text-white/50 font-bold">
-            <span>PROGRESS: {answeredCount} SOAL DIJAWAB</span>
-            <span>{answeredCount} / {filteredList.length}</span>
-        </div>
-    </div>
-)}
-
-<div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
                                 
 <div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
     <span className="text-white font-black text-xl">
