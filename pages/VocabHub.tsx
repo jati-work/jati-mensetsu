@@ -154,6 +154,12 @@ const loadVocab = async () => {
     }
 };
 
+const masteredVocab = filteredList.filter(v => v.mastered);
+const notMasteredVocab = filteredList.filter(v => !v.mastered);
+const masteredPercentage = filteredList.length > 0 
+    ? Math.round((masteredVocab.length / filteredList.length) * 100) 
+    : 0;
+
 const startReview = (type: 'mastered' | 'needsReview') => {
     const vocabsToReview = type === 'mastered' 
         ? masteredVocab 
@@ -550,13 +556,6 @@ const handleSaveVocab = async () => {
     };
 
     const currentCard = filteredList[flashIndex];
-
-// Statistik untuk Review
-const masteredVocab = filteredList.filter(v => v.mastered);
-const notMasteredVocab = filteredList.filter(v => !v.mastered);
-const masteredPercentage = filteredList.length > 0 
-    ? Math.round((masteredVocab.length / filteredList.length) * 100) 
-    : 0;
 
 // Mode Review Khusus
 if (isReviewing && reviewType) {
