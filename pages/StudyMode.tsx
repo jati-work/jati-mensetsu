@@ -21,11 +21,20 @@ const StudyMode: React.FC<Props> = ({ questions, setQuestions, interviewPoints, 
     const [currentIndex, setCurrentIndex] = useState(0);
 
     // Filter Logic
-    const filteredQuestions = useMemo(() => {
-        return selectedCategory === 'Semua' 
-            ? questions 
-            : questions.filter(q => q.category === selectedCategory);
-    }, [questions, selectedCategory]);
+const filteredQuestions = useMemo(() => {
+    let filtered = selectedCategory === 'Semua' 
+        ? questions 
+        : questions.filter(q => q.category === selectedCategory);
+    
+    // Filter berdasarkan review type
+    if (reviewType === 'mastered') {
+        filtered = filtered.filter(q => q.mastered);
+    } else if (reviewType === 'needsReview') {
+        filtered = filtered.filter(q => !q.mastered);
+    }
+    
+    return filtered;
+}, [questions, selectedCategory, reviewType]);
 
     const categories = useMemo(() => {
         const cats = Array.from(new Set(questions.map(q => q.category))).filter(Boolean);
@@ -40,6 +49,7 @@ const StudyMode: React.FC<Props> = ({ questions, setQuestions, interviewPoints, 
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [showReview, setShowReview] = useState(false);
     const [showStrategy, setShowStrategy] = useState(false);
+    const [reviewType, setReviewType] = useState<'mastered' | 'needsReview' | null>(null);
     
     // Feature States
     const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
@@ -230,6 +240,12 @@ if (epData && epData.length > 0) {
         window.speechSynthesis.speak(utterance);
     };
 
+const startReview = (type: 'mastered' | 'needsReview') => {
+    setReviewType(type);
+    setCurrentIndex(0);
+    setShowReview(false);
+};
+    
     const stopRecordingProcess = () => {
         mediaRecorderRef.current?.stop();
         setIsRecording(false);
@@ -555,6 +571,15 @@ const masteredPercentage = filteredQuestions.length > 0
                                     ></div>
                                 </div>
                             </div>
+
+                            {reviewType && (
+    <button 
+        onClick={() => setReviewType(null)} 
+        className="w-full py-4 bg-gray-100 text-gray-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+    >
+        ← KEMBALI KE SEMUA SOAL
+    </button>
+)}
                             
                             {/* ========== TOMBOL REVIEW - TAMBAHKAN DI SINI ========== */}
                             <button 
@@ -581,7 +606,10 @@ const masteredPercentage = filteredQuestions.length > 0
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Sudah Dikuasai */}
-                                <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
+                                <div 
+    onClick={() => startReview('mastered')}
+    className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 cursor-pointer hover:bg-emerald-100 transition-all"
+>
                                     <div className="flex items-center gap-2 mb-4">
                                         <CheckCircle2 className="text-emerald-500" size={20} />
                                         <h4 className="font-black text-emerald-700">SUDAH DIKUASAI ({masteredQuestions.length})</h4>
@@ -600,7 +628,10 @@ const masteredPercentage = filteredQuestions.length > 0
                                 </div>
                                 
                                 {/* Belum Dikuasai */}
-                                <div className="bg-rose-50 p-6 rounded-3xl border border-rose-100">
+                                <div 
+    onClick={() => startReview('needsReview')}
+    className="bg-rose-50 p-6 rounded-3xl border border-rose-100 cursor-pointer hover:bg-rose-100 transition-all"
+>ose-100">
                                     <div className="flex items-center gap-2 mb-4">
                                         <AlertCircle className="text-rose-500" size={20} />
                                         <h4 className="font-black text-rose-700">PERLU LATIHAN LAGI ({notMasteredQuestions.length})</h4>
