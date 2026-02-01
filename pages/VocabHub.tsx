@@ -204,20 +204,20 @@ const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
         setImportProgress(10);
         
         // Parse CSV
-        const parsedData = lines.slice(1).map((line, index) => { // Skip header
-            const separator = line.includes('\t') ? '\t' : ',';
-            const parts = line.split(separator).map(v => v.trim().replace(/^"|"$/g, ''));
-            
-            return {
-                word: parts[0] || '',
-                meaning: parts[1] || '',
-                category: parts[2] || 'Umum',
-                example_japanese: parts[3] || '',
-                example_indo: parts[4] || '',
-                mastered: false,
-                order_index: vocabList.length + index
-            };
-        }).filter(item => item.word && item.meaning); // Filter yang valid
+const parsedData = lines.slice(1).map((line, index) => { // Skip header
+    const separator = line.includes('\t') ? '\t' : ',';
+    const parts = line.split(separator).map(v => v.trim().replace(/^"|"$/g, ''));
+    
+    return {
+        category: parts[0] || 'Umum',
+        word: parts[1] || '',
+        meaning: parts[2] || '',
+        example_japanese: parts[3] || '',
+        example_indo: parts[4] || '',
+        mastered: false,
+        order_index: vocabList.length + index
+    };
+}).filter(item => item.word && item.meaning);
         
         setImportProgress(30);
         
@@ -587,7 +587,7 @@ const masteredPercentage = filteredList.length > 0
             <div className="space-y-2 text-xs font-bold text-indigo-700">
                 <p className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
-                    Header: <code className="bg-white px-2 py-1 rounded text-[10px] font-mono">Word,Meaning,Category,Example Japanese,Example Indo</code>
+                    Header: <code className="bg-white px-2 py-1 rounded text-[10px] font-mono">Category,Word,Meaning,Example Japanese,Example Indo</code>
                 </p>
                 <p className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
@@ -603,12 +603,12 @@ const masteredPercentage = filteredList.length > 0
                     ▶ Lihat Contoh Format
                 </summary>
                 <div className="mt-3 bg-white rounded-xl p-4 border border-indigo-100">
-                    <pre className="text-[9px] font-mono text-gray-600 overflow-x-auto whitespace-pre">
-{`Word,Meaning,Category,Example Japanese,Example Indo
-こんにちは,Halo,Salam,こんにちは、お元気ですか,Halo apa kabar
-ありがとう,Terima kasih,Salam,ありがとうございます,Terima kasih banyak
-さようなら,Selamat tinggal,Salam,さようなら、また会いましょう,Sampai jumpa lagi`}
-                    </pre>
+<pre className="text-[9px] font-mono text-gray-600 overflow-x-auto whitespace-pre">
+{`Category,Word,Meaning,Example Japanese,Example Indo
+Salam,こんにちは,Halo,こんにちは、お元気ですか,Halo apa kabar
+Salam,ありがとう,Terima kasih,ありがとうございます,Terima kasih banyak
+Salam,さようなら,Selamat tinggal,さようなら、また会いましょう,Sampai jumpa lagi`}
+</pre>
                 </div>
             </details>
         </div>
