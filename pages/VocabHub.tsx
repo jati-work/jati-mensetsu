@@ -625,6 +625,24 @@ const startReview = (type: 'mastered' | 'needsReview') => {
     }, 100);
 };
 
+// TAMBAH DI SINI ↓
+const nextQuestion = () => {
+    if (studyMode === 'random' || studyMode === 'examRandom') {
+        const newAnsweredCount = answeredCount + 1;
+        setAnsweredCount(newAnsweredCount);
+        setFlashIndex(Math.floor(Math.random() * filteredList.length));
+    } else {
+        setFlashIndex((flashIndex + 1) % filteredList.length);
+    }
+    setIsFlipped(false);
+};
+
+const resetQuiz = () => {
+    setAnsweredCount(0);
+    setFlashIndex(Math.floor(Math.random() * filteredList.length));
+    setIsFlipped(false);
+};
+    
 // Mode Review Khusus
 if (isReviewing && reviewType) {
     const vocabsToReview = reviewType === 'mastered' ? masteredVocab : notMasteredVocab;
@@ -1050,22 +1068,7 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     </span>
 </div>
 <button onClick={() => {
-    if (studyMode === 'random' || studyMode === 'examRandom') {
-        const currentAnswered = answeredCount + 1;
-        
-        if (currentAnswered >= filteredList.length) {
-            // Sudah selesai semua - reset
-            setAnsweredCount(0);
-            setFlashIndex(Math.floor(Math.random() * filteredList.length));
-        } else {
-            // Masih ada soal - update progress dan lanjut
-            setAnsweredCount(currentAnswered);
-            setFlashIndex(Math.floor(Math.random() * filteredList.length));
-        }
-    } else {
-        setFlashIndex((flashIndex + 1) % filteredList.length);
-    }
-}} 
+
 className={`p-5 rounded-3xl transition-all ${
     (studyMode === 'random' || studyMode === 'examRandom') && answeredCount + 1 >= filteredList.length
     ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
@@ -1096,6 +1099,17 @@ className={`p-5 rounded-3xl transition-all ${
     {showReview ? 'SEMBUNYIKAN REVIEW' : '📊 LIHAT REVIEW HAFALAN'}
 </button>
 
+{/* Tombol Next atau Refresh */}
+{(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length ? (
+    <button onClick={resetQuiz} className="p-5 bg-emerald-500 text-white rounded-3xl hover:bg-emerald-600 transition-all">
+        <RotateCw size={32} />
+    </button>
+) : (
+    <button onClick={nextQuestion} className="p-5 bg-white text-indigo-600 rounded-3xl hover:bg-indigo-50 transition-all">
+        <ChevronRight size={32} />
+    </button>
+)}
+                
 {/* Review Section */}
 {showReview && (
     <div className="bg-white p-8 rounded-[48px] border border-gray-100 space-y-6 slide-up">
