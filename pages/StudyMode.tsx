@@ -241,6 +241,17 @@ if (epData && epData.length > 0) {
     };
 
 const startReview = (type: 'mastered' | 'needsReview') => {
+    const filtered = type === 'mastered' 
+        ? questions.filter(q => q.mastered)
+        : questions.filter(q => !q.mastered);
+    
+    if (filtered.length === 0) {
+        alert(type === 'mastered' 
+            ? 'Belum ada soal yang dikuasai!' 
+            : 'Semua soal sudah dikuasai! 🎉');
+        return;
+    }
+    
     setReviewType(type);
     setCurrentIndex(0);
     setShowReview(false);
@@ -498,7 +509,7 @@ const masteredPercentage = filteredQuestions.length > 0
         <div>
             <p className="text-sm font-bold text-gray-500">Mode Review Aktif:</p>
             <p className="text-lg font-black text-indigo-600">
-                {reviewType === 'mastered' ? '🔵 Sudah Dikuasai' : '🔄 Perlu Diulang'}
+                {reviewType === 'mastered' ? '✅ Sudah Dikuasai' : '🔄 Perlu Diulang'}
             </p>
         </div>
         <button 
