@@ -27,6 +27,13 @@ const [addForm, setAddForm] = useState<Omit<Question, 'id' | 'mastered'>>({
     category: '', question: '', answerJapanese: '', answerRomaji: '', answerIndo: '', timeLimit: 30
 });
 const [searchQuery, setSearchQuery] = useState('');
+const [categoryInput, setCategoryInput] = useState('');
+const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+
+// Ambil semua kategori unik yang pernah dibuat
+const existingCategories = useMemo(() => {
+    return Array.from(new Set(questions.map(q => q.category))).filter(cat => cat.trim() !== '');
+}, [questions]);
 
     const [draggedId, setDraggedId] = useState<number | null>(null);
 
@@ -192,7 +199,40 @@ Format: Kategori, Soal, Jepang, Romaji, Indo, Waktu" />
                         {isAddingManual && (
                             <div className="p-8 rounded-[45px] border-4 border-dashed border-indigo-100 bg-indigo-50/20 slide-up space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <input value={addForm.category} onChange={(e) => setAddForm({...addForm, category: e.target.value})} className="bg-white p-5 rounded-2xl font-bold text-xs outline-none" placeholder="Kategori" />
+                                    <div className="relative">
+    <input 
+        value={addForm.category} 
+        onChange={(e) => {
+            setAddForm({...addForm, category: e.target.value});
+            setShowCategorySuggestions(true);
+        }}
+        onFocus={() => setShowCategorySuggestions(true)}
+        className="bg-white p-5 rounded-2xl font-bold text-xs outline-none w-full" 
+        placeholder="Kategori" 
+    />
+    {showCategorySuggestions && addForm.category && existingCategories.filter(cat => 
+        cat.toLowerCase().includes(addForm.category.toLowerCase())
+    ).length > 0 && (
+        <div className="absolute z-50 w-full mt-2 bg-white border-2 border-indigo-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto">
+            {existingCategories
+                .filter(cat => cat.toLowerCase().includes(addForm.category.toLowerCase()))
+                .map((cat, idx) => (
+                    <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                            setAddForm({...addForm, category: cat});
+                            setShowCategorySuggestions(false);
+                        }}
+                        className="w-full text-left px-5 py-3 hover:bg-indigo-50 font-bold text-xs transition-all first:rounded-t-2xl last:rounded-b-2xl"
+                    >
+                        {cat}
+                    </button>
+                ))
+            }
+        </div>
+    )}
+</div>
                                     <input type="number" value={addForm.timeLimit} onChange={(e) => setAddForm({...addForm, timeLimit: parseInt(e.target.value)})} className="bg-white p-5 rounded-2xl font-bold text-xs outline-none" placeholder="Timer (detik)" />
                                 </div>
                                 <input value={addForm.question} onChange={(e) => setAddForm({...addForm, question: e.target.value})} className="w-full bg-white p-5 rounded-2xl font-bold text-xs outline-none" placeholder="Soal" />
@@ -228,7 +268,39 @@ Format: Kategori, Soal, Jepang, Romaji, Indo, Waktu" />
                                 {editingId === q.id ? (
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
-                                            <input value={editForm?.category} onChange={(e) => setEditForm(prev => prev ? {...prev, category: e.target.value} : null)} className="bg-gray-50 p-4 rounded-xl font-bold text-xs" />
+                                            <div className="relative">
+    <input 
+        value={editForm?.category} 
+        onChange={(e) => {
+            setEditForm(prev => prev ? {...prev, category: e.target.value} : null);
+            setShowCategorySuggestions(true);
+        }}
+        onFocus={() => setShowCategorySuggestions(true)}
+        className="bg-gray-50 p-4 rounded-xl font-bold text-xs w-full" 
+    />
+    {showCategorySuggestions && editForm?.category && existingCategories.filter(cat => 
+        cat.toLowerCase().includes(editForm.category.toLowerCase())
+    ).length > 0 && (
+        <div className="absolute z-50 w-full mt-2 bg-white border-2 border-indigo-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto">
+            {existingCategories
+                .filter(cat => cat.toLowerCase().includes(editForm.category.toLowerCase()))
+                .map((cat, idx) => (
+                    <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                            setEditForm(prev => prev ? {...prev, category: cat} : null);
+                            setShowCategorySuggestions(false);
+                        }}
+                        className="w-full text-left px-4 py-2 hover:bg-indigo-50 font-bold text-xs transition-all first:rounded-t-2xl last:rounded-b-2xl"
+                    >
+                        {cat}
+                    </button>
+                ))
+            }
+        </div>
+    )}
+</div>
                                             <input type="number" value={editForm?.timeLimit} onChange={(e) => setEditForm(prev => prev ? {...prev, timeLimit: parseInt(e.target.value)} : null)} className="bg-gray-50 p-4 rounded-xl font-bold text-xs" />
                                         </div>
                                         <input value={editForm?.question} onChange={(e) => setEditForm(prev => prev ? {...prev, question: e.target.value} : null)} className="w-full bg-gray-50 p-4 rounded-xl font-bold text-xs" />
