@@ -121,6 +121,43 @@ useEffect(() => {
         window.speechSynthesis.onvoiceschanged = loadVoices;
     }, []);
 
+    // Load data dari Supabase saat pertama kali
+useEffect(() => {
+    const loadStrategyData = async () => {
+        // Load Interview Points
+        const { data: ipData } = await supabase
+            .from('interview_points')
+            .select('*')
+            .order('created_at', { ascending: true });
+        if (ipData && ipData.length > 0) {
+            setInterviewPoints(ipData.map(item => item.point));
+        }
+
+        // Load Emergency Phrases
+        const { data: epData } = await supabase
+            .from('emergency_phrases')
+            .select('*')
+            .order('created_at', { ascending: true });
+        if (epData && epData.length > 0) {
+            setEmergencyPhrases(epData.map(item => ({
+                phrase: item.phrase,
+                translation: item.translation || ''
+            })));
+        }
+
+        // Load Study Notes
+        const { data: snData } = await supabase
+            .from('study_notes')
+            .select('*')
+            .order('created_at', { ascending: true });
+        if (snData && snData.length > 0) {
+            setStudyNotes(snData.map(item => item.note));
+        }
+    };
+
+    loadStrategyData();
+}, []); // [] = cuma jalan sekali pas component pertama kali render
+
     useEffect(() => {
         setCurrentIndex(0);
         resetSession();
