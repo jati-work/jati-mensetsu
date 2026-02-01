@@ -651,10 +651,9 @@ const masteredPercentage = filteredQuestions.length > 0
                                 <button onClick={() => setQuestions(questions.map(q => q.id === currentQ?.id ? {...q, mastered: !q.mastered} : q))} className={`p-5 rounded-3xl transition-all active:scale-90 ${currentQ?.mastered ? 'bg-emerald-500 text-white shadow-lg' : 'bg-gray-100 text-gray-300 hover:text-gray-400'}`} title="Tandai Bisa">
                                     <CheckCircle2 size={28} />
                                 </button>
-<button onClick={() => setShowAnswer(!showAnswer)} className={`p-5 rounded-3xl transition-all active-scale-90 ${showAnswer ? 'bg-indigo-600 text-white shadow-lg' : 'bg-indigo-50 text-indigo-400 hover:bg-indigo-100'}`} title="Lihat Jawaban">
-className={`p-5 rounded-3xl transition-all active-scale-90 ${showAnswer ? 'bg-indigo-600 text-white shadow-lg' : 'bg-indigo-50 text-indigo-400 hover:bg-indigo-100'}`} title="Lihat Jawaban">
-                                    {showAnswer ? <EyeOff size={28} /> : <Eye size={28} />}
-                                </button>
+<button onClick={() => setShowAnswer(!showAnswer)} className={`p-5 rounded-3xl transition-all active:scale-90 ${showAnswer ? 'bg-indigo-600 text-white shadow-lg' : 'bg-indigo-50 text-indigo-400 hover:bg-indigo-100'}`} title="Lihat Jawaban">
+    {showAnswer ? <EyeOff size={28} /> : <Eye size={28} />}
+</button>
 
                                 <button onClick={nextQuestion} className="p-5 bg-indigo-600 text-white rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-90 transition-all" title="Selanjutnya">
                                     <ChevronRight size={28} />
