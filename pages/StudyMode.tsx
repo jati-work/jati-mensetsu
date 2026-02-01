@@ -116,24 +116,28 @@ useEffect(() => {
                 const newTime = prev - 1;
                 
                 // Sound effect
-                if (newTime <= 5 && newTime > 0) {
-                    playBeep(800, 100); // Beep setiap detik
-                } else if (newTime === 0) {
-                    playBeep(400, 500); // Buzzer pas habis
+                if (newTime <= 5 && newTime >= 1) {
+                    playBeep(800, 100); // Beep dari 5 sampai 1
                 }
                 
                 return newTime;
             });
         }, 1000);
     } else if (timeLeft === 0 && isTimerRunning) {
-        setIsTimerRunning(false);
+        // Play buzzer pas 0
+        playBeep(400, 500);
         
-        // Auto next card setelah timer habis
-        if (mode === 'random' || mode === 'examRandom') {
-            setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
-        } else {
-            setCurrentIndex((currentIndex + 1) % filteredQuestions.length);
-        }
+        // Delay 500ms biar user liat angka 0 dulu, baru pindah
+        setTimeout(() => {
+            setIsTimerRunning(false);
+            
+            // Auto next card setelah timer habis
+            if (mode === 'random' || mode === 'examRandom') {
+                setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
+            } else {
+                setCurrentIndex((currentIndex + 1) % filteredQuestions.length);
+            }
+        }, 500);
     }
     return () => clearInterval(timer);
 }, [isTimerRunning, timeLeft, currentIndex, filteredQuestions.length, mode]);
