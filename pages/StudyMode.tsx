@@ -50,7 +50,6 @@ const filteredQuestions = useMemo(() => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [showReview, setShowReview] = useState(false);
     const [showStrategy, setShowStrategy] = useState(false);
-    const [showCompletionModal, setShowCompletionModal] = useState(false);
     
     // Feature States
     const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
@@ -127,28 +126,9 @@ if (newTime <= 5 && newTime >= 1) {
                 return newTime;
             });
         }, 1000);
-    } else if (timeLeft === 0 && isTimerRunning) {
-        // Delay 1000ms (1 detik) biar user bener-bener liat angka 0
-        setTimeout(() => {
-            setIsTimerRunning(false);
-            
-// Auto next card setelah timer habis
-if (mode === 'random' || mode === 'examRandom') {
-    const newAnsweredCount = answeredCount + 1;
-    setAnsweredCount(newAnsweredCount);
-    
-    // Cek apakah sudah selesai semua
-    if (newAnsweredCount >= filteredQuestions.length) {
-        setShowCompletionModal(true);
-        return;
-    }
-    
-    setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
-} else {
-    setCurrentIndex(currentIndex + 1);
+} else if (timeLeft === 0 && isTimerRunning) {
+    setIsTimerRunning(false);
 }
-        }, 1000); // Dari 800ms jadi 1000ms
-    }
     return () => clearInterval(timer);
 }, [isTimerRunning, timeLeft, currentIndex, filteredQuestions.length, mode]);
 
@@ -333,28 +313,17 @@ const startReview = (type: 'mastered' | 'needsReview') => {
     };
 
 const nextQuestion = () => {
-    // Mode acak
+    // Mode acak - update counter
     if (mode === 'random' || mode === 'examRandom') {
-        const newAnsweredCount = answeredCount + 1;
-        setAnsweredCount(newAnsweredCount);
-        
-        // Cek apakah sudah selesai semua
-        if (newAnsweredCount >= filteredQuestions.length) {
-            setShowCompletionModal(true);
-            return;
-        }
-        
+        setAnsweredCount(prev => prev + 1);
         setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
     } 
     // Mode normal
     else {
-        // Cek apakah ini kartu terakhir
-        if (currentIndex === filteredQuestions.length - 1) {
-            setShowCompletionModal(true);
-            return;
+        // Kalau belum soal terakhir, lanjut
+        if (currentIndex < filteredQuestions.length - 1) {
+            setCurrentIndex(currentIndex + 1);
         }
-        
-        setCurrentIndex(currentIndex + 1);
     }
     
     setShowAnswer(false);
@@ -367,6 +336,17 @@ const nextQuestion = () => {
     }
 };
 
+const resetQuiz = () => {
+    setCurrentIndex(0);
+    setAnsweredCount(0);
+    setShowAnswer(false);
+    setAiFeedback(null);
+    setRecordedAudioUrl(null);
+    setTimeLeft(30);
+    setReviewType(null);
+    setSelectedCategory('Semua');
+};
+    
 const prevQuestion = () => {
     if (currentIndex === 0) {
         alert('Ini sudah soal pertama!');
@@ -641,22 +621,35 @@ const masteredPercentage = filteredQuestions.length > 0
                         )}
                         
                         <div className="mt-16 space-y-8">
-                            <div className="flex items-center justify-center gap-4 md:gap-8">
-                                <button onClick={prevQuestion} className="p-5 bg-gray-100 text-gray-400 rounded-3xl hover:bg-gray-200 transition-all active:scale-90" title="Sebelumnya">
-                                    <ChevronLeft size={28} />
-                                </button>
 
-                                <button onClick={() => setQuestions(questions.map(q => q.id === currentQ?.id ? {...q, mastered: !q.mastered} : q))} className={`p-5 rounded-3xl transition-all active:scale-90 ${currentQ?.mastered ? 'bg-emerald-500 text-white shadow-lg' : 'bg-gray-100 text-gray-300 hover:text-gray-400'}`} title="Tandai Bisa">
-                                    <CheckCircle2 size={28} />
-                                </button>
-<button onClick={() => setShowAnswer(!showAnswer)} className={`p-5 rounded-3xl transition-all active:scale-90 ${showAnswer ? 'bg-indigo-600 text-white shadow-lg' : 'bg-indigo-50 text-indigo-400 hover:bg-indigo-100'}`} title="Lihat Jawaban">
-    {showAnswer ? <EyeOff size={28} /> : <Eye size={28} />}
-</button>
+<div className="flex items-center justify-center gap-4 md:gap-8">
+    <button onClick={prevQuestion} className="p-5 bg-gray-100 text-gray-400 rounded-3xl hover:bg-gray-200 transition-all active:scale-90" title="Sebelumnya">
+        <ChevronLeft size={28} />
+    </button>
 
-                                <button onClick={nextQuestion} className="p-5 bg-indigo-600 text-white rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-90 transition-all" title="Selanjutnya">
-                                    <ChevronRight size={28} />
-                                </button>
-                            </div>
+    <button onClick={() => setQuestions(questions.map(q => q.id === currentQ?.id ? {...q, mastered: !q.mastered} : q))} className={`p-5 rounded-3xl transition-all active:scale-90 ${currentQ?.mastered ? 'bg-emerald-500 text-white shadow-lg' : 'bg-gray-100 text-gray-300 hover:text-gray-400'}`} title="Tandai Bisa">
+        <CheckCircle2 size={28} />
+    </button>
+
+    <button onClick={() => setShowAnswer(!showAnswer)} className={`p-5 rounded-3xl transition-all active:scale-90 ${showAnswer ? 'bg-indigo-600 text-white shadow-lg' : 'bg-indigo-50 text-indigo-400 hover:bg-indigo-100'}`} title="Lihat Jawaban">
+        {showAnswer ? <EyeOff size={28} /> : <Eye size={28} />}
+    </button>
+
+    {/* Tombol Next atau Refresh */}
+    {(mode === 'random' || mode === 'examRandom') && answeredCount >= filteredQuestions.length ? (
+        <button onClick={resetQuiz} className="p-5 bg-emerald-600 text-white rounded-3xl shadow-xl hover:bg-emerald-700 active:scale-90 transition-all" title="Mulai Lagi">
+            <RotateCcw size={28} />
+        </button>
+    ) : (mode !== 'random' && mode !== 'examRandom') && currentIndex === filteredQuestions.length - 1 ? (
+        <button onClick={resetQuiz} className="p-5 bg-emerald-600 text-white rounded-3xl shadow-xl hover:bg-emerald-700 active:scale-90 transition-all" title="Mulai Lagi">
+            <RotateCcw size={28} />
+        </button>
+    ) : (
+        <button onClick={nextQuestion} className="p-5 bg-indigo-600 text-white rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-90 transition-all" title="Selanjutnya">
+            <ChevronRight size={28} />
+        </button>
+    )}
+</div>
 
                             <div className="w-full max-md mx-auto space-y-3">
                                 <div className="flex justify-between items-end px-2">
@@ -751,50 +744,6 @@ const masteredPercentage = filteredQuestions.length > 0
                     )}
                     
                 </>
-            )}
-
-{/* Modal Selesai */}
-{showCompletionModal && (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style={{ margin: 0 }}>
-        <div className="bg-white rounded-[48px] p-10 max-w-md w-full space-y-6 shadow-2xl mx-auto">
-                        <div className="text-center space-y-4">
-                            <div className="text-6xl">🎉</div>
-                            <h3 className="text-3xl font-black text-gray-900">Selamat!</h3>
-                            <p className="text-gray-600 font-bold">
-                                Kamu sudah menyelesaikan semua soal!
-                            </p>
-                            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-3xl">
-                                <p className="text-sm text-gray-600 font-bold">
-                                    Total Soal Dijawab: <span className="text-indigo-600 text-2xl font-black">{answeredCount}</span> / {filteredQuestions.length}
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <div className="space-y-3">
-                            <button
-                                onClick={() => {
-                                    setShowCompletionModal(false);
-                                    setReviewType(null);
-                                    setSelectedCategory('Semua');
-                                    setCurrentIndex(0);
-                                    setAnsweredCount(0);
-                                    setTimeLeft(30);
-                                    setShowAnswer(false);
-                                }}
-                                className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg transition-all active:scale-95"
-                            >
-                                🔄 Mulai Lagi dari Awal
-                            </button>
-                            
-                            <button
-                                onClick={() => setShowCompletionModal(false)}
-                                className="w-full py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl font-black text-sm uppercase tracking-widest transition-all active:scale-95"
-                            >
-                                Tetap di Sini
-                            </button>
-                        </div>
-                    </div>
-                </div>
             )}
             
             <style>{`
