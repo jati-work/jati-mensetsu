@@ -792,35 +792,7 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
         </div>
     </div>
 </div>
-                
-{/* Mode Selector */}
-<div className="flex gap-3 justify-center">
-    <button 
-        onClick={() => { setStudyMode('casual'); setIsTimerRunning(false); }} 
-        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'casual' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
-    >
-        ☕ SANTAI
-    </button>
-    <button 
-        onClick={() => { setStudyMode('exam'); setTimeLeft(10); setIsTimerRunning(true); }} 
-        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'exam' ? 'bg-rose-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
-    >
-        ⏱️ UJIAN (10s)
-    </button>
-<button 
-    onClick={() => setStudyMode('random')} 
-    className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'random' ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
->
-    🎲 ACAK
-</button>
-<button 
-    onClick={() => setStudyMode('examRandom')} 
-    className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'examRandom' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
->
-    🎯 UJIAN ACAK
-</button>
-</div>
-            
+                  
             <div className="space-y-10">
                 <div className="bg-white p-8 md:p-10 rounded-[48px] border border-gray-100 space-y-8 shadow-sm flex flex-col slide-up">
                     <h3 className="text-xl font-black text-indigo-600 flex items-center gap-3"><Languages /> Daftar Kotoba</h3>
@@ -969,6 +941,34 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
                     </div>
                 </div>
 
+{/* Mode Selector */}
+<div className="flex gap-3 justify-center">
+    <button 
+        onClick={() => { setStudyMode('casual'); setIsTimerRunning(false); }} 
+        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'casual' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+    >
+        ☕ SANTAI
+    </button>
+    <button 
+        onClick={() => { setStudyMode('exam'); setTimeLeft(10); setIsTimerRunning(true); }} 
+        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'exam' ? 'bg-rose-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+    >
+        ⏱️ UJIAN (10s)
+    </button>
+    <button 
+        onClick={() => setStudyMode('random')} 
+        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'random' ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+    >
+        🎲 ACAK
+    </button>
+    <button 
+        onClick={() => setStudyMode('examRandom')} 
+        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'examRandom' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+    >
+        🎯 UJIAN ACAK
+    </button>
+</div>
+                
 {/* Indikator Mode Review */}
 {reviewType && (
     <div className="bg-white p-4 rounded-3xl border-2 border-indigo-200 flex items-center justify-between">
@@ -1066,17 +1066,17 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 
 {/* Progress Bar */}
 <div className="w-full max-w-lg mx-auto mb-6 bg-white/5 p-4 rounded-3xl border-2 border-white/20 backdrop-blur-sm">
+<div className="flex justify-between mb-3 text-xs text-white font-black">
+    <span>PROGRESS: {(studyMode === 'random' || studyMode === 'examRandom') ? `${answeredCount} SOAL DIJAWAB` : `${flashIndex + 1} SOAL DIJAWAB`}</span>
+    <span className="text-emerald-300">{flashIndex + 1} / {filteredList.length}</span>
+</div>
 <div className="bg-white/20 rounded-full h-4 overflow-hidden border border-white/30 shadow-inner">
     <div 
         className="bg-gradient-to-r from-emerald-300 via-emerald-400 to-emerald-500 h-full transition-all duration-300 shadow-lg"
         style={{ width: `${progressPercentage}%` }}
     />
 </div>
-<div className="flex justify-between mt-3 text-xs text-white font-black">
-    <span>PROGRESS: {(studyMode === 'random' || studyMode === 'examRandom') ? `${answeredCount} SOAL DIJAWAB` : `${flashIndex + 1} SOAL DIJAWAB`}</span>
-    <span className="text-emerald-300">{flashIndex + 1} / {filteredList.length}</span>
 </div>
-    </div>
                                     
 {/* Navigasi & Kontrol */}
 <div className="flex items-center gap-6 justify-center">
