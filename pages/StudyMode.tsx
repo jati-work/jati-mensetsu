@@ -518,19 +518,6 @@ const masteredPercentage = filteredQuestions.length > 0
         ))}
     </div>
 </div>
-
-{(mode === 'exam' || mode === 'examRandom') && (
-    <button 
-        onClick={() => {
-            setIsTimerRunning(false);
-            setMode('casual');
-            alert('Mode ujian dihentikan. Kamu sekarang di mode santai!');
-        }}
-        className="w-full py-4 bg-rose-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition-all flex items-center justify-center gap-2"
-    >
-        ⏸️ STOP UJIAN & ISTIRAHAT
-    </button>
-)}
                     
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
                         <div className="flex flex-wrap gap-2">
