@@ -640,14 +640,17 @@ const masteredPercentage = filteredQuestions.length > 0
 
 <div className="w-full max-md mx-auto space-y-3">
     <div className="flex justify-between items-end px-2">
+        {/* KIRI: Progress berapa soal dijawab (SEMUA MODE) */}
         <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
-            Progress: {mode === 'random' || mode === 'examRandom' ? `${answeredCount} Soal Dijawab` : selectedCategory}
-        </span>
-        <span className="text-lg font-black text-indigo-600">
-            {mode === 'random' || mode === 'examRandom' 
-                ? `${answeredCount} / ${filteredQuestions.length}` 
-                : `${filteredQuestions.length > 0 ? currentIndex + 1 : 0} / ${filteredQuestions.length}`
+            Progress: {mode === 'random' || mode === 'examRandom' 
+                ? `${answeredCount} Soal Dijawab` 
+                : `${currentIndex + 1} Soal Dijawab`
             }
+        </span>
+        
+        {/* KANAN: Indikator soal ke berapa yang sedang ditampilkan */}
+        <span className="text-lg font-black text-indigo-600">
+            {filteredQuestions.length > 0 ? currentIndex + 1 : 0} / {filteredQuestions.length}
         </span>
     </div>
     <div className="h-3 bg-gray-100 rounded-full overflow-hidden p-1 shadow-inner">
