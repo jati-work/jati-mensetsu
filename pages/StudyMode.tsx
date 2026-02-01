@@ -57,6 +57,7 @@ const filteredQuestions = useMemo(() => {
     const [timeLeft, setTimeLeft] = useState(30);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+    const [answeredCount, setAnsweredCount] = useState(0);
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -221,6 +222,7 @@ if (epData && epData.length > 0) {
 
     useEffect(() => {
         setCurrentIndex(0);
+        setAnsweredCount(0);
         resetSession();
     }, [selectedCategory]);
 
@@ -347,10 +349,12 @@ const nextQuestion = () => {
         setReviewType(null);
         setSelectedCategory('Semua');
         setCurrentIndex(0);
+        setAnsweredCount(0); // Reset counter
         return;
     }
     
     if (mode === 'random' || mode === 'examRandom') {
+        setAnsweredCount(prev => prev + 1); // TAMBAH INI - hitung soal yang udah dijawab
         setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
     } else {
         setCurrentIndex(currentIndex + 1);
@@ -411,7 +415,9 @@ const prevQuestion = () => {
         }
     };
 
-    const progressPercentage = filteredQuestions.length > 0 ? ((currentIndex + 1) / filteredQuestions.length) * 100 : 0;
+    const progressPercentage = (mode === 'random' || mode === 'examRandom')
+    ? (answeredCount / filteredQuestions.length) * 100
+    : filteredQuestions.length > 0 ? ((currentIndex + 1) / filteredQuestions.length) * 100 : 0;
     const currentQ = filteredQuestions[currentIndex];
 
 const masteredQuestions = filteredQuestions.filter(q => q.mastered);
@@ -535,6 +541,19 @@ const masteredPercentage = filteredQuestions.length > 0
     </div>
 </div>
 
+{(mode === 'exam' || mode === 'examRandom') && (
+    <button 
+        onClick={() => {
+            setIsTimerRunning(false);
+            setMode('casual');
+            alert('Mode ujian dihentikan. Kamu sekarang di mode santai!');
+        }}
+        className="w-full py-4 bg-rose-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition-all flex items-center justify-center gap-2"
+    >
+        ⏸️ STOP UJIAN & ISTIRAHAT
+    </button>
+)}
+                    
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
                         <div className="flex flex-wrap gap-2">
                             <button onClick={() => setMode('casual')} className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'casual' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}><Coffee size={16} /> SANTAI</button>
@@ -579,7 +598,7 @@ const masteredPercentage = filteredQuestions.length > 0
                         {(mode === 'exam' || mode === 'examRandom') && (
                             <div className="absolute top-10 right-10 flex items-center gap-3 bg-rose-50 px-6 py-3 rounded-full border border-rose-100">
                                 <Timer className={`text-rose-500 ${isTimerRunning ? 'animate-pulse' : ''}`} />
-                                <span className={`font-black text-xl ${timeLeft <= 5 ? 'text-rose-600 animate-bounce' : 'text-rose-900'}`}>{timeLeft}s</span>
+                                <span className={`font-black text-2xl transition-all ${timeLeft <= 5 ? 'text-rose-600 scale-125' : 'text-rose-900'}`}>{timeLeft}s</span>
                             </div>
                         )}
                         
@@ -644,7 +663,15 @@ const masteredPercentage = filteredQuestions.length > 0
 
                             <div className="w-full max-md mx-auto space-y-3">
                                 <div className="flex justify-between items-end px-2">
-                                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Progress: {selectedCategory}</span>
+                                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+    Progress: {mode === 'random' || mode === 'examRandom' ? `${answeredCount} Soal Dijawab` : selectedCategory}
+</span>
+<span className="text-lg font-black text-indigo-600">
+    {mode === 'random' || mode === 'examRandom' 
+        ? `${answeredCount} / ${filteredQuestions.length}` 
+        : `${filteredQuestions.length > 0 ? currentIndex + 1 : 0} / ${filteredQuestions.length}`
+    }
+</span>
                                     <span className="text-lg font-black text-indigo-600">{filteredQuestions.length > 0 ? currentIndex + 1 : 0} <span className="text-gray-300 text-xs">/ {filteredQuestions.length}</span></span>
                                 </div>
                                 <div className="h-3 bg-gray-100 rounded-full overflow-hidden p-1 shadow-inner">
