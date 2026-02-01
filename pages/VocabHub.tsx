@@ -59,6 +59,13 @@ const filteredList = useMemo(() => {
         ? vocabList 
         : vocabList.filter(v => v.category === selectedCategory);
     
+    // Filter berdasarkan review type
+    if (reviewType === 'mastered') {
+        filtered = filtered.filter(v => v.mastered);
+    } else if (reviewType === 'needsReview') {
+        filtered = filtered.filter(v => !v.mastered);
+    }
+    
     if (searchQuery) {
         const search = searchQuery.toLowerCase();
         filtered = filtered.filter(v => 
@@ -69,7 +76,7 @@ const filteredList = useMemo(() => {
     }
     
     return filtered;
-}, [vocabList, selectedCategory, searchQuery]);
+}, [vocabList, selectedCategory, searchQuery, reviewType]);
     
 const existingCategories = useMemo(() => {
     return Array.from(new Set(vocabList.map(v => v.category))).filter(cat => cat.trim() !== '');
@@ -555,8 +562,19 @@ const startReview = (type: 'mastered' | 'needsReview') => {
         return;
     }
     
+    // Tutup review section dan set mode review
+    setShowReview(false);
     setReviewType(type);
-    setIsReviewing(true);
+    setFlashIndex(0); // Reset ke kartu pertama
+    setIsFlipped(false); // Reset flip
+    
+    // Scroll ke flashcard
+    setTimeout(() => {
+        const flashcardElement = document.querySelector('.flashcard-container');
+        if (flashcardElement) {
+            flashcardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 100);
 };
 
 // Mode Review Khusus
@@ -849,6 +867,24 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
                     </div>
                 </div>
 
+{/* Indikator Mode Review */}
+{reviewType && (
+    <div className="bg-white p-4 rounded-3xl border-2 border-indigo-200 flex items-center justify-between">
+        <div>
+            <p className="text-sm font-bold text-gray-500">Mode Review Aktif:</p>
+            <p className="text-lg font-black text-indigo-600">
+                {reviewType === 'mastered' ? '✅ Sudah Dihafal' : '🔄 Perlu Diulang'}
+            </p>
+        </div>
+        <button 
+            onClick={() => setReviewType(null)}
+            className="px-4 py-2 bg-rose-500 text-white rounded-xl font-bold text-xs hover:bg-rose-600 transition-all"
+        >
+            ✕ Keluar Mode Review
+        </button>
+    </div>
+)}
+                
                 <div className="bg-indigo-600 p-8 md:p-14 rounded-[64px] shadow-2xl flex flex-col items-center justify-between h-[800px] relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent"></div>
                     
