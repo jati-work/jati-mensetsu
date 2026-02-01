@@ -58,6 +58,8 @@ const filteredQuestions = useMemo(() => {
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
     const [answeredCount, setAnsweredCount] = useState(0);
+    const [shuffledQueue, setShuffledQueue] = useState<number[]>([]);  // TAMBAH INI
+    const [queueIndex, setQueueIndex] = useState(0);                   // TAMBAH INI
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -201,11 +203,16 @@ if (epData && epData.length > 0) {
     loadStrategyData();
 }, []); // [] = cuma jalan sekali pas component pertama kali render
 
-    useEffect(() => {
-        setCurrentIndex(0);
-        setAnsweredCount(0);
-        resetSession();
-    }, [selectedCategory]);
+useEffect(() => {
+    setCurrentIndex(0);
+    setAnsweredCount(0);
+    resetSession();
+    
+    // Initialize shuffled queue untuk mode random
+    if (mode === 'random' || mode === 'examRandom') {
+        initializeShuffledQueue();
+    }
+}, [selectedCategory, filteredQuestions, mode]);
 
     const speak = (text: string) => {
         if (!text) return;
@@ -252,6 +259,24 @@ const playBeep = (frequency: number = 800, duration: number = 100) => {
     
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + duration / 1000);
+};
+
+// TAMBAH FUNGSI INI
+const shuffleArray = (array: any[]) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+};
+
+const initializeShuffledQueue = () => {
+    const indices = filteredQuestions.map((_, idx) => idx);
+    const shuffled = shuffleArray(indices);
+    setShuffledQueue(shuffled);
+    setQueueIndex(0);
+    setCurrentIndex(shuffled[0] || 0);
 };
     
 const startReview = (type: 'mastered' | 'needsReview') => {
@@ -313,14 +338,23 @@ const startReview = (type: 'mastered' | 'needsReview') => {
     };
 
 const nextQuestion = () => {
-    // Mode acak - update counter
+    // Mode acak - pakai shuffled queue
     if (mode === 'random' || mode === 'examRandom') {
-        setAnsweredCount(prev => prev + 1);
-        setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
+        const newAnsweredCount = answeredCount + 1;
+        setAnsweredCount(newAnsweredCount);
+        
+        // Kalau udah habis semua soal, shuffle ulang
+        if (queueIndex >= shuffledQueue.length - 1) {
+            initializeShuffledQueue();
+        } else {
+            // Ambil soal berikutnya dari queue
+            const nextQueueIndex = queueIndex + 1;
+            setQueueIndex(nextQueueIndex);
+            setCurrentIndex(shuffledQueue[nextQueueIndex]);
+        }
     } 
     // Mode normal
     else {
-        // Kalau belum soal terakhir, lanjut
         if (currentIndex < filteredQuestions.length - 1) {
             setCurrentIndex(currentIndex + 1);
         }
@@ -330,8 +364,12 @@ const nextQuestion = () => {
     setAiFeedback(null);
     setRecordedAudioUrl(null);
     
-    if ((mode === 'exam' || mode === 'examRandom') && filteredQuestions[currentIndex + 1]) {
-        setTimeLeft(filteredQuestions[currentIndex + 1].timeLimit);
+    const nextIdx = (mode === 'random' || mode === 'examRandom') 
+        ? shuffledQueue[queueIndex + 1] 
+        : currentIndex + 1;
+    
+    if ((mode === 'exam' || mode === 'examRandom') && filteredQuestions[nextIdx]) {
+        setTimeLeft(filteredQuestions[nextIdx].timeLimit);
         setIsTimerRunning(true);
     }
 };
@@ -345,6 +383,11 @@ const resetQuiz = () => {
     setTimeLeft(30);
     setReviewType(null);
     setSelectedCategory('Semua');
+    
+    // Reset shuffled queue
+    if (mode === 'random' || mode === 'examRandom') {
+        initializeShuffledQueue();
+    }
 };
     
 const prevQuestion = () => {
@@ -523,8 +566,27 @@ const masteredPercentage = filteredQuestions.length > 0
                         <div className="flex flex-wrap gap-2">
                             <button onClick={() => setMode('casual')} className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'casual' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}><Coffee size={16} /> SANTAI</button>
                             <button onClick={() => { setMode('exam'); setTimeLeft(currentQ?.timeLimit || 30); }} className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'exam' ? 'bg-rose-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}><Timer size={16} /> UJIAN</button>
-                            <button onClick={() => setMode('random')} className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'random' ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}><Shuffle size={16} /> ACAK</button>
-                            <button onClick={() => { setMode('examRandom'); setTimeLeft(currentQ?.timeLimit || 30); setIsTimerRunning(true); setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length)); }} className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'examRandom' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}><Target size={16} /> UJIAN ACAK</button>
+<button 
+    onClick={() => { 
+        setMode('random'); 
+        initializeShuffledQueue(); 
+    }} 
+    className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'random' ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+>
+    <Shuffle size={16} /> ACAK
+</button>
+
+<button 
+    onClick={() => { 
+        setMode('examRandom'); 
+        initializeShuffledQueue();
+        setTimeLeft(currentQ?.timeLimit || 30); 
+        setIsTimerRunning(true); 
+    }} 
+    className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'examRandom' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+>
+    <Target size={16} /> UJIAN ACAK
+</button>
                         </div>
                         
                         <div className="flex items-center gap-2 bg-indigo-50 p-2 rounded-2xl border border-indigo-100">
