@@ -631,7 +631,7 @@ const masteredPercentage = filteredQuestions.length > 0
                                 <div 
     onClick={() => startReview('needsReview')}
     className="bg-rose-50 p-6 rounded-3xl border border-rose-100 cursor-pointer hover:bg-rose-100 transition-all"
->ose-100">
+>
                                     <div className="flex items-center gap-2 mb-4">
                                         <AlertCircle className="text-rose-500" size={20} />
                                         <h4 className="font-black text-rose-700">PERLU LATIHAN LAGI ({notMasteredQuestions.length})</h4>
