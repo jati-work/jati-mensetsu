@@ -60,10 +60,16 @@ useEffect(() => {
         timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (timeLeft === 0 && isTimerRunning) {
         setIsTimerRunning(false);
-        setIsFlipped(true); // Auto flip kartu
+        
+        // Auto next card setelah 10 detik
+        if (studyMode === 'random') {
+            setFlashIndex(Math.floor(Math.random() * filteredList.length));
+        } else {
+            setFlashIndex((flashIndex + 1) % filteredList.length);
+        }
     }
     return () => clearInterval(timer);
-}, [isTimerRunning, timeLeft]);
+}, [isTimerRunning, timeLeft, flashIndex, filteredList.length, studyMode]);
 
 // Reset timer saat ganti kartu
 useEffect(() => {
