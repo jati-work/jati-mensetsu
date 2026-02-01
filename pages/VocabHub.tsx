@@ -907,7 +907,7 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     </div>
 )}
                 
-                <div className="bg-indigo-600 p-8 md:p-14 rounded-[64px] shadow-2xl flex flex-col items-center justify-between h-[800px] relative overflow-hidden">
+                <div className="bg-indigo-600 p-8 md:p-14 rounded-[64px] shadow-2xl flex flex-col items-center justify-between min-h-[900px] relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent"></div>
                     
                     <div className="w-full flex justify-between items-center relative z-10">
@@ -986,16 +986,16 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 
 {/* Progress Bar - TARUH DI SINI ✅ */}
 {(studyMode === 'random' || studyMode === 'examRandom') && (
-    <div className="w-full max-w-lg mx-auto mb-4">
-        <div className="bg-white/10 rounded-full h-3 overflow-hidden">
+    <div className="w-full max-w-lg mx-auto mb-6 bg-white/5 p-4 rounded-3xl border-2 border-white/20 backdrop-blur-sm">
+        <div className="bg-white/20 rounded-full h-4 overflow-hidden border border-white/30 shadow-inner">
             <div 
-                className="bg-gradient-to-r from-indigo-400 to-indigo-600 h-full transition-all duration-300"
+                className="bg-gradient-to-r from-yellow-300 via-orange-400 to-rose-500 h-full transition-all duration-300 shadow-lg"
                 style={{ width: `${(answeredCount / filteredList.length) * 100}%` }}
             />
         </div>
-        <div className="flex justify-between mt-2 text-xs text-white/50 font-bold">
+        <div className="flex justify-between mt-3 text-xs text-white font-black">
             <span>PROGRESS: {answeredCount} SOAL DIJAWAB</span>
-            <span>{answeredCount} / {filteredList.length}</span>
+            <span className="text-yellow-300">{answeredCount} / {filteredList.length}</span>
         </div>
     </div>
 )}
