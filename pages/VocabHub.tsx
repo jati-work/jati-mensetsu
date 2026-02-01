@@ -37,6 +37,11 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
     const [draggedId, setDraggedId] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+    // Ambil semua kategori unik
+const existingCategories = useMemo(() => {
+    return Array.from(new Set(vocabList.map(v => v.category))).filter(cat => cat.trim() !== '');
+}, [vocabList]);
     const [showReview, setShowReview] = useState(false);
     const [studyMode, setStudyMode] = useState<'casual' | 'exam' | 'random'>('casual');
     const [timeLeft, setTimeLeft] = useState(10);
@@ -347,7 +352,40 @@ const masteredPercentage = filteredList.length > 0
                     
                     <div ref={formRef} className={`p-6 rounded-[35px] border-2 transition-all space-y-3 ${editingId ? 'bg-emerald-50 border-emerald-200' : 'bg-indigo-50/50 border-indigo-100'}`}>
                         {editingId && <button onClick={() => setEditingId(null)} className="float-right text-emerald-400"><X size={16}/></button>}
-                        <input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Kategori (Umum, Kerja, Medis...)" className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner" />
+                        <div className="relative">
+    <input 
+        value={newCategory} 
+        onChange={e => {
+            setNewCategory(e.target.value);
+            setShowCategorySuggestions(true);
+        }}
+        onFocus={() => setShowCategorySuggestions(true)}
+        className="bg-white p-5 rounded-2xl font-bold text-xs outline-none border-2 border-indigo-100 w-full" 
+        placeholder="Kategori" 
+    />
+    {showCategorySuggestions && newCategory && existingCategories.filter(cat => 
+        cat.toLowerCase().includes(newCategory.toLowerCase())
+    ).length > 0 && (
+        <div className="absolute z-50 w-full mt-2 bg-white border-2 border-indigo-100 rounded-2xl shadow-xl max-h-48 overflow-y-auto">
+            {existingCategories
+                .filter(cat => cat.toLowerCase().includes(newCategory.toLowerCase()))
+                .map((cat, idx) => (
+                    <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                            setNewCategory(cat);
+                            setShowCategorySuggestions(false);
+                        }}
+                        className="w-full text-left px-5 py-3 hover:bg-indigo-50 font-bold text-xs transition-all first:rounded-t-2xl last:rounded-b-2xl"
+                    >
+                        {cat}
+                    </button>
+                ))
+            }
+        </div>
+    )}
+</div>
                         <input value={newWord} onChange={(e) => setNewWord(e.target.value)} placeholder="Kata Jepang" className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner" />
                         <input value={newMeaning} onChange={(e) => setNewMeaning(e.target.value)} placeholder="Arti" className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner" />
 
