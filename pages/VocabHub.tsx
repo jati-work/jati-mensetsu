@@ -1083,22 +1083,14 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 {/* Tombol PREV */}
 <button 
     onClick={() => {
-        if (studyMode === 'random' || studyMode === 'examRandom') {
-            // Mode acak: mundur di queue
-            const newQueueIndex = queueIndex - 1;
-            if (newQueueIndex >= 0) {
-                setQueueIndex(newQueueIndex);
-                setFlashIndex(shuffledQueue[newQueueIndex]);
-                setAnsweredCount(newQueueIndex);
-            }
-        } else {
-            // Mode santai/exam: mundur biasa
+        if (studyMode !== 'random' && studyMode !== 'examRandom') {
+            // Mode santai/exam aja yang bisa mundur
             setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length);
         }
     }}
-    disabled={(studyMode === 'random' || studyMode === 'examRandom') && queueIndex === 0}
+    disabled={studyMode === 'random' || studyMode === 'examRandom'}
     className={`p-5 rounded-3xl text-white transition-all ${
-        (studyMode === 'random' || studyMode === 'examRandom') && queueIndex === 0 
+        studyMode === 'random' || studyMode === 'examRandom'
             ? 'bg-white/5 opacity-30 cursor-not-allowed' 
             : 'bg-white/10 hover:bg-white/20'
     }`}
