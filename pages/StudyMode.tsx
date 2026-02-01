@@ -111,15 +111,15 @@ useEffect(() => {
 useEffect(() => {
     let timer: any;
     if (isTimerRunning && timeLeft > 0) {
-        timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-    } else if (timeLeft === 0 && isTimerRunning) {
-        setIsTimerRunning(false);
-
-               // TAMBAH INI - Sound effect
+        timer = setInterval(() => {
+            setTimeLeft(prev => {
+                const newTime = prev - 1;
+                
+                // Sound effect
                 if (newTime <= 5 && newTime > 0) {
                     playBeep(800, 100); // Beep setiap detik
                 } else if (newTime === 0) {
-                    playBeep(400, 500); // Buzzer pas habis (nada lebih rendah & panjang)
+                    playBeep(400, 500); // Buzzer pas habis
                 }
                 
                 return newTime;
