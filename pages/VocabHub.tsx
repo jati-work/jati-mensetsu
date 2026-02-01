@@ -50,7 +50,7 @@ const existingCategories = useMemo(() => {
     return Array.from(new Set(vocabList.map(v => v.category))).filter(cat => cat.trim() !== '');
 }, [vocabList]);
     const [showReview, setShowReview] = useState(false);
-    const [studyMode, setStudyMode] = useState<'casual' | 'exam' | 'random'>('casual');
+    const [studyMode, setStudyMode] = useState<'casual' | 'exam' | 'random' | 'examRandom'>('casual');
     const [timeLeft, setTimeLeft] = useState(10);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
 
@@ -61,8 +61,8 @@ useEffect(() => {
     } else if (timeLeft === 0 && isTimerRunning) {
         setIsTimerRunning(false);
         
-        // Auto next card setelah 10 detik
-        if (studyMode === 'random') {
+        // Auto next card setelah timer habis
+        if (studyMode === 'random' || studyMode === 'examRandom') {
             setFlashIndex(Math.floor(Math.random() * filteredList.length));
         } else {
             setFlashIndex((flashIndex + 1) % filteredList.length);
@@ -73,7 +73,7 @@ useEffect(() => {
 
 // Reset timer saat ganti kartu
 useEffect(() => {
-    if (studyMode === 'exam') {
+    if (studyMode === 'exam' || studyMode === 'examRandom') {
         setTimeLeft(10);
         setIsTimerRunning(true);
     }
@@ -623,6 +623,12 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     >
         🎲 ACAK
     </button>
+    <button 
+        onClick={() => { setStudyMode('examRandom'); setTimeLeft(10); setIsTimerRunning(true); setFlashIndex(Math.floor(Math.random() * filteredList.length)); }} 
+        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'examRandom' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
+    >
+        🎯 UJIAN ACAK
+    </button>
 </div>
             
             <div className="space-y-10">
@@ -789,11 +795,11 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
                     {currentCard ? (
                         <div className="w-full max-w-lg space-y-12 relative z-10 flex flex-col items-center">
                                     {/* Timer Display - Mode Ujian */}
-        {studyMode === 'exam' && (
-            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-rose-500 text-white px-6 py-2 rounded-full font-black text-lg shadow-xl z-20">
-                ⏱️ {timeLeft}s
-            </div>
-        )}
+{(studyMode === 'exam' || studyMode === 'examRandom') && (
+    <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-rose-500 text-white px-6 py-2 rounded-full font-black text-lg shadow-xl z-20">
+        ⏱️ {timeLeft}s
+    </div>
+)}
                             <div className="h-[450px] w-full perspective cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
                                 <div className={`relative h-full w-full transition-all duration-700 preserve-3d ${isFlipped ? 'my-rotate-y-180' : ''}`}>
                                     
@@ -869,8 +875,8 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     <div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
         <span className="text-white font-black text-xl">{flashIndex + 1} <span className="opacity-30 text-sm">/ {filteredList.length}</span></span>
     </div>
-    <button onClick={() => {
-    if (studyMode === 'random') {
+<button onClick={() => {
+    if (studyMode === 'random' || studyMode === 'examRandom') {
         setFlashIndex(Math.floor(Math.random() * filteredList.length));
     } else {
         setFlashIndex((flashIndex + 1) % filteredList.length);
