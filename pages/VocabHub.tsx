@@ -591,9 +591,6 @@ const masteredPercentage = filteredList.length > 0
         </p>
     )}
     
-    <p className="mt-12 text-indigo-300 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
-        <RotateCw size={16}/> Klik kartu untuk memutar
-    </p>
 </div>
 <div className="absolute inset-0 backface-hidden my-rotate-y-180 bg-emerald-500 rounded-[64px] flex flex-col items-center justify-center p-12 text-center text-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]">
     {/* TTS Button - Pojok Kanan Atas */}
