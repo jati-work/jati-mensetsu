@@ -134,16 +134,13 @@ useEffect(() => {
         }
 
         // Load Emergency Phrases
-        const { data: epData } = await supabase
-            .from('emergency_phrases')
-            .select('*')
-            .order('created_at', { ascending: true });
-        if (epData && epData.length > 0) {
-            setEmergencyPhrases(epData.map(item => ({
-                phrase: item.phrase,
-                translation: item.translation || ''
-            })));
-        }
+const { data: epData } = await supabase
+    .from('emergency_phrases')
+    .select('*')
+    .order('created_at', { ascending: true });
+if (epData && epData.length > 0) {
+    setEmergencyPhrases(epData.map(item => item.phrase || item));
+}
 
         // Load Study Notes
         const { data: snData } = await supabase
