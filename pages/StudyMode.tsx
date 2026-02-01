@@ -133,9 +133,18 @@ if (newTime <= 5 && newTime >= 1) {
             setIsTimerRunning(false);
             
 // Cek apakah ini kartu terakhir
-if (currentIndex === filteredQuestions.length - 1) {
-    setShowCompletionModal(true);
-    return;
+if (mode === 'random' || mode === 'examRandom') {
+    // Untuk mode acak, cek berdasarkan answeredCount
+    if (answeredCount >= filteredQuestions.length) {
+        setShowCompletionModal(true);
+        return;
+    }
+} else {
+    // Untuk mode normal, cek berdasarkan currentIndex
+    if (currentIndex === filteredQuestions.length - 1) {
+        setShowCompletionModal(true);
+        return;
+    }
 }
             
 // Auto next card setelah timer habis
@@ -348,9 +357,18 @@ const nextQuestion = () => {
     }
     
 // Cek apakah ini kartu terakhir
-if (currentIndex === filteredQuestions.length - 1) {
-    setShowCompletionModal(true);
-    return;
+if (mode === 'random' || mode === 'examRandom') {
+    // Untuk mode acak, cek answeredCount (sudah di-increment di atas)
+    if (answeredCount >= filteredQuestions.length) {
+        setShowCompletionModal(true);
+        return;
+    }
+} else {
+    // Untuk mode normal, cek currentIndex
+    if (currentIndex === filteredQuestions.length - 1) {
+        setShowCompletionModal(true);
+        return;
+    }
 }
     
     if (mode === 'random' || mode === 'examRandom') {
@@ -598,7 +616,7 @@ const masteredPercentage = filteredQuestions.length > 0
                         {(mode === 'exam' || mode === 'examRandom') && (
                             <div className="absolute top-10 right-10 flex items-center gap-3 bg-rose-50 px-6 py-3 rounded-full border border-rose-100">
                                 <Timer className={`text-rose-500 ${isTimerRunning ? 'animate-pulse' : ''}`} />
-                                <span className={`font-black text-2xl transition-all ${timeLeft <= 5 ? 'text-rose-600 scale-125' : 'text-rose-900'}`}>{timeLeft}s</span>
+                                <span className={`font-black text-2xl ${timeLeft <= 5 ? 'text-rose-600' : 'text-rose-900'}`}>{timeLeft}s</span>
                             </div>
                         )}
                         
@@ -756,9 +774,9 @@ const masteredPercentage = filteredQuestions.length > 0
             )}
 
 {/* Modal Selesai */}
-            {showCompletionModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-[48px] p-10 max-w-md w-full space-y-6 slide-up shadow-2xl">
+{showCompletionModal && (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style={{ margin: 0 }}>
+        <div className="bg-white rounded-[48px] p-10 max-w-md w-full space-y-6 shadow-2xl mx-auto">
                         <div className="text-center space-y-4">
                             <div className="text-6xl">🎉</div>
                             <h3 className="text-3xl font-black text-gray-900">Selamat!</h3>
