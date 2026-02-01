@@ -97,6 +97,16 @@ const filteredList = useMemo(() => {
     
     return filtered;
 }, [vocabList, selectedCategory, searchQuery, reviewType]);
+
+const progressPercentage = useMemo(() => {
+    if (filteredList.length === 0) return 0;
+    
+    if (studyMode === 'random' || studyMode === 'examRandom') {
+        return (answeredCount / filteredList.length) * 100;
+    } else {
+        return ((flashIndex + 1) / filteredList.length) * 100;
+    }
+}, [studyMode, answeredCount, flashIndex, filteredList.length]);
     
 const existingCategories = useMemo(() => {
     return Array.from(new Set(vocabList.map(v => v.category))).filter(cat => cat.trim() !== '');
@@ -1033,7 +1043,7 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 <div className="bg-white/20 rounded-full h-4 overflow-hidden border border-white/30 shadow-inner">
     <div 
         className="bg-gradient-to-r from-emerald-300 via-emerald-400 to-emerald-500 h-full transition-all duration-300 shadow-lg"
-        style={{ width: `${((studyMode === 'random' || studyMode === 'examRandom') ? answeredCount : flashIndex + 1) / filteredList.length * 100}%` }}
+        style={{ width: `${progressPercentage}%` }}
     />
 </div>
 <div className="flex justify-between mt-3 text-xs text-white font-black">
@@ -1066,22 +1076,29 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
         <CheckCircle2 size={32} />
     </button>
     
-    {/* Tombol NEXT / REFRESH */}
-    {flashIndex + 1 >= filteredList.length ? (
-        <button 
-            onClick={resetQuiz} 
-            className="p-5 bg-emerald-500 text-white rounded-3xl hover:bg-emerald-600 transition-all"
-        >
-            <RotateCw size={32} />
-        </button>
-    ) : (
-        <button 
-            onClick={nextQuestion} 
-            className="p-5 bg-white text-indigo-600 rounded-3xl hover:bg-indigo-50 transition-all"
-        >
-            <ChevronRight size={32} />
-        </button>
-    )}
+{/* Tombol NEXT / REFRESH */}
+{(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length ? (
+    <button 
+        onClick={resetQuiz} 
+        className="p-5 bg-emerald-500 text-white rounded-3xl hover:bg-emerald-600 transition-all"
+    >
+        <RotateCw size={32} />
+    </button>
+) : (studyMode !== 'random' && studyMode !== 'examRandom') && flashIndex === filteredList.length - 1 ? (
+    <button 
+        onClick={resetQuiz} 
+        className="p-5 bg-emerald-500 text-white rounded-3xl hover:bg-emerald-600 transition-all"
+    >
+        <RotateCw size={32} />
+    </button>
+) : (
+    <button 
+        onClick={nextQuestion} 
+        className="p-5 bg-white text-indigo-600 rounded-3xl hover:bg-indigo-50 transition-all"
+    >
+        <ChevronRight size={32} />
+    </button>
+)}
 </div>
                                 
                         </div>
