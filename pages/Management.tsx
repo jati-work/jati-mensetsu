@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabase';
 import { Trash2, Edit3, X, Plus, GripVertical, Download, Upload, Clock, Languages, Search } from 'lucide-react';
 
@@ -27,7 +27,6 @@ const [addForm, setAddForm] = useState<Omit<Question, 'id' | 'mastered'>>({
     category: '', question: '', answerJapanese: '', answerRomaji: '', answerIndo: '', timeLimit: 30
 });
 const [searchQuery, setSearchQuery] = useState('');
-const [categoryInput, setCategoryInput] = useState('');
 const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
 
 // Ambil semua kategori unik yang pernah dibuat
