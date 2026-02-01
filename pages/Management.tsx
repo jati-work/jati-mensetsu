@@ -30,6 +30,9 @@ const editedCardRef = useRef<HTMLDivElement | null>(null);
 const [lastEditedId, setLastEditedId] = useState<number | null>(null);
 const [searchQuery, setSearchQuery] = useState('');
 const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+const [isImporting, setIsImporting] = useState(false);
+const [importProgress, setImportProgress] = useState(0);
+const [importResults, setImportResults] = useState<{success: string[], failed: string[]} | null>(null);
 
 // Ambil semua kategori unik yang pernah dibuat
 const existingCategories = useMemo(() => {
@@ -151,6 +154,82 @@ const saveManual = async () => {
     setAddForm({ category: '', question: '', answerJapanese: '', answerRomaji: '', answerIndo: '', timeLimit: 30 });
 };
 
+const handleBulkAdd = async () => {
+        try {
+            setIsImporting(true);
+            setImportProgress(0);
+            setImportResults(null);
+            
+            const rows = bulkCsv.split('\n').filter(r => r.trim());
+            setImportProgress(10);
+            
+            // Parse semua data dulu
+            const parsedData = rows.map((r, index) => {
+                const separator = r.includes('\t') ? '\t' : ',';
+                const p = r.split(separator).map(v => v.trim().replace(/^"|"$/g, ''));
+                
+                return {
+                    category: p[0] || 'Umum',
+                    question: p[1] || '?',
+                    answer_japanese: p[2] || '',
+                    answer_romaji: p[3] || '',
+                    answer_indo: p[4] || '',
+                    time_limit: parseInt(p[5]) || 30,
+                    mastered: false,
+                    order_index: questions.length + index
+                };
+            });
+            
+            setImportProgress(30);
+            
+            // INSERT BATCH ke Supabase
+            const { data, error } = await supabase
+                .from('questions')
+                .insert(parsedData)
+                .select();
+            
+            setImportProgress(80);
+            
+            const successList: string[] = [];
+            const failedList: string[] = [];
+            
+            if (error) {
+                console.error('Error bulk insert:', error);
+                rows.forEach(line => failedList.push(line.substring(0, 50) + '...'));
+            } else if (data) {
+                const newQuestions = data.map((item: any) => ({
+                    id: item.id,
+                    category: item.category,
+                    question: item.question,
+                    answerJapanese: item.answer_japanese,
+                    answerRomaji: item.answer_romaji,
+                    answerIndo: item.answer_indo,
+                    mastered: item.mastered,
+                    timeLimit: item.time_limit
+                }));
+                
+                setQuestions([...questions, ...newQuestions]);
+                data.forEach(item => successList.push(item.question));
+                
+                const failedCount = rows.length - data.length;
+                if (failedCount > 0) {
+                    failedList.push(`${failedCount} baris tidak valid`);
+                }
+            }
+            
+            setImportProgress(100);
+            setImportResults({ success: successList, failed: failedList });
+            setBulkCsv('');
+            
+        } catch (err) {
+            console.error('Error:', err);
+            setImportResults({ 
+                success: [], 
+                failed: ['Error: ' + (err as Error).message] 
+            });
+        }
+    };
+    
     const exportCsv = () => {
         const header = "Kategori,Soal,Jepang,Romaji,Indo,Waktu\n";
         const rows = questions.map(q => `"${q.category}","${q.question}","${q.answerJapanese}","${q.answerRomaji}","${q.answerIndo}",${q.timeLimit}`).join("\n");
@@ -162,8 +241,108 @@ const saveManual = async () => {
         a.click();
     };
 
+// Modal Loading & Results
+    const renderImportModal = () => {
+        if (!isImporting && !importResults) return null;
+        
+        return (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 space-y-6">
+                    {isImporting && !importResults && (
+                        <>
+                            <div className="text-center space-y-4">
+                                <div className="inline-flex items-center justify-center w-20 h-20 bg-indigo-100 rounded-full">
+                                    <Upload className="text-indigo-600 animate-bounce" size={40} />
+                                </div>
+                                <h3 className="text-2xl font-black text-gray-900">Importing Data...</h3>
+                                <p className="text-sm text-gray-500">Mohon tunggu, jangan tutup halaman ini</p>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                    <div 
+                                        className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500"
+                                        style={{ width: `${importProgress}%` }}
+                                    />
+                                </div>
+                                <p className="text-center text-sm font-bold text-indigo-600">{importProgress}%</p>
+                            </div>
+                        </>
+                    )}
+                    
+                    {importResults && (
+                        <>
+                            <div className="text-center space-y-3">
+                                <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full ${
+                                    importResults.failed.length === 0 ? 'bg-emerald-100' : 'bg-amber-100'
+                                }`}>
+                                    {importResults.failed.length === 0 ? (
+                                        <span className="text-4xl">✅</span>
+                                    ) : (
+                                        <span className="text-4xl">⚠️</span>
+                                    )}
+                                </div>
+                                <h3 className="text-2xl font-black text-gray-900">Import Selesai!</h3>
+                            </div>
+                            
+                            <div className="space-y-4 max-h-80 overflow-y-auto">
+                                {importResults.success.length > 0 && (
+                                    <div className="bg-emerald-50 rounded-2xl p-5 border-2 border-emerald-200">
+                                        <p className="font-black text-emerald-700 text-sm mb-3">
+                                            ✅ Berhasil ({importResults.success.length})
+                                        </p>
+                                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                                            {importResults.success.slice(0, 5).map((item, idx) => (
+                                                <p key={idx} className="text-xs text-emerald-600 font-medium">
+                                                    • {item.length > 60 ? item.substring(0, 60) + '...' : item}
+                                                </p>
+                                            ))}
+                                            {importResults.success.length > 5 && (
+                                                <p className="text-xs text-emerald-500 italic">
+                                                    ... dan {importResults.success.length - 5} lainnya
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {importResults.failed.length > 0 && (
+                                    <div className="bg-rose-50 rounded-2xl p-5 border-2 border-rose-200">
+                                        <p className="font-black text-rose-700 text-sm mb-3">
+                                            ❌ Gagal ({importResults.failed.length})
+                                        </p>
+                                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                                            {importResults.failed.map((item, idx) => (
+                                                <p key={idx} className="text-xs text-rose-600 font-medium">
+                                                    • {item.length > 60 ? item.substring(0, 60) + '...' : item}
+                                                </p>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <button 
+                                onClick={() => {
+                                    setIsImporting(false);
+                                    setImportResults(null);
+                                    setImportProgress(0);
+                                }}
+                                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all"
+                            >
+                                TUTUP
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+        );
+    };
+    
     return (
-        <div className="space-y-12 fade-in pb-20">
+        <>
+            {renderImportModal()}
+            <div className="space-y-12 fade-in pb-20">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div className="space-y-2">
                     <h1 className="text-4xl font-black text-gray-900">Database Management</h1>
@@ -179,31 +358,7 @@ const saveManual = async () => {
 Perkenalan diri	お名前は何ですか？	私の名前はJatiです	Watashi no namae wa Jati desu	Nama saya Jati	30
 
 Format: Kategori, Soal, Jepang, Romaji, Indo, Waktu" />
-<button onClick={async () => {
-    const rows = bulkCsv.split('\n').filter(r => r.trim());
-    const newQ = rows.map(r => {
-        // Auto-detect: Tab dari Excel atau Comma dari CSV
-        const separator = r.includes('\t') ? '\t' : ',';
-        const p = r.split(separator).map(v => v.trim().replace(/^"|"$/g, ''));
-        
-        return { 
-            id: Date.now() + Math.random(), 
-            category: p[0] || 'Umum', 
-            question: p[1] || '?', 
-            answerJapanese: p[2] || '', 
-            answerRomaji: p[3] || '', 
-            answerIndo: p[4] || '', 
-            timeLimit: parseInt(p[5]) || 30, 
-            mastered: false 
-        };
-    });
-    
-    for (const q of newQ) {
-        await saveQuestion(q);
-    }
-    setQuestions([...questions, ...newQ]);
-    setBulkCsv('');
-}} className="w-full py-6 bg-gray-900 text-white rounded-[28px] font-black uppercase shadow-xl hover:bg-black transition-all">TAMBAH KE DATABASE</button>
+<button onClick={handleBulkAdd} className="w-full py-6 bg-gray-900 text-white rounded-[28px] font-black uppercase shadow-xl hover:bg-black transition-all">TAMBAH KE DATABASE</button>
                 </div>
 
                 <div className="space-y-6">
@@ -389,6 +544,7 @@ Format: Kategori, Soal, Jepang, Romaji, Indo, Waktu" />
                 </div>
             </div>
         </div>
+        </>
     );
 };
 
