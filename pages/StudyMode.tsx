@@ -132,24 +132,17 @@ if (newTime <= 5 && newTime >= 1) {
         setTimeout(() => {
             setIsTimerRunning(false);
             
-// Cek apakah ini kartu terakhir
-if (mode === 'random' || mode === 'examRandom') {
-    // Untuk mode acak, cek berdasarkan answeredCount
-    if (answeredCount >= filteredQuestions.length) {
-        setShowCompletionModal(true);
-        return;
-    }
-} else {
-    // Untuk mode normal, cek berdasarkan currentIndex
-    if (currentIndex === filteredQuestions.length - 1) {
-        setShowCompletionModal(true);
-        return;
-    }
-}
-            
 // Auto next card setelah timer habis
 if (mode === 'random' || mode === 'examRandom') {
-    setAnsweredCount(prev => prev + 1); // Tambah ini - hitung soal yang udah lewat
+    const newAnsweredCount = answeredCount + 1;
+    setAnsweredCount(newAnsweredCount);
+    
+    // Cek apakah sudah selesai semua
+    if (newAnsweredCount >= filteredQuestions.length) {
+        setShowCompletionModal(true);
+        return;
+    }
+    
     setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
 } else {
     setCurrentIndex(currentIndex + 1);
@@ -233,17 +226,6 @@ if (epData && epData.length > 0) {
         setAnsweredCount(0);
         resetSession();
     }, [selectedCategory]);
-
-    useEffect(() => {
-        let timer: any;
-        if (isTimerRunning && timeLeft > 0) {
-            timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-        } else if (timeLeft === 0 && isTimerRunning) {
-            setIsTimerRunning(false);
-            if (isRecording) stopRecordingProcess();
-        }
-        return () => clearInterval(timer);
-    }, [isTimerRunning, timeLeft, isRecording]);
 
     const speak = (text: string) => {
         if (!text) return;
@@ -351,32 +333,30 @@ const startReview = (type: 'mastered' | 'needsReview') => {
     };
 
 const nextQuestion = () => {
-    // Update counter dulu sebelum cek apapun (biar langsung keisi)
+    // Mode acak
     if (mode === 'random' || mode === 'examRandom') {
-        setAnsweredCount(prev => prev + 1);
-    }
-    
-// Cek apakah ini kartu terakhir
-if (mode === 'random' || mode === 'examRandom') {
-    // Untuk mode acak, cek answeredCount (sudah di-increment di atas)
-    if (answeredCount >= filteredQuestions.length) {
-        setShowCompletionModal(true);
-        return;
-    }
-} else {
-    // Untuk mode normal, cek currentIndex
-    if (currentIndex === filteredQuestions.length - 1) {
-        setShowCompletionModal(true);
-        return;
-    }
-}
-    
-    if (mode === 'random' || mode === 'examRandom') {
+        const newAnsweredCount = answeredCount + 1;
+        setAnsweredCount(newAnsweredCount);
+        
+        // Cek apakah sudah selesai semua
+        if (newAnsweredCount >= filteredQuestions.length) {
+            setShowCompletionModal(true);
+            return;
+        }
+        
         setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
-    
-    } else {
+    } 
+    // Mode normal
+    else {
+        // Cek apakah ini kartu terakhir
+        if (currentIndex === filteredQuestions.length - 1) {
+            setShowCompletionModal(true);
+            return;
+        }
+        
         setCurrentIndex(currentIndex + 1);
     }
+    
     setShowAnswer(false);
     setAiFeedback(null);
     setRecordedAudioUrl(null);
