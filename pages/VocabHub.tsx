@@ -484,8 +484,21 @@ const exportExcel = async () => {
 const handleSaveVocab = async () => {
     if (!newWord.trim() || !newMeaning.trim()) return;
     
+    // Cek duplikat berdasarkan word (case-insensitive & trim)
+    const normalizedNewWord = newWord.trim().toLowerCase();
+    
     if (editingId !== null) {
-        // EDIT MODE
+        // EDIT MODE - cek duplikat kecuali diri sendiri
+        const duplicate = vocabList.find(v => 
+            v.id !== editingId && 
+            v.word.trim().toLowerCase() === normalizedNewWord
+        );
+        
+        if (duplicate) {
+            alert(`❌ Kata "${newWord}" sudah ada di database!\n\nKata yang sama: "${duplicate.word}"\nArti: "${duplicate.meaning}"\nKategori: ${duplicate.category}`);
+            return;
+        }
+        
         const updated: Vocab = { 
             id: editingId, 
             word: newWord, 
@@ -500,12 +513,19 @@ const handleSaveVocab = async () => {
             setVocabList(vocabList.map(v => v.id === editingId ? savedVocab : v));
         }
         
-        // 🎯 TAMBAH BARIS INI - untuk trigger auto scroll setelah save
         setLastEditedId(editingId);
-        
         setEditingId(null);
     } else {
-        // ADD NEW MODE
+        // ADD NEW MODE - cek duplikat
+        const duplicate = vocabList.find(v => 
+            v.word.trim().toLowerCase() === normalizedNewWord
+        );
+        
+        if (duplicate) {
+            alert(`❌ Kata "${newWord}" sudah ada di database!\n\nKata yang sama: "${duplicate.word}"\nArti: "${duplicate.meaning}"\nKategori: ${duplicate.category}`);
+            return;
+        }
+        
         const newVocab = { 
             word: newWord, 
             meaning: newMeaning, 
@@ -1042,11 +1062,11 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     }
 }} 
 className={`p-5 rounded-3xl transition-all ${
-    (studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length - 1
+    (studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length
     ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
     : 'bg-white text-indigo-600 hover:bg-indigo-50'
 }`}>
-    {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length - 1
+    {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length
         ? <RotateCw size={32}/> 
         : <ChevronRight size={32}/>
     }
