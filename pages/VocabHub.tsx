@@ -109,22 +109,21 @@ useEffect(() => {
 }, [lastEditedId]);
 
 const loadVocab = async () => {
-    const { data } = await supabase.from('vocab').select('*').order('created_at', { ascending: true });
+    const { data } = await supabase.from('vocab').select('*').order('order_index', { ascending: true });
     if (data) {
         setVocabList(data.map((v: any) => ({
             id: v.id,
             word: v.word,
             meaning: v.meaning,
             category: v.category,
-            example_japanese: v.example_japanese || '',  // TAMBAH INI
+            example_japanese: v.example_japanese || '',
             example_indo: v.example_indo || '',
-            mastered: v.mastered || false  // TAMBAH INI
+            mastered: v.mastered || false
         })));
     }
 };
 
 const saveVocab = async (v: any) => {
-    // Kalau ada ID (edit), pakai update. Kalau nggak ada ID (baru), pakai insert
     if (v.id) {
         // UPDATE data yang sudah ada
         const { data, error } = await supabase.from('vocab').update({
@@ -133,7 +132,8 @@ const saveVocab = async (v: any) => {
             category: v.category,
             example_japanese: v.example_japanese,
             example_indo: v.example_indo,
-            mastered: v.mastered || false
+            mastered: v.mastered || false,
+            order_index: vocabList.findIndex(voc => voc.id === v.id)
         }).eq('id', v.id).select();
         
         if (error) console.error('Error updating vocab:', error);
@@ -146,7 +146,8 @@ const saveVocab = async (v: any) => {
             category: v.category,
             example_japanese: v.example_japanese,
             example_indo: v.example_indo,
-            mastered: v.mastered || false
+            mastered: v.mastered || false,
+            order_index: vocabList.length
         }).select();
         
         if (error) console.error('Error inserting vocab:', error);
@@ -171,6 +172,13 @@ const handleDragOver = (e: React.DragEvent, targetId: number) => {
         newList.splice(draggedIndex, 1);
         newList.splice(targetIndex, 0, item);
         setVocabList(newList);
+        
+        // Save order_index ke database
+        newList.forEach(async (vocab, index) => {
+            await supabase.from('vocab')
+                .update({ order_index: index })
+                .eq('id', vocab.id);
+        });
     }
 };
 
