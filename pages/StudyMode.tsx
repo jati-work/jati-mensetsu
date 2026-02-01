@@ -43,7 +43,7 @@ const StudyMode: React.FC<Props> = ({ questions, setQuestions, interviewPoints, 
     
     // Feature States
     const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
-    const [mode, setMode] = useState<'casual' | 'exam' | 'random'>('casual');
+    const [mode, setMode] = useState<'casual' | 'exam' | 'random' | 'examRandom'>('casual');
     const [timeLeft, setTimeLeft] = useState(30);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -106,7 +106,7 @@ useEffect(() => {
         setIsTimerRunning(false);
         
         // Auto next card setelah timer habis
-        if (mode === 'random') {
+        if (mode === 'random' || mode === 'examRandom') {
             setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
         } else {
             setCurrentIndex((currentIndex + 1) % filteredQuestions.length);
@@ -117,7 +117,7 @@ useEffect(() => {
 
 // Reset timer saat ganti soal atau mode
 useEffect(() => {
-    if (mode === 'exam' && filteredQuestions[currentIndex]) {
+    if ((mode === 'exam' || mode === 'examRandom') && filteredQuestions[currentIndex]) {
         setTimeLeft(filteredQuestions[currentIndex].timeLimit);
         setIsTimerRunning(true);
     } else {
@@ -272,7 +272,7 @@ if (epData && epData.length > 0) {
     };
 
 const nextQuestion = () => {
-    if (mode === 'random') {
+    if (mode === 'random' || mode === 'examRandom') {
         setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length));
     } else {
         setCurrentIndex((currentIndex + 1) % filteredQuestions.length);
@@ -282,7 +282,7 @@ const nextQuestion = () => {
     setRecordedAudioUrl(null);
     
     // Reset timer untuk soal berikutnya
-    if (mode === 'exam' && filteredQuestions[currentIndex + 1]) {
+    if ((mode === 'exam' || mode === 'examRandom') && filteredQuestions[currentIndex + 1]) {
         setTimeLeft(filteredQuestions[(currentIndex + 1) % filteredQuestions.length].timeLimit);
         setIsTimerRunning(true);
     }
@@ -295,7 +295,7 @@ const prevQuestion = () => {
     setRecordedAudioUrl(null);
     
     // Reset timer untuk soal sebelumnya
-    if (mode === 'exam') {
+    if (mode === 'exam' || mode === 'examRandom') {
         const prevIdx = (currentIndex - 1 + filteredQuestions.length) % filteredQuestions.length;
         setTimeLeft(filteredQuestions[prevIdx].timeLimit);
         setIsTimerRunning(true);
@@ -459,6 +459,7 @@ const masteredPercentage = filteredQuestions.length > 0
                             <button onClick={() => setMode('casual')} className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'casual' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}><Coffee size={16} /> SANTAI</button>
                             <button onClick={() => { setMode('exam'); setTimeLeft(currentQ?.timeLimit || 30); }} className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'exam' ? 'bg-rose-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}><Timer size={16} /> UJIAN</button>
                             <button onClick={() => setMode('random')} className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'random' ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}><Shuffle size={16} /> ACAK</button>
+                            <button onClick={() => { setMode('examRandom'); setTimeLeft(currentQ?.timeLimit || 30); setIsTimerRunning(true); setCurrentIndex(Math.floor(Math.random() * filteredQuestions.length)); }} className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'examRandom' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}><Target size={16} /> UJIAN ACAK</button>
                         </div>
                         
                         <div className="flex items-center gap-2 bg-indigo-50 p-2 rounded-2xl border border-indigo-100">
@@ -476,7 +477,7 @@ const masteredPercentage = filteredQuestions.length > 0
                     </div>
 
                     <div className="bg-white p-10 md:p-14 rounded-[64px] shadow-sm border border-gray-100 min-h-[550px] flex flex-col justify-between relative overflow-hidden slide-up">
-                        {mode === 'exam' && (
+                        {(mode === 'exam' || mode === 'examRandom') && (
                             <div className="absolute top-10 right-10 flex items-center gap-3 bg-rose-50 px-6 py-3 rounded-full border border-rose-100">
                                 <Timer className={`text-rose-500 ${isTimerRunning ? 'animate-pulse' : ''}`} />
                                 <span className={`font-black text-xl ${timeLeft <= 5 ? 'text-rose-600 animate-bounce' : 'text-rose-900'}`}>{timeLeft}s</span>
