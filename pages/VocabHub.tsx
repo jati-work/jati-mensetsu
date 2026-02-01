@@ -41,6 +41,10 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [draggedId, setDraggedId] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState(0);
+    const [importResults, setImportResults] = useState<{success: string[], failed: string[]} | null>(null);
+    const [showImportModal, setShowImportModal] = useState(false);
     // Ambil semua kategori unik
 const existingCategories = useMemo(() => {
     return Array.from(new Set(vocabList.map(v => v.category))).filter(cat => cat.trim() !== '');
@@ -184,6 +188,197 @@ const handleDragOver = (e: React.DragEvent, targetId: number) => {
 
 const handleDragEnd = () => setDraggedId(null);
 
+const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    try {
+        setIsImporting(true);
+        setImportProgress(0);
+        setImportResults(null);
+        setShowImportModal(true);
+        
+        const text = await file.text();
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        setImportProgress(10);
+        
+        // Parse CSV
+        const parsedData = lines.slice(1).map((line, index) => { // Skip header
+            const separator = line.includes('\t') ? '\t' : ',';
+            const parts = line.split(separator).map(v => v.trim().replace(/^"|"$/g, ''));
+            
+            return {
+                word: parts[0] || '',
+                meaning: parts[1] || '',
+                category: parts[2] || 'Umum',
+                example_japanese: parts[3] || '',
+                example_indo: parts[4] || '',
+                mastered: false,
+                order_index: vocabList.length + index
+            };
+        }).filter(item => item.word && item.meaning); // Filter yang valid
+        
+        setImportProgress(30);
+        
+        // Cek duplikat berdasarkan word
+        const existingWords = new Set(vocabList.map(v => v.word.trim().toLowerCase()));
+        const newData = parsedData.filter(item => 
+            !existingWords.has(item.word.trim().toLowerCase())
+        );
+        const duplicates = parsedData.filter(item => 
+            existingWords.has(item.word.trim().toLowerCase())
+        );
+        
+        setImportProgress(50);
+        
+        const successList: string[] = [];
+        const failedList: string[] = [];
+        
+        // Tambah info duplikat
+        duplicates.forEach(item => {
+            failedList.push(`${item.word} (sudah ada di database)`);
+        });
+        
+        // INSERT batch ke Supabase
+        if (newData.length > 0) {
+            const { data, error } = await supabase
+                .from('vocab')
+                .insert(newData)
+                .select();
+            
+            setImportProgress(80);
+            
+            if (error) {
+                console.error('Error bulk insert:', error);
+                newData.forEach(item => failedList.push(`${item.word} (error: ${error.message})`));
+            } else if (data) {
+                const newVocabs = data.map((item: any) => ({
+                    id: item.id,
+                    word: item.word,
+                    meaning: item.meaning,
+                    category: item.category,
+                    example_japanese: item.example_japanese || '',
+                    example_indo: item.example_indo || '',
+                    mastered: item.mastered || false
+                }));
+                
+                setVocabList([...vocabList, ...newVocabs]);
+                data.forEach(item => successList.push(item.word));
+            }
+        } else {
+            setImportProgress(80);
+        }
+        
+        setImportProgress(100);
+        setImportResults({ success: successList, failed: failedList });
+        
+        // Reset file input
+        event.target.value = '';
+        
+    } catch (err) {
+        console.error('Error:', err);
+        setImportResults({ 
+            success: [], 
+            failed: ['Error membaca file: ' + (err as Error).message] 
+        });
+    } finally {
+        setIsImporting(false);
+    }
+};
+
+const renderImportModal = () => {
+    if (!showImportModal) return null;
+    
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 md:pl-64">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 space-y-6">
+                {isImporting && !importResults && (
+                    <>
+                        <div className="text-center space-y-4">
+                            <div className="inline-flex items-center justify-center w-20 h-20 bg-indigo-100 rounded-full">
+                                <Upload className="text-indigo-600 animate-bounce" size={40} />
+                            </div>
+                            <h3 className="text-2xl font-black text-gray-900">Importing Vocab...</h3>
+                            <p className="text-sm text-gray-500">Mohon tunggu, sedang memproses file</p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                <div 
+                                    className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500"
+                                    style={{ width: `${importProgress}%` }}
+                                />
+                            </div>
+                            <p className="text-center text-sm font-bold text-indigo-600">{importProgress}%</p>
+                        </div>
+                    </>
+                )}
+                
+                {importResults && (
+                    <>
+                        <div className="text-center space-y-3">
+                            <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full ${
+                                importResults.failed.length === 0 ? 'bg-emerald-100' : 'bg-amber-100'
+                            }`}>
+                                {importResults.failed.length === 0 ? (
+                                    <span className="text-4xl">✅</span>
+                                ) : (
+                                    <span className="text-4xl">⚠️</span>
+                                )}
+                            </div>
+                            <h3 className="text-2xl font-black text-gray-900">Import Selesai!</h3>
+                        </div>
+                        
+                        <div className="space-y-4 max-h-80 overflow-y-auto">
+                            {importResults.success.length > 0 && (
+                                <div className="bg-emerald-50 rounded-2xl p-5 border-2 border-emerald-200">
+                                    <p className="font-black text-emerald-700 text-sm mb-3">
+                                        ✅ Berhasil ({importResults.success.length})
+                                    </p>
+                                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                                        {importResults.success.map((item, idx) => (
+                                            <p key={idx} className="text-xs text-emerald-600 font-medium">
+                                                • {item.length > 60 ? item.substring(0, 60) + '...' : item}
+                                            </p>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {importResults.failed.length > 0 && (
+                                <div className="bg-rose-50 rounded-2xl p-5 border-2 border-rose-200">
+                                    <p className="font-black text-rose-700 text-sm mb-3">
+                                        ❌ Gagal ({importResults.failed.length})
+                                    </p>
+                                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                                        {importResults.failed.map((item, idx) => (
+                                            <p key={idx} className="text-xs text-rose-600 font-medium">
+                                                • {item.length > 60 ? item.substring(0, 60) + '...' : item}
+                                            </p>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        
+                        <button 
+                            onClick={() => {
+                                setShowImportModal(false);
+                                setImportResults(null);
+                                setImportProgress(0);
+                            }}
+                            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all"
+                        >
+                            TUTUP
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+    
 const exportCsv = () => {
     const header = "Kategori,Kata,Arti,Contoh_Jepang,Contoh_Indo\n";
     const rows = vocabList.map(v => `"${v.category}","${v.word}","${v.meaning}","${v.example_japanese || ''}","${v.example_indo || ''}"`).join("\n");
@@ -357,22 +552,69 @@ const masteredPercentage = filteredList.length > 0
     : 0;
     
     return (
-        <div className="space-y-12 fade-in pb-20 pt-4 md:pt-0">
+        <>
+            {renderImportModal()}
+            <div className="space-y-12 fade-in pb-20 pt-4 md:pt-0">
 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
     <div className="space-y-2">
         <h1 className="text-4xl font-black text-gray-900 tracking-tight">Vocab Hub Pro</h1>
         <p className="text-indigo-500 font-black text-[10px] uppercase tracking-[0.3em]">Flashcards untuk hafalan kotoba</p>
     </div>
     <div className="flex gap-4">
-        <button onClick={importCsv} className="flex items-center gap-3 bg-indigo-50 text-indigo-600 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-indigo-100 transition-all">
-            <Upload size={18} /> IMPORT CSV
-        </button>
+<label className="flex items-center gap-3 px-6 py-3 bg-indigo-50 text-indigo-600 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-indigo-100 transition-all cursor-pointer">
+    <Upload size={18} /> IMPORT CSV
+    <input 
+        type="file" 
+        accept=".csv,.txt" 
+        onChange={handleFileImport}
+        className="hidden"
+    />
+</label>
         <button onClick={exportCsv} className="flex items-center gap-3 bg-emerald-50 text-emerald-600 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-emerald-100 transition-all">
             <Download size={18} /> EXPORT CSV
         </button>
     </div>
 </div>
 
+{/* Info Format CSV */}
+<div className="bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-6 space-y-3">
+    <div className="flex items-start gap-3">
+        <div className="p-2 bg-indigo-100 rounded-xl flex-shrink-0">
+            <Upload className="text-indigo-600" size={20} />
+        </div>
+        <div className="flex-1">
+            <h4 className="font-black text-indigo-900 text-sm mb-2">📋 Format File CSV untuk Import</h4>
+            <div className="space-y-2 text-xs font-bold text-indigo-700">
+                <p className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
+                    Header: <code className="bg-white px-2 py-1 rounded text-[10px] font-mono">Word,Meaning,Category,Example Japanese,Example Indo</code>
+                </p>
+                <p className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
+                    Bisa pakai <strong>koma (,)</strong> atau <strong>tab dari Excel</strong>
+                </p>
+                <p className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
+                    Data duplikat otomatis dilewati
+                </p>
+            </div>
+            <details className="mt-3">
+                <summary className="cursor-pointer text-indigo-600 font-black text-[10px] uppercase tracking-wider hover:text-indigo-800 select-none">
+                    ▶ Lihat Contoh Format
+                </summary>
+                <div className="mt-3 bg-white rounded-xl p-4 border border-indigo-100">
+                    <pre className="text-[9px] font-mono text-gray-600 overflow-x-auto whitespace-pre">
+{`Word,Meaning,Category,Example Japanese,Example Indo
+こんにちは,Halo,Salam,こんにちは、お元気ですか,Halo apa kabar
+ありがとう,Terima kasih,Salam,ありがとうございます,Terima kasih banyak
+さようなら,Selamat tinggal,Salam,さようなら、また会いましょう,Sampai jumpa lagi`}
+                    </pre>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+                
 {/* Mode Selector */}
 <div className="flex gap-3 justify-center">
     <button 
@@ -735,6 +977,7 @@ const masteredPercentage = filteredList.length > 0
     }
 `}</style>
         </div>
+        </>
 );
 };
 
