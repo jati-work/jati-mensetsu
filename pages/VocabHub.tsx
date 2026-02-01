@@ -28,6 +28,7 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const formRef = useRef<HTMLDivElement>(null);
     const editedItemRef = useRef<HTMLDivElement | null>(null);
     const [lastEditedId, setLastEditedId] = useState<number | null>(null);
+    const [glowingId, setGlowingId] = useState<number | null>(null);
 
     const [selectedCategory, setSelectedCategory] = useState('Semua');
     const [flashIndex, setFlashIndex] = useState(0);
@@ -73,11 +74,11 @@ useEffect(() => {
         loadVocab();
     }, []);
 
-    // AUTO SCROLL #1: Saat MULAI EDIT → scroll ke kotak edit
+// AUTO SCROLL #1: Saat MULAI EDIT → scroll ke kotak edit
 useEffect(() => {
-    if (editingId !== null && editedItemRef.current) {
+    if (editingId !== null && formRef.current) {  // ✅ BENAR: pakai formRef
         setTimeout(() => {
-            editedItemRef.current?.scrollIntoView({ 
+            formRef.current?.scrollIntoView({ 
                 behavior: 'smooth', 
                 block: 'center' 
             });
@@ -93,6 +94,15 @@ useEffect(() => {
                 behavior: 'smooth', 
                 block: 'center' 
             });
+            
+            // Trigger glow effect
+            setGlowingId(lastEditedId);
+            
+            // Hilangkan glow setelah 2 detik
+            setTimeout(() => {
+                setGlowingId(null);
+            }, 2000);
+            
             setLastEditedId(null);
         }, 100);
     }
@@ -463,19 +473,21 @@ const masteredPercentage = filteredList.length > 0
                     
 <div className="max-h-[400px] overflow-y-auto custom-scroll space-y-3 pr-2">
     {filteredList.map((item) => (
-        <div 
-            key={item.id}
-            ref={item.id === editingId || item.id === lastEditedId ? editedItemRef : null}
-            draggable
-            onDragStart={() => handleDragStart(item.id)}
-            onDragOver={(e) => handleDragOver(e, item.id)}
-            onDragEnd={handleDragEnd}
-            className={`p-5 border rounded-3xl flex items-center justify-between transition-all cursor-grab active:cursor-grabbing ${
-                draggedId === item.id 
-                    ? 'opacity-30 scale-95 bg-gray-50 border-indigo-200' 
-                    : 'bg-white border-gray-100 hover:shadow-lg'
-            }`}
-        >
+<div 
+    key={item.id}
+    ref={item.id === editingId || item.id === lastEditedId ? editedItemRef : null}
+    draggable
+    onDragStart={() => handleDragStart(item.id)}
+    onDragOver={(e) => handleDragOver(e, item.id)}
+    onDragEnd={handleDragEnd}
+    className={`p-5 border rounded-3xl flex items-center justify-between transition-all cursor-grab active:cursor-grabbing ${
+    draggedId === item.id 
+        ? 'opacity-30 scale-95 bg-gray-50 border-indigo-200' 
+        : item.id === glowingId
+        ? 'bg-emerald-50 border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.4)] scale-105 animate-[glow-pulse_1s_ease-in-out_2]'
+        : 'bg-white border-gray-100 hover:shadow-lg'
+}`}
+>
 <GripVertical size={16} className="text-gray-200 mr-2 flex-shrink-0" />
 
 {/* Kolom Kiri: Kata & Arti */}
@@ -705,13 +717,18 @@ const masteredPercentage = filteredList.length > 0
 )}
                 
             </div>
-            <style>{`
-                .perspective { perspective: 2000px; }
-                .preserve-3d { transform-style: preserve-3d; }
-                .backface-hidden { backface-visibility: hidden; }
-                .my-rotate-y-180 { transform: rotateY(180deg); }
-                .no-scrollbar::-webkit-scrollbar { display: none; }
-            `}</style>
+<style>{`
+    .perspective { perspective: 2000px; }
+    .preserve-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; }
+    .my-rotate-y-180 { transform: rotateY(180deg); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    @keyframes glow-pulse {
+        0%, 100% { box-shadow: 0 0 20px rgba(16,185,129,0.3); }
+        50% { box-shadow: 0 0 40px rgba(16,185,129,0.6); }
+    }
+`}</style>
         </div>
 );
 };
