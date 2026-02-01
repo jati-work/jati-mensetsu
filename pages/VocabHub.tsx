@@ -360,7 +360,7 @@ const masteredPercentage = filteredList.length > 0
             setShowCategorySuggestions(true);
         }}
         onFocus={() => setShowCategorySuggestions(true)}
-        className="bg-gray-50 p-5 rounded-2xl font-bold text-xs outline-none border border-gray-100 w-full"
+        className="w-full p-4 bg-white rounded-2xl font-bold border-none outline-none text-xs shadow-inner"
         placeholder="Kategori" 
     />
     {showCategorySuggestions && newCategory && existingCategories.filter(cat => 
