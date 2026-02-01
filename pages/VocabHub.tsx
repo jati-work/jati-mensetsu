@@ -1045,7 +1045,19 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 )}
                                     
                             <div className="flex items-center gap-10">
-                                <button onClick={() => setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length)} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"><ChevronLeft size={32}/></button>
+                                <button onClick={() => setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length)} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"></div>  // Counter
+    
+    {/* TARUH KODE BARU DI SINI */}
+    {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length ? (
+        <button onClick={resetQuiz} ...>
+            <RotateCw size={32} />
+        </button>
+    ) : (
+        <button onClick={nextQuestion} ...>
+            <ChevronRight size={32} />
+        </button>
+    )}
+</div>
 
 {/* TAMBAH TOMBOL MASTERED */}
     <button 
@@ -1067,19 +1079,9 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
         <span className="opacity-30 text-sm"> / {filteredList.length}</span>
     </span>
 </div>
-<button onClick={() => {
 
-className={`p-5 rounded-3xl transition-all ${
-    (studyMode === 'random' || studyMode === 'examRandom') && answeredCount + 1 >= filteredList.length
-    ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
-    : 'bg-white text-indigo-600 hover:bg-indigo-50'
-}`}>
-    {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount + 1 >= filteredList.length
-        ? <RotateCw size={32}/> 
-        : <ChevronRight size={32}/>
-    }
-</button>
-</div>
+
+                                
                         </div>
                     ) : (
                         <div className="text-center p-24 bg-white/5 rounded-[80px] border border-white/10 backdrop-blur-lg">
