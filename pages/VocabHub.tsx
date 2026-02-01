@@ -974,15 +974,17 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
             "{currentCard.example_indo}"
         </p>
     )}
-    {flipMode === 'IDtoJP' && currentCard.example_japanese && (
-        <p className="mt-6 text-sm font-bold text-white/80 italic leading-relaxed break-words max-w-full px-4">
-            "{currentCard.example_japanese}"
-        </p>
-    )}
-</div>
+        {flipMode === 'IDtoJP' && currentCard.example_japanese && (
+            <p className="mt-6 text-sm font-bold text-white/80 italic leading-relaxed break-words max-w-full px-4">
+                "{currentCard.example_japanese}"
+            </p>
+        )}
+    </div>  {/* ← Penutup kartu belakang (hijau) */}
                         
+                                </div>  {/* ← Penutup div preserve-3d */}
+                            </div>  {/* ← Penutup div h-[450px] perspective */}
 
-{/* Progress Bar - TARUH DI SINI */}
+{/* Progress Bar - TARUH DI SINI ✅ */}
 {(studyMode === 'random' || studyMode === 'examRandom') && (
     <div className="w-full max-w-lg mx-auto mb-4">
         <div className="bg-white/10 rounded-full h-3 overflow-hidden">
