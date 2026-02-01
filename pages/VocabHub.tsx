@@ -52,6 +52,26 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [isReviewing, setIsReviewing] = useState(false);
     const [reviewType, setReviewType] = useState<'mastered' | 'needsReview' | null>(null);
+    const [answeredCount, setAnsweredCount] = useState(0);
+    const [originalIndex, setOriginalIndex] = useState(0);
+
+const playBeep = (frequency: number = 800, duration: number = 100) => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration / 1000);
+};
 
 // ========== PASTE FILTEREDLIST DI SINI (BARIS 57-58) ==========
 const filteredList = useMemo(() => {
@@ -88,14 +108,16 @@ useEffect(() => {
         timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (timeLeft === 0 && isTimerRunning) {
         setIsTimerRunning(false);
-        
-        // Auto next card setelah timer habis
-        if (studyMode === 'random' || studyMode === 'examRandom') {
-            setFlashIndex(Math.floor(Math.random() * filteredList.length));
-        } else {
-            setFlashIndex((flashIndex + 1) % filteredList.length);
-        }
+        // Hapus auto next - biar user yang next manual
     }
+    
+    // Play beep untuk countdown 3, 2, 1
+    if (isTimerRunning && timeLeft <= 3 && timeLeft > 0) {
+        // Bunyi makin tinggi pas makin mendekati 0
+        const freq = timeLeft === 3 ? 600 : timeLeft === 2 ? 800 : 1000;
+        playBeep(freq, 100);
+    }
+    
     return () => clearInterval(timer);
 }, [isTimerRunning, timeLeft, flashIndex, filteredList.length, studyMode]);
 
@@ -977,17 +999,56 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     >
         <CheckCircle2 size={32} />
     </button>
-    
-    <div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
-        <span className="text-white font-black text-xl">{flashIndex + 1} <span className="opacity-30 text-sm">/ {filteredList.length}</span></span>
+
+{(studyMode === 'random' || studyMode === 'examRandom') && (
+    <div className="w-full max-w-lg mx-auto mb-4">
+        <div className="bg-white/10 rounded-full h-3 overflow-hidden">
+            <div 
+                className="bg-gradient-to-r from-indigo-400 to-indigo-600 h-full transition-all duration-300"
+                style={{ width: `${(answeredCount / filteredList.length) * 100}%` }}
+            />
+        </div>
+        <div className="flex justify-between mt-2 text-xs text-white/50 font-bold">
+            <span>PROGRESS: {answeredCount} SOAL DIJAWAB</span>
+            <span>{answeredCount} / {filteredList.length}</span>
+        </div>
     </div>
+)}
+
+<div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
+                                
+<div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
+    <span className="text-white font-black text-xl">
+        {(studyMode === 'random' || studyMode === 'examRandom') ? answeredCount + 1 : flashIndex + 1}
+        <span className="opacity-30 text-sm"> / {filteredList.length}</span>
+    </span>
+</div>
 <button onClick={() => {
     if (studyMode === 'random' || studyMode === 'examRandom') {
-        setFlashIndex(Math.floor(Math.random() * filteredList.length));
+        const nextCount = answeredCount + 1;
+        setAnsweredCount(nextCount);
+        
+        if (nextCount >= filteredList.length) {
+            // Selesai semua - reset
+            setAnsweredCount(0);
+            setFlashIndex(0);
+        } else {
+            setFlashIndex(Math.floor(Math.random() * filteredList.length));
+        }
     } else {
         setFlashIndex((flashIndex + 1) % filteredList.length);
     }
-}} className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"><ChevronRight size={32}/></button>
+}} 
+className={`p-5 rounded-3xl transition-all ${
+    (studyMode === 'random' || studyMode === 'examRandom') && answeredCount + 1 >= filteredList.length
+    ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
+    : 'bg-white text-indigo-600 hover:bg-indigo-50'
+}`}>
+    {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount + 1 >= filteredList.length 
+        ? <RotateCw size={32}/> 
+        : <ChevronRight size={32}/>
+    }
+</button>
 </div>
                         </div>
                     ) : (
