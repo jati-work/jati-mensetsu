@@ -26,6 +26,8 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [newExampleIndo, setNewExampleIndo] = useState('');
     const [editingId, setEditingId] = useState<number | null>(null);
     const formRef = useRef<HTMLDivElement>(null);
+    const editedItemRef = useRef<HTMLDivElement | null>(null);
+    const [lastEditedId, setLastEditedId] = useState<number | null>(null);
 
     const [selectedCategory, setSelectedCategory] = useState('Semua');
     const [flashIndex, setFlashIndex] = useState(0);
@@ -70,6 +72,31 @@ useEffect(() => {
     useEffect(() => {
         loadVocab();
     }, []);
+
+    // AUTO SCROLL #1: Saat MULAI EDIT → scroll ke kotak edit
+useEffect(() => {
+    if (editingId !== null && editedItemRef.current) {
+        setTimeout(() => {
+            editedItemRef.current?.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }, 100);
+    }
+}, [editingId]);
+
+// AUTO SCROLL #2: Saat SELESAI SAVE → scroll ke log yang baru di-edit
+useEffect(() => {
+    if (lastEditedId !== null && editedItemRef.current) {
+        setTimeout(() => {
+            editedItemRef.current?.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            setLastEditedId(null);
+        }, 100);
+    }
+}, [lastEditedId]);
 
 const loadVocab = async () => {
     const { data } = await supabase.from('vocab').select('*').order('created_at', { ascending: true });
@@ -233,12 +260,16 @@ const handleSaveVocab = async () => {
             category: newCategory || 'Umum',
             example_japanese: newExampleJapanese,
             example_indo: newExampleIndo,
-            mastered: false  // Tambah ini
+            mastered: false
         };
         const savedVocab = await saveVocab(updated);
         if (savedVocab) {
             setVocabList(vocabList.map(v => v.id === editingId ? savedVocab : v));
         }
+        
+        // 🎯 TAMBAH BARIS INI - untuk trigger auto scroll setelah save
+        setLastEditedId(editingId);
+        
         setEditingId(null);
     } else {
         // ADD NEW MODE
@@ -248,7 +279,7 @@ const handleSaveVocab = async () => {
             category: newCategory || 'Umum',
             example_japanese: newExampleJapanese,
             example_indo: newExampleIndo,
-            mastered: false  // Tambah ini
+            mastered: false
         };
         const savedVocab = await saveVocab(newVocab as Vocab);
         if (savedVocab) {
@@ -258,7 +289,7 @@ const handleSaveVocab = async () => {
     
     // Reset semua field
     setNewWord(''); 
-    setNewMeaning(''); 
+    setNewMeaning(''; 
     setNewCategory('Umum');
     setNewExampleJapanese('');
     setNewExampleIndo('');
@@ -433,7 +464,8 @@ const masteredPercentage = filteredList.length > 0
 <div className="max-h-[400px] overflow-y-auto custom-scroll space-y-3 pr-2">
     {filteredList.map((item) => (
         <div 
-            key={item.id} 
+            key={item.id}
+            ref={item.id === editingId || item.id === lastEditedId ? editedItemRef : null}
             draggable
             onDragStart={() => handleDragStart(item.id)}
             onDragOver={(e) => handleDragOver(e, item.id)}
