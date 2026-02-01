@@ -105,6 +105,24 @@ useEffect(() => {
         loadVocab();
     }, []);
 
+const startReview = (type: 'mastered' | 'needsReview') => {
+    const vocabsToReview = type === 'mastered' 
+        ? masteredVocab 
+        : notMasteredVocab;
+    
+    if (vocabsToReview.length === 0) {
+        alert(type === 'mastered' 
+            ? 'Belum ada vocab yang dihafal untuk direview!' 
+            : 'Belum ada vocab yang perlu diulang!');
+        return;
+    }
+    
+    setReviewType(type);
+    setIsReviewing(true);
+};
+
+const saveVocab = async (v: any) => {
+
 // AUTO SCROLL #1: Saat MULAI EDIT → scroll ke kotak edit
 useEffect(() => {
     if (editingId !== null && formRef.current) {  // ✅ BENAR: pakai formRef
@@ -152,28 +170,6 @@ const loadVocab = async () => {
             mastered: v.mastered || false
         })));
     }
-};
-
-const masteredVocab = filteredList.filter(v => v.mastered);
-const notMasteredVocab = filteredList.filter(v => !v.mastered);
-const masteredPercentage = filteredList.length > 0 
-    ? Math.round((masteredVocab.length / filteredList.length) * 100) 
-    : 0;
-
-const startReview = (type: 'mastered' | 'needsReview') => {
-    const vocabsToReview = type === 'mastered' 
-        ? masteredVocab 
-        : notMasteredVocab;
-    
-    if (vocabsToReview.length === 0) {
-        alert(type === 'mastered' 
-            ? 'Belum ada vocab yang dihafal untuk direview!' 
-            : 'Belum ada vocab yang perlu diulang!');
-        return;
-    }
-    
-    setReviewType(type);
-    setIsReviewing(true);
 };
 
 const saveVocab = async (v: any) => {
@@ -557,6 +553,13 @@ const handleSaveVocab = async () => {
 
     const currentCard = filteredList[flashIndex];
 
+    // Statistik untuk Review
+const masteredVocab = filteredList.filter(v => v.mastered);
+const notMasteredVocab = filteredList.filter(v => !v.mastered);
+const masteredPercentage = filteredList.length > 0 
+    ? Math.round((masteredVocab.length / filteredList.length) * 100) 
+    : 0;
+
 // Mode Review Khusus
 if (isReviewing && reviewType) {
     const vocabsToReview = reviewType === 'mastered' ? masteredVocab : notMasteredVocab;
@@ -937,7 +940,7 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Sudah Dihafal */}
-<div 
+            <div 
     onClick={() => startReview('mastered')}
     className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 cursor-pointer hover:bg-emerald-100 transition-all"
 >
@@ -960,7 +963,7 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
             </div>
             
             {/* Belum Dihafal */}
-<div 
+            <div 
     onClick={() => startReview('needsReview')}
     className="bg-rose-50 p-6 rounded-3xl border border-rose-100 cursor-pointer hover:bg-rose-100 transition-all"
 >
