@@ -672,9 +672,18 @@ const masteredPercentage = filteredQuestions.length > 0
                         <div className="mt-16 space-y-8">
 
 <div className="flex items-center justify-center gap-4 md:gap-8">
-    <button onClick={prevQuestion} className="p-5 bg-gray-100 text-gray-400 rounded-3xl hover:bg-gray-200 transition-all active:scale-90" title="Sebelumnya">
-        <ChevronLeft size={28} />
-    </button>
+<button 
+    onClick={prevQuestion} 
+    disabled={mode === 'random' || mode === 'examRandom'}
+    className={`p-5 rounded-3xl transition-all active:scale-90 ${
+        mode === 'random' || mode === 'examRandom'
+            ? 'bg-gray-50 text-gray-200 cursor-not-allowed opacity-50'
+            : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+    }`} 
+    title={mode === 'random' || mode === 'examRandom' ? 'Tidak bisa mundur di mode acak' : 'Sebelumnya'}
+>
+    <ChevronLeft size={28} />
+</button>
 
     <button onClick={() => setQuestions(questions.map(q => q.id === currentQ?.id ? {...q, mastered: !q.mastered} : q))} className={`p-5 rounded-3xl transition-all active:scale-90 ${currentQ?.mastered ? 'bg-emerald-500 text-white shadow-lg' : 'bg-gray-100 text-gray-300 hover:text-gray-400'}`} title="Tandai Bisa">
         <CheckCircle2 size={28} />
