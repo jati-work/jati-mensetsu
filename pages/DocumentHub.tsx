@@ -19,7 +19,7 @@ const DocumentHub: React.FC<Props> = ({ checklist, setChecklist, docNotes, setDo
     }, []);
 
     const loadDocs = async () => {
-        const { data } = await supabase.from('documents').select('*').order('created_at', { ascending: true });
+        const { data } = await supabase.from('documents').select('*').order('order_index', { ascending: true });
         if (data) {
             setChecklist(data.map((d: any) => ({
                 id: d.id,
@@ -36,15 +36,16 @@ const DocumentHub: React.FC<Props> = ({ checklist, setChecklist, docNotes, setDo
         if (data) setDocNotes(data.content);
     };
 
-    const saveDoc = async (doc: any) => {
-        await supabase.from('documents').upsert({
-            id: doc.id,
-            label: doc.label,
-            is_done: doc.isDone,
-            file_url: doc.fileUrl,
-            file_name: doc.fileName
-        });
-    };
+const saveDoc = async (doc: any) => {
+    await supabase.from('documents').upsert({
+        id: doc.id,
+        label: doc.label,
+        is_done: doc.isDone,
+        file_url: doc.fileUrl,
+        file_name: doc.fileName,
+        order_index: checklist.findIndex(d => d.id === doc.id)
+    });
+};
 
     const deleteDoc = async (id: number) => {
         await supabase.from('documents').delete().eq('id', id);
@@ -84,19 +85,26 @@ const DocumentHub: React.FC<Props> = ({ checklist, setChecklist, docNotes, setDo
 
     const handleDragStart = (id: number) => setDraggedId(id);
 
-    const handleDragOver = (e: React.DragEvent, targetId: number) => {
-        e.preventDefault();
-        if (draggedId === null || draggedId === targetId) return;
-        const newList = [...checklist];
-        const draggedIndex = newList.findIndex(d => d.id === draggedId);
-        const targetIndex = newList.findIndex(d => d.id === targetId);
-        if (draggedIndex !== -1 && targetIndex !== -1) {
-            const item = newList[draggedIndex];
-            newList.splice(draggedIndex, 1);
-            newList.splice(targetIndex, 0, item);
-            setChecklist(newList);
-        }
-    };
+const handleDragOver = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    if (draggedId === null || draggedId === targetId) return;
+    const newList = [...checklist];
+    const draggedIndex = newList.findIndex(d => d.id === draggedId);
+    const targetIndex = newList.findIndex(d => d.id === targetId);
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+        const item = newList[draggedIndex];
+        newList.splice(draggedIndex, 1);
+        newList.splice(targetIndex, 0, item);
+        setChecklist(newList);
+        
+        // Save order_index ke database
+        newList.forEach(async (doc, index) => {
+            await supabase.from('documents')
+                .update({ order_index: index })
+                .eq('id', doc.id);
+        });
+    }
+};
 
     const handleDragEnd = () => setDraggedId(null);
     
