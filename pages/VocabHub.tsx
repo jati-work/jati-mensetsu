@@ -289,8 +289,8 @@ const handleSaveVocab = async () => {
     
     // Reset semua field
     setNewWord(''); 
-    setNewMeaning(''; 
-    setNewCategory('Umum');
+    setNewMeaning('');
+    setNewCategory('');
     setNewExampleJapanese('');
     setNewExampleIndo('');
 };
