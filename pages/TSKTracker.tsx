@@ -30,36 +30,62 @@ const TSKTracker: React.FC<Props> = ({ tskList, setTskList }) => {
     const [isFetching, setIsFetching] = useState(false);
     const [draggedId, setDraggedId] = useState<number | null>(null);
 
+    const handleDragStart = (id: number) => setDraggedId(id);
+
+const handleDragOver = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    if (draggedId === null || draggedId === targetId) return;
+    const newList = [...tskList];
+    const draggedIndex = newList.findIndex(t => t.id === draggedId);
+    const targetIndex = newList.findIndex(t => t.id === targetId);
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+        const item = newList[draggedIndex];
+        newList.splice(draggedIndex, 1);
+        newList.splice(targetIndex, 0, item);
+        setTskList(newList);
+        
+        // Save order_index ke database
+        newList.forEach(async (tsk, index) => {
+            await supabase.from('tsk_applications')
+                .update({ order_index: index })
+                .eq('id', tsk.id);
+        });
+    }
+};
+
+const handleDragEnd = () => setDraggedId(null);
+
     useEffect(() => {
         loadTSK();
     }, []);
 
-    const loadTSK = async () => {
-        const { data } = await supabase.from('tsk_applications').select('*').order('created_at', { ascending: false });
-        if (data) {
-            setTskList(data.map((t: any) => ({
-                id: t.id,
-                name: t.name,
-                status: t.status,
-                salary: t.salary,
-                rounds: t.rounds || [],
-                notes: t.notes,
-                retro: t.retro
-            })));
-        }
-    };
-
-    const saveTSK = async (t: TSK) => {
-        await supabase.from('tsk_applications').upsert({
+const loadTSK = async () => {
+    const { data } = await supabase.from('tsk_applications').select('*').order('order_index', { ascending: true });
+    if (data) {
+        setTskList(data.map((t: any) => ({
             id: t.id,
             name: t.name,
             status: t.status,
             salary: t.salary,
-            rounds: t.rounds,
+            rounds: t.rounds || [],
             notes: t.notes,
             retro: t.retro
-        });
-    };
+        })));
+    }
+};
+
+const saveTSK = async (t: TSK) => {
+    await supabase.from('tsk_applications').upsert({
+        id: t.id,
+        name: t.name,
+        status: t.status,
+        salary: t.salary,
+        rounds: t.rounds,
+        notes: t.notes,
+        retro: t.retro,
+        order_index: tskList.findIndex(tsk => tsk.id === t.id)
+    });
+};
 
     const deleteTSK = async (id: number) => {
         await supabase.from('tsk_applications').delete().eq('id', id);
