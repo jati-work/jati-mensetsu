@@ -46,14 +46,33 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [importResults, setImportResults] = useState<{success: string[], failed: string[]} | null>(null);
     const [showImportModal, setShowImportModal] = useState(false);
     // Ambil semua kategori unik
-const existingCategories = useMemo(() => {
-    return Array.from(new Set(vocabList.map(v => v.category))).filter(cat => cat.trim() !== '');
-}, [vocabList]);
     const [showReview, setShowReview] = useState(false);
     const [studyMode, setStudyMode] = useState<'casual' | 'exam' | 'random' | 'examRandom'>('casual');
     const [timeLeft, setTimeLeft] = useState(10);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
 
+// ========== PASTE FILTEREDLIST DI SINI (BARIS 57-58) ==========
+const filteredList = useMemo(() => {
+    let filtered = selectedCategory === 'Semua' 
+        ? vocabList 
+        : vocabList.filter(v => v.category === selectedCategory);
+    
+    if (searchQuery) {
+        const search = searchQuery.toLowerCase();
+        filtered = filtered.filter(v => 
+            v.word.toLowerCase().includes(search) ||
+            v.meaning.toLowerCase().includes(search) ||
+            v.category.toLowerCase().includes(search)
+        );
+    }
+    
+    return filtered;
+}, [vocabList, selectedCategory, searchQuery]);
+    
+const existingCategories = useMemo(() => {
+    return Array.from(new Set(vocabList.map(v => v.category))).filter(cat => cat.trim() !== '');
+}, [vocabList]);
+    
 useEffect(() => {
     let timer: any;
     if (isTimerRunning && timeLeft > 0) {
@@ -425,24 +444,6 @@ const exportExcel = async () => {
         const cats = Array.from(new Set(vocabList.map(v => v.category))).filter(Boolean);
         return ['Semua', ...cats];
     }, [vocabList]);
-
-const filteredList = useMemo(() => {
-    let filtered = selectedCategory === 'Semua' 
-        ? vocabList 
-        : vocabList.filter(v => v.category === selectedCategory);
-    
-    // Apply search filter
-    if (searchQuery) {
-        const search = searchQuery.toLowerCase();
-        filtered = filtered.filter(v => 
-            v.word.toLowerCase().includes(search) ||
-            v.meaning.toLowerCase().includes(search) ||
-            v.category.toLowerCase().includes(search)
-        );
-    }
-    
-    return filtered;
-}, [vocabList, selectedCategory, searchQuery]);
 
     useEffect(() => {
         setFlashIndex(0);
