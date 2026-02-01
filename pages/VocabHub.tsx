@@ -1025,14 +1025,16 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 </div>
 <button onClick={() => {
     if (studyMode === 'random' || studyMode === 'examRandom') {
-        const nextCount = answeredCount + 1;
-        setAnsweredCount(nextCount);
+        // Hitung sudah jawab berapa (termasuk yang sekarang)
+        const currentAnswered = answeredCount + 1;
         
-        if (nextCount >= filteredList.length) {
-            // Selesai semua - reset
+        if (currentAnswered >= filteredList.length) {
+            // Sudah selesai semua - reset
             setAnsweredCount(0);
-            setFlashIndex(0);
+            setFlashIndex(Math.floor(Math.random() * filteredList.length));
         } else {
+            // Masih ada soal - lanjut ke random berikutnya
+            setAnsweredCount(currentAnswered);
             setFlashIndex(Math.floor(Math.random() * filteredList.length));
         }
     } else {
@@ -1040,11 +1042,11 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     }
 }} 
 className={`p-5 rounded-3xl transition-all ${
-    (studyMode === 'random' || studyMode === 'examRandom') && answeredCount + 1 >= filteredList.length
+    (studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length - 1
     ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
     : 'bg-white text-indigo-600 hover:bg-indigo-50'
 }`}>
-    {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount + 1 >= filteredList.length 
+    {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length - 1
         ? <RotateCw size={32}/> 
         : <ChevronRight size={32}/>
     }
