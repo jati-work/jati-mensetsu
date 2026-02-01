@@ -638,26 +638,25 @@ const masteredPercentage = filteredQuestions.length > 0
     )}
 </div>
 
-                            <div className="w-full max-md mx-auto space-y-3">
-                                <div className="flex justify-between items-end px-2">
-                                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
-    Progress: {mode === 'random' || mode === 'examRandom' ? `${answeredCount} Soal Dijawab` : selectedCategory}
-</span>
-<span className="text-lg font-black text-indigo-600">
-    {mode === 'random' || mode === 'examRandom' 
-        ? `${answeredCount} / ${filteredQuestions.length}` 
-        : `${filteredQuestions.length > 0 ? currentIndex + 1 : 0} / ${filteredQuestions.length}`
-    }
-</span>
-                                    <span className="text-lg font-black text-indigo-600">{filteredQuestions.length > 0 ? currentIndex + 1 : 0} <span className="text-gray-300 text-xs">/ {filteredQuestions.length}</span></span>
-                                </div>
-                                <div className="h-3 bg-gray-100 rounded-full overflow-hidden p-1 shadow-inner">
-                                    <div 
-                                        className="h-full bg-indigo-500 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(99,102,241,0.4)]" 
-                                        style={{ width: `${progressPercentage}%` }}
-                                    ></div>
-                                </div>
-                            </div>
+<div className="w-full max-md mx-auto space-y-3">
+    <div className="flex justify-between items-end px-2">
+        <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+            Progress: {mode === 'random' || mode === 'examRandom' ? `${answeredCount} Soal Dijawab` : selectedCategory}
+        </span>
+        <span className="text-lg font-black text-indigo-600">
+            {mode === 'random' || mode === 'examRandom' 
+                ? `${answeredCount} / ${filteredQuestions.length}` 
+                : `${filteredQuestions.length > 0 ? currentIndex + 1 : 0} / ${filteredQuestions.length}`
+            }
+        </span>
+    </div>
+    <div className="h-3 bg-gray-100 rounded-full overflow-hidden p-1 shadow-inner">
+        <div 
+            className="h-full bg-indigo-500 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(99,102,241,0.4)]" 
+            style={{ width: `${progressPercentage}%` }}
+        ></div>
+    </div>
+</div>
                             
                             {/* ========== TOMBOL REVIEW - TAMBAHKAN DI SINI ========== */}
                             <button 
