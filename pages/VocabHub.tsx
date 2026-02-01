@@ -655,8 +655,8 @@ const nextQuestion = () => {
         if (newQueueIndex < shuffledQueue.length) {
             setQueueIndex(newQueueIndex);
             setFlashIndex(shuffledQueue[newQueueIndex]);
-            setAnsweredCount(newQueueIndex);
         }
+        setAnsweredCount(newQueueIndex);  // ← PINDAH KE LUAR IF supaya tetap update
     } else {
         setFlashIndex((flashIndex + 1) % filteredList.length);
     }
@@ -1080,13 +1080,31 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
                                     
 {/* Navigasi & Kontrol */}
 <div className="flex items-center gap-6 justify-center">
-    {/* Tombol PREV */}
-    <button 
-        onClick={() => setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length)} 
-        className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"
-    >
-        <ChevronLeft size={32} />
-    </button>
+{/* Tombol PREV */}
+<button 
+    onClick={() => {
+        if (studyMode === 'random' || studyMode === 'examRandom') {
+            // Mode acak: mundur di queue
+            const newQueueIndex = queueIndex - 1;
+            if (newQueueIndex >= 0) {
+                setQueueIndex(newQueueIndex);
+                setFlashIndex(shuffledQueue[newQueueIndex]);
+                setAnsweredCount(newQueueIndex);
+            }
+        } else {
+            // Mode santai/exam: mundur biasa
+            setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length);
+        }
+    }}
+    disabled={(studyMode === 'random' || studyMode === 'examRandom') && queueIndex === 0}
+    className={`p-5 rounded-3xl text-white transition-all ${
+        (studyMode === 'random' || studyMode === 'examRandom') && queueIndex === 0 
+            ? 'bg-white/5 opacity-30 cursor-not-allowed' 
+            : 'bg-white/10 hover:bg-white/20'
+    }`}
+>
+    <ChevronLeft size={32} />
+</button>
     
     {/* Tombol MASTERED */}
     <button 
