@@ -155,47 +155,66 @@ const saveManual = async () => {
 };
 
 const handleBulkAdd = async () => {
-        try {
-            setIsImporting(true);
-            setImportProgress(0);
-            setImportResults(null);
+    try {
+        setIsImporting(true);
+        setImportProgress(0);
+        setImportResults(null);
+        
+        const rows = bulkCsv.split('\n').filter(r => r.trim());
+        setImportProgress(10);
+        
+        // Parse semua data dulu
+        const parsedData = rows.map((r, index) => {
+            const separator = r.includes('\t') ? '\t' : ',';
+            const p = r.split(separator).map(v => v.trim().replace(/^"|"$/g, ''));
             
-            const rows = bulkCsv.split('\n').filter(r => r.trim());
-            setImportProgress(10);
-            
-            // Parse semua data dulu
-            const parsedData = rows.map((r, index) => {
-                const separator = r.includes('\t') ? '\t' : ',';
-                const p = r.split(separator).map(v => v.trim().replace(/^"|"$/g, ''));
-                
-                return {
-                    category: p[0] || 'Umum',
-                    question: p[1] || '?',
-                    answer_japanese: p[2] || '',
-                    answer_romaji: p[3] || '',
-                    answer_indo: p[4] || '',
-                    time_limit: parseInt(p[5]) || 30,
-                    mastered: false,
-                    order_index: questions.length + index
-                };
-            });
-            
-            setImportProgress(30);
-            
-            // INSERT BATCH ke Supabase
+            return {
+                question: p[1] || '?',
+                category: p[0] || 'Umum',
+                answer_japanese: p[2] || '',
+                answer_romaji: p[3] || '',
+                answer_indo: p[4] || '',
+                time_limit: parseInt(p[5]) || 30,
+                mastered: false,
+                order_index: questions.length + index
+            };
+        });
+        
+        setImportProgress(30);
+        
+        // CEK DUPLIKAT: ambil semua pertanyaan yang udah ada
+        const existingQuestions = new Set(questions.map(q => q.question.trim().toLowerCase()));
+        
+        // Filter: pisahkan yang baru vs yang duplikat
+        const newData = parsedData.filter(item => 
+            !existingQuestions.has(item.question.trim().toLowerCase())
+        );
+        const duplicates = parsedData.filter(item => 
+            existingQuestions.has(item.question.trim().toLowerCase())
+        );
+        
+        setImportProgress(50);
+        
+        const successList: string[] = [];
+        const failedList: string[] = [];
+        
+        // Tambah info duplikat
+        duplicates.forEach(item => {
+            failedList.push(`${item.question} (sudah ada di database)`);
+        });
+        
+        // INSERT yang baru aja
+        if (newData.length > 0) {
             const { data, error } = await supabase
                 .from('questions')
-                .insert(parsedData)
+                .insert(newData)
                 .select();
             
             setImportProgress(80);
             
-            const successList: string[] = [];
-            const failedList: string[] = [];
-            
             if (error) {
                 console.error('Error bulk insert:', error);
-                rows.forEach(line => failedList.push(line.substring(0, 50) + '...'));
+                newData.forEach(item => failedList.push(`${item.question} (error: ${error.message})`));
             } else if (data) {
                 const newQuestions = data.map((item: any) => ({
                     id: item.id,
@@ -210,25 +229,23 @@ const handleBulkAdd = async () => {
                 
                 setQuestions([...questions, ...newQuestions]);
                 data.forEach(item => successList.push(item.question));
-                
-                const failedCount = rows.length - data.length;
-                if (failedCount > 0) {
-                    failedList.push(`${failedCount} baris tidak valid`);
-                }
             }
-            
-            setImportProgress(100);
-            setImportResults({ success: successList, failed: failedList });
-            setBulkCsv('');
-            
-        } catch (err) {
-            console.error('Error:', err);
-            setImportResults({ 
-                success: [], 
-                failed: ['Error: ' + (err as Error).message] 
-            });
+        } else {
+            setImportProgress(80);
         }
-    };
+        
+        setImportProgress(100);
+        setImportResults({ success: successList, failed: failedList });
+        setBulkCsv('');
+        
+    } catch (err) {
+        console.error('Error:', err);
+        setImportResults({ 
+            success: [], 
+            failed: ['Error: ' + (err as Error).message] 
+        });
+    }
+};
     
     const exportCsv = () => {
         const header = "Kategori,Soal,Jepang,Romaji,Indo,Waktu\n";
@@ -246,7 +263,7 @@ const handleBulkAdd = async () => {
         if (!isImporting && !importResults) return null;
         
         return (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 md:pl-64">
                 <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 space-y-6">
                     {isImporting && !importResults && (
                         <>
@@ -292,17 +309,12 @@ const handleBulkAdd = async () => {
                                             ✅ Berhasil ({importResults.success.length})
                                         </p>
                                         <div className="space-y-2 max-h-40 overflow-y-auto">
-                                            {importResults.success.slice(0, 5).map((item, idx) => (
-                                                <p key={idx} className="text-xs text-emerald-600 font-medium">
-                                                    • {item.length > 60 ? item.substring(0, 60) + '...' : item}
-                                                </p>
-                                            ))}
-                                            {importResults.success.length > 5 && (
-                                                <p className="text-xs text-emerald-500 italic">
-                                                    ... dan {importResults.success.length - 5} lainnya
-                                                </p>
-                                            )}
-                                        </div>
+    {importResults.success.map((item, idx) => (
+        <p key={idx} className="text-xs text-emerald-600 font-medium">
+            • {item.length > 60 ? item.substring(0, 60) + '...' : item}
+        </p>
+    ))}
+</div>
                                     </div>
                                 )}
                                 
