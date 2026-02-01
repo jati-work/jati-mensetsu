@@ -69,10 +69,10 @@ useEffect(() => {
 }, [lastEditedId]);
 
     const loadQuestions = async () => {
-        const { data, error } = await supabase
-            .from('questions')
-            .select('*')
-            .order('created_at', { ascending: true });
+const { data, error } = await supabase
+    .from('questions')
+    .select('*')
+    .order('order_index', { ascending: true });
         
         if (data && data.length > 0) {
             const loaded = data.map((item: any) => ({
@@ -89,18 +89,19 @@ useEffect(() => {
         }
     };
 
-    const saveQuestion = async (q: Question) => {
-        await supabase.from('questions').upsert({
-            id: q.id,
-            category: q.category,
-            question: q.question,
-            answer_japanese: q.answerJapanese,
-            answer_romaji: q.answerRomaji,
-            answer_indo: q.answerIndo,
-            time_limit: q.timeLimit,
-            mastered: q.mastered
-        });
-    };
+const saveQuestion = async (q: Question) => {
+    await supabase.from('questions').upsert({
+        id: q.id,
+        category: q.category,
+        question: q.question,
+        answer_japanese: q.answerJapanese,
+        answer_romaji: q.answerRomaji,
+        answer_indo: q.answerIndo,
+        time_limit: q.timeLimit,
+        mastered: q.mastered,
+        order_index: questions.findIndex(qu => qu.id === q.id)
+    });
+};
 
     const deleteQuestion = async (id: number) => {
         await supabase.from('questions').delete().eq('id', id);
@@ -108,18 +109,25 @@ useEffect(() => {
 
     const handleDragStart = (id: number) => setDraggedId(id);
     const handleDragOver = (e: React.DragEvent, targetId: number) => {
-        e.preventDefault();
-        if (draggedId === null || draggedId === targetId) return;
-        const newList = [...questions];
-        const draggedIndex = newList.findIndex(q => q.id === draggedId);
-        const targetIndex = newList.findIndex(q => q.id === targetId);
-        if (draggedIndex !== -1 && targetIndex !== -1) {
-            const item = newList[draggedIndex];
-            newList.splice(draggedIndex, 1);
-            newList.splice(targetIndex, 0, item);
-            setQuestions(newList);
-        }
-    };
+    e.preventDefault();
+    if (draggedId === null || draggedId === targetId) return;
+    const newList = [...questions];
+    const draggedIndex = newList.findIndex(q => q.id === draggedId);
+    const targetIndex = newList.findIndex(q => q.id === targetId);
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+        const item = newList[draggedIndex];
+        newList.splice(draggedIndex, 1);
+        newList.splice(targetIndex, 0, item);
+        setQuestions(newList);
+        
+        // Save order_index ke database
+        newList.forEach(async (question, index) => {
+            await supabase.from('questions')
+                .update({ order_index: index })
+                .eq('id', question.id);
+        });
+    }
+};
     const handleDragEnd = () => setDraggedId(null);
 
 const saveEdit = async () => {
