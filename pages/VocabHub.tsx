@@ -1044,7 +1044,9 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     </div>
 )}
                                     
-<div className="flex items-center gap-10">
+{/* Navigasi & Kontrol - SEMUA SEJAJAR HORIZONTAL */}
+<div className="flex items-center gap-6 justify-center">
+    {/* Tombol PREV */}
     <button 
         onClick={() => setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length)} 
         className="p-5 bg-white/10 rounded-3xl text-white hover:bg-white/20 transition-all"
@@ -1052,6 +1054,29 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
         <ChevronLeft size={32} />
     </button>
     
+    {/* Counter */}
+    <div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
+        <span className="text-white font-black text-xl">
+            {flashIndex + 1}
+            <span className="opacity-30 text-sm"> / {filteredList.length}</span>
+        </span>
+    </div>
+    
+    {/* Tombol MASTERED */}
+    <button 
+        onClick={async () => {
+            const updated = vocabList.map(v => v.id === currentCard.id ? {...v, mastered: !v.mastered} : v);
+            setVocabList(updated);
+            const updatedVocab = updated.find(v => v.id === currentCard.id);
+            if (updatedVocab) await saveVocab(updatedVocab);
+        }} 
+        className={`p-5 rounded-3xl transition-all ${currentCard.mastered ? 'bg-emerald-500 text-white shadow-lg' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
+        title="Tandai Sudah Hafal"
+    >
+        <CheckCircle2 size={32} />
+    </button>
+    
+    {/* Tombol NEXT / REFRESH */}
     {(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length ? (
         <button 
             onClick={resetQuiz} 
@@ -1068,29 +1093,6 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
         </button>
     )}
 </div>
-
-{/* TAMBAH TOMBOL MASTERED */}
-    <button 
-        onClick={async () => {
-            const updated = vocabList.map(v => v.id === currentCard.id ? {...v, mastered: !v.mastered} : v);
-            setVocabList(updated);
-            const updatedVocab = updated.find(v => v.id === currentCard.id);
-            if (updatedVocab) await saveVocab(updatedVocab);
-        }} 
-        className={`p-5 rounded-3xl transition-all ${currentCard.mastered ? 'bg-emerald-500 text-white shadow-lg' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
-        title="Tandai Sudah Hafal"
-    >
-        <CheckCircle2 size={32} />
-    </button>
-                                
-<div className="bg-white/10 px-8 py-4 rounded-3xl backdrop-blur-md">
-    <span className="text-white font-black text-xl">
-        {flashIndex + 1}
-        <span className="opacity-30 text-sm"> / {filteredList.length}</span>
-    </span>
-</div>
-
-
                                 
                         </div>
                     ) : (
@@ -1110,17 +1112,6 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     <CheckCircle2 size={18} />
     {showReview ? 'SEMBUNYIKAN REVIEW' : '📊 LIHAT REVIEW HAFALAN'}
 </button>
-
-{/* Tombol Next atau Refresh */}
-{(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length ? (
-    <button onClick={resetQuiz} className="p-5 bg-emerald-500 text-white rounded-3xl hover:bg-emerald-600 transition-all">
-        <RotateCw size={32} />
-    </button>
-) : (
-    <button onClick={nextQuestion} className="p-5 bg-white text-indigo-600 rounded-3xl hover:bg-indigo-50 transition-all">
-        <ChevronRight size={32} />
-    </button>
-)}
                 
 {/* Review Section */}
 {showReview && (
