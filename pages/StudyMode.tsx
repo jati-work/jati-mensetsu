@@ -42,6 +42,12 @@ const filteredQuestions = useMemo(() => {
         return ['Semua', ...cats];
     }, [questions]);
 
+// Fungsi untuk hitung jumlah soal per kategori
+const getCategoryCount = (category: string) => {
+    if (category === 'Semua') return questions.length;
+    return questions.filter(q => q.category === category).length;
+};
+    
     // UI States
     const [showAnswer, setShowAnswer] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
@@ -58,6 +64,7 @@ const filteredQuestions = useMemo(() => {
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
     const [answeredCount, setAnsweredCount] = useState(0);
+    const [isNavigating, setIsNavigating] = useState(false);  // ← TAMBAH INI
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -313,6 +320,10 @@ const startReview = (type: 'mastered' | 'needsReview') => {
     };
 
 const nextQuestion = () => {
+    if (isNavigating) return; // ← TAMBAH: Prevent spam click
+    
+    setIsNavigating(true); // ← TAMBAH: Set navigating
+    
     // Nambah answered count
     setAnsweredCount(prev => prev + 1);
     
@@ -337,6 +348,10 @@ const nextQuestion = () => {
     setShowAnswer(false);
     setAiFeedback(null);
     setRecordedAudioUrl(null);
+// ← TAMBAH: Cooldown 300ms
+    setTimeout(() => {
+        setIsNavigating(false);
+    }, 300);
 };
 
 const resetQuiz = () => {
@@ -350,6 +365,10 @@ const resetQuiz = () => {
 };
     
 const prevQuestion = () => {
+    if (isNavigating) return; // ← TAMBAH: Prevent spam click
+    
+    setIsNavigating(true); // ← TAMBAH: Set navigating
+    
     if (currentIndex === 0) {
         alert('Ini sudah soal pertama!');
         return;
@@ -370,6 +389,10 @@ const prevQuestion = () => {
         setTimeLeft(filteredQuestions[prevIdx].timeLimit);
         setIsTimerRunning(true);
     }
+// ← TAMBAH: Cooldown 300ms
+    setTimeout(() => {
+        setIsNavigating(false);
+    }, 300);
 };
 
     const analyzeAnswer = async () => {
@@ -539,7 +562,7 @@ const prevQuestion = () => {
                         : 'text-gray-400 hover:text-indigo-400'
             }`}
         >
-            {cat}
+            {cat} ({getCategoryCount(cat)})
         </button>
     );
 })}
@@ -635,9 +658,10 @@ const prevQuestion = () => {
                         <div className="mt-16 space-y-8">
 
 <div className="flex items-center justify-center gap-4 md:gap-8">
-    <button 
-        onClick={prevQuestion} 
-        className="p-5 rounded-3xl transition-all active:scale-90 bg-gray-100 text-gray-400 hover:bg-gray-200" 
+<button 
+        onClick={prevQuestion}
+        disabled={isNavigating}
+        className="p-5 rounded-3xl transition-all active:scale-90 bg-gray-100 text-gray-400 hover:bg-gray-200 disabled:opacity-50" 
         title="Sebelumnya"
     >
         <ChevronLeft size={28} />
@@ -651,7 +675,12 @@ const prevQuestion = () => {
         {showAnswer ? <EyeOff size={28} /> : <Eye size={28} />}
     </button>
 
-    <button onClick={nextQuestion} className="p-5 bg-indigo-600 text-white rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-90 transition-all" title="Selanjutnya">
+<button 
+        onClick={nextQuestion}
+        disabled={isNavigating}
+        className="p-5 bg-indigo-600 text-white rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-90 transition-all disabled:opacity-50" 
+        title="Selanjutnya"
+    >
         <ChevronRight size={28} />
     </button>
 </div>
