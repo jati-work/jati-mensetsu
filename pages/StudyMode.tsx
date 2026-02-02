@@ -442,8 +442,7 @@ const prevQuestion = () => {
 
 const progressPercentage = (mode === 'random' || mode === 'examRandom')
     ? Math.min((answeredCount / filteredQuestions.length) * 100, 100)
-    : filteredQuestions.length > 0 ? ((currentIndex + 1) / filteredQuestions.length) * 100 : 0;
-    const currentQ = filteredQuestions[currentIndex];
+    : filteredQuestions.length > 0 ? (currentIndex / filteredQuestions.length) * 100 : 0;
 
 const masteredQuestions = filteredQuestions.filter(q => q.mastered);
 const notMasteredQuestions = filteredQuestions.filter(q => !q.mastered);
@@ -748,7 +747,7 @@ const masteredPercentage = filteredQuestions.length > 0
         ? '✅ SELESAI'
         : (mode !== 'random' && mode !== 'examRandom') && currentIndex === filteredQuestions.length - 1
             ? '✅ SELESAI'
-            : `${filteredQuestions.length > 0 ? currentIndex + 1 : 0} / ${filteredQuestions.length}`
+            : `${filteredQuestions.length > 0 ? currentIndex : 0} / ${filteredQuestions.length}`
     }
 </span>
     </div>
