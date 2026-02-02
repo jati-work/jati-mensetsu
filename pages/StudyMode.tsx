@@ -444,6 +444,8 @@ const progressPercentage = (mode === 'random' || mode === 'examRandom')
     ? Math.min((answeredCount / filteredQuestions.length) * 100, 100)
     : filteredQuestions.length > 0 ? (currentIndex / filteredQuestions.length) * 100 : 0;
 
+  const currentQ = filteredQuestions[currentIndex];  
+    
 const masteredQuestions = filteredQuestions.filter(q => q.mastered);
 const notMasteredQuestions = filteredQuestions.filter(q => !q.mastered);
 const masteredPercentage = filteredQuestions.length > 0 
