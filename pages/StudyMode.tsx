@@ -311,12 +311,17 @@ const startReview = (type: 'mastered' | 'needsReview') => {
     };
 
 const nextQuestion = () => {
-    // Selalu nambah currentIndex, nggak dibatasi
-    setCurrentIndex(currentIndex + 1);
+    // Kalau udah di soal terakhir, balik ke awal
+    if (currentIndex >= filteredQuestions.length - 1) {
+        setCurrentIndex(0);
+    } else {
+        setCurrentIndex(currentIndex + 1);
+    }
     
-    // Set timer cuma kalau masih ada soal berikutnya
-    if (mode === 'exam' && filteredQuestions[currentIndex + 1]) {
-        setTimeLeft(filteredQuestions[currentIndex + 1].timeLimit);
+    // Set timer untuk soal berikutnya
+    const nextIdx = currentIndex >= filteredQuestions.length - 1 ? 0 : currentIndex + 1;
+    if (mode === 'exam' && filteredQuestions[nextIdx]) {
+        setTimeLeft(filteredQuestions[nextIdx].timeLimit);
         setIsTimerRunning(true);
     }
     
@@ -631,16 +636,9 @@ const masteredPercentage = filteredQuestions.length > 0
         {showAnswer ? <EyeOff size={28} /> : <Eye size={28} />}
     </button>
 
-{currentIndex >= filteredQuestions.length ? (
-    <button onClick={resetQuiz} className="p-5 bg-emerald-600 text-white rounded-3xl shadow-xl hover:bg-emerald-700 active:scale-90 transition-all" title="Mulai Lagi">
-        <RotateCcw size={28} />
-    </button>
-) : (
-    <button onClick={nextQuestion} className="p-5 bg-indigo-600 text-white rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-90 transition-all" title="Selanjutnya">
-        <ChevronRight size={28} />
-    </button>
-)}
-</div>
+<button onClick={nextQuestion} className="p-5 bg-indigo-600 text-white rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-90 transition-all" title="Selanjutnya">
+    <ChevronRight size={28} />
+</button>
 
 <div className="w-full max-md mx-auto space-y-3">
     <div className="flex justify-between items-end px-2">
