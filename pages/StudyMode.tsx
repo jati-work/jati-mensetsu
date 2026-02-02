@@ -620,13 +620,13 @@ const masteredPercentage = filteredQuestions.length > 0
                         <div className="mt-16 space-y-8">
 
 <div className="flex items-center justify-center gap-4 md:gap-8">
-<button 
-    onClick={prevQuestion} 
-    className="p-5 rounded-3xl transition-all active:scale-90 bg-gray-100 text-gray-400 hover:bg-gray-200" 
-    title="Sebelumnya"
->
-    <ChevronLeft size={28} />
-</button>
+    <button 
+        onClick={prevQuestion} 
+        className="p-5 rounded-3xl transition-all active:scale-90 bg-gray-100 text-gray-400 hover:bg-gray-200" 
+        title="Sebelumnya"
+    >
+        <ChevronLeft size={28} />
+    </button>
     
     <button onClick={() => setQuestions(questions.map(q => q.id === currentQ?.id ? {...q, mastered: !q.mastered} : q))} className={`p-5 rounded-3xl transition-all active:scale-90 ${currentQ?.mastered ? 'bg-emerald-500 text-white shadow-lg' : 'bg-gray-100 text-gray-300 hover:text-gray-400'}`} title="Tandai Bisa">
         <CheckCircle2 size={28} />
@@ -636,9 +636,10 @@ const masteredPercentage = filteredQuestions.length > 0
         {showAnswer ? <EyeOff size={28} /> : <Eye size={28} />}
     </button>
 
-<button onClick={nextQuestion} className="p-5 bg-indigo-600 text-white rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-90 transition-all" title="Selanjutnya">
-    <ChevronRight size={28} />
-</button>
+    <button onClick={nextQuestion} className="p-5 bg-indigo-600 text-white rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-90 transition-all" title="Selanjutnya">
+        <ChevronRight size={28} />
+    </button>
+</div>
 
 <div className="w-full max-md mx-auto space-y-3">
     <div className="flex justify-between items-end px-2">
