@@ -180,7 +180,7 @@ useEffect(() => {
 }, [lastEditedId]);
 
 const loadVocab = async () => {
-    const { data } = await supabase.from('vocab').select('*').order('order_index', { ascending: true });
+    const { data } = await supabase.from('vocab').select('*').order('order_index', { ascending: true }).limit(10000);
     if (data) {
         setVocabList(data.map((v: any) => ({
             id: v.id,
