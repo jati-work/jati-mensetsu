@@ -38,6 +38,16 @@ const filteredQuestions = useMemo(() => {
 }, [questions, selectedCategory, reviewType]);
 
 const currentQ = filteredQuestions[currentIndex];
+
+    const progressPercentage = filteredQuestions.length > 0 
+        ? (answeredCount / filteredQuestions.length) * 100 
+        : 0;
+    
+    const masteredQuestions = questions.filter(q => q.mastered);
+    const notMasteredQuestions = questions.filter(q => !q.mastered);
+    const masteredPercentage = questions.length > 0 
+        ? Math.round((masteredQuestions.length / questions.length) * 100) 
+        : 0;
     
     const categories = useMemo(() => {
         const cats = Array.from(new Set(questions.map(q => q.category))).filter(Boolean);
@@ -396,18 +406,6 @@ const prevQuestion = () => {
             setIsAnalyzing(false); 
         }
     };
-
-const progressPercentage = filteredQuestions.length > 0 
-    ? (answeredCount / filteredQuestions.length) * 100 
-    : 0;
-
-  const currentQ = filteredQuestions[currentIndex];  
-    
-const masteredQuestions = filteredQuestions.filter(q => q.mastered);
-const notMasteredQuestions = filteredQuestions.filter(q => !q.mastered);
-const masteredPercentage = filteredQuestions.length > 0 
-    ? Math.round((masteredQuestions.length / filteredQuestions.length) * 100) 
-    : 0;
     
     return (
         <div className="fade-in space-y-8 pb-20">
