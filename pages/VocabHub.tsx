@@ -275,21 +275,45 @@ const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const workbook = XLSX.read(data);
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+// Validasi apakah file kosong
+if (jsonData.length === 0) {
+    alert('⚠️ File kosong! Tidak ada data yang bisa diimport.');
+    setIsImporting(false);
+    setShowImportModal(false);
+    event.target.value = '';
+    return;
+}
         
         setImportProgress(30);
         
-        // Parse data dari Excel
-        const parsedData = jsonData.map((row: any, index) => ({
-            category: row.Category || row.category || 'Umum',
-            word: row.Word || row.word || '',
-            meaning: row.Meaning || row.meaning || '',
-            example_japanese: row['Example Japanese'] || row.example_japanese || '',
-            example_indo: row['Example Indo'] || row.example_indo || '',
-            mastered: false,
-            order_index: vocabList.length + index
-        })).filter(item => item.word && item.meaning);
+ // Parse data dari Excel
+const parsedData = jsonData.map((row: any, index) => ({
+    category: row.Category || row.category || '',
+    word: row.Word || row.word || '',
+    meaning: row.Meaning || row.meaning || '',
+    example_japanese: row['Example Japanese'] || row.example_japanese || '',
+    example_indo: row['Example Indo'] || row.example_indo || '',
+    mastered: false,
+    order_index: vocabList.length + index
+})).filter(item => 
+    item.category.trim() !== '' &&
+    item.word.trim() !== '' &&
+    item.meaning.trim() !== '' &&
+    item.example_japanese.trim() !== '' &&  // ← WAJIB
+    item.example_indo.trim() !== ''         // ← WAJIB
+);
         
         setImportProgress(50);
+
+// Cek apakah ada data yang valid setelah di-filter
+if (parsedData.length === 0) {
+    alert('⚠️ Maaf, file tidak diterima!\n\nSemua baris tidak lengkap atau tidak valid.\n\nPastikan SETIAP BARIS memiliki:\n✓ Category\n✓ Word\n✓ Meaning\n✓ Example Japanese\n✓ Example Indo\n\nSEMUA FIELD WAJIB DIISI!');
+    setIsImporting(false);
+    setShowImportModal(false);
+    event.target.value = '';
+    return;
+}
         
         // Cek duplikat berdasarkan word
         const existingWords = new Set(vocabList.map(v => v.word.trim().toLowerCase()));
@@ -787,10 +811,14 @@ if (isReviewing && reviewType) {
         <div className="flex-1">
             <h4 className="font-black text-indigo-900 text-sm mb-2">📋 Format File EXCEL untuk Import</h4>
             <div className="space-y-2 text-xs font-bold text-indigo-700">
-                <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
-                    Header: <code className="bg-white px-2 py-1 rounded text-[10px] font-mono">Category,Word,Meaning,Example Japanese,Example Indo</code>
-                </p>
+<p className="flex items-center gap-2">
+    <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
+    Header: <code className="bg-white px-2 py-1 rounded text-[10px] font-mono">Category,Word,Meaning,Example Japanese,Example Indo</code>
+</p>
+<p className="flex items-center gap-2">
+    <span className="w-2 h-2 bg-rose-400 rounded-full"></span>
+    <strong className="text-rose-600">SEMUA FIELD WAJIB DIISI!</strong> (tidak boleh ada yang kosong)
+</p>
                 <p className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
                     Bisa pakai <strong>koma (,)</strong> atau <strong>tab dari Excel</strong>
