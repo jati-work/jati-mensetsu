@@ -202,6 +202,7 @@ if (epData && epData.length > 0) {
 
 useEffect(() => {
     setCurrentIndex(0);
+    setAnsweredCount(0);
     resetSession();
 }, [selectedCategory, filteredQuestions, mode]);
 
@@ -311,17 +312,28 @@ const startReview = (type: 'mastered' | 'needsReview') => {
     };
 
 const nextQuestion = () => {
-    // Kalau udah di soal terakhir, balik ke awal
-    if (currentIndex >= filteredQuestions.length - 1) {
+    // Nambah answered count (untuk display counter)
+    const newCount = answeredCount + 1;
+    setAnsweredCount(newCount);
+    
+    // Kalau count udah melebihi total soal, reset semua
+    if (newCount > filteredQuestions.length) {
+        setAnsweredCount(0);
         setCurrentIndex(0);
-    } else {
+    } 
+    // Kalau count = total soal, tetep di soal terakhir (tapi counter jadi 4/4)
+    else if (newCount === filteredQuestions.length) {
+        // currentIndex tetep di soal terakhir (index 3)
+        // tapi counter jadi 4/4
+    }
+    // Kalau belum sampe akhir, lanjut ke soal berikutnya
+    else {
         setCurrentIndex(currentIndex + 1);
     }
     
-    // Set timer untuk soal berikutnya
-    const nextIdx = currentIndex >= filteredQuestions.length - 1 ? 0 : currentIndex + 1;
-    if (mode === 'exam' && filteredQuestions[nextIdx]) {
-        setTimeLeft(filteredQuestions[nextIdx].timeLimit);
+    // Set timer
+    if (mode === 'exam' && filteredQuestions[currentIndex + 1]) {
+        setTimeLeft(filteredQuestions[currentIndex + 1].timeLimit);
         setIsTimerRunning(true);
     }
     
@@ -387,7 +399,7 @@ const prevQuestion = () => {
     };
 
 const progressPercentage = filteredQuestions.length > 0 
-    ? (currentIndex / filteredQuestions.length) * 100 
+    ? (answeredCount / filteredQuestions.length) * 100 
     : 0;
 
   const currentQ = filteredQuestions[currentIndex];  
@@ -645,13 +657,13 @@ const masteredPercentage = filteredQuestions.length > 0
     <div className="flex justify-between items-end px-2">
         {/* KIRI: Progress berapa soal dijawab (SEMUA MODE) */}
 <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
-    Progress: {currentIndex} Soal Dijawab
+    Progress: {answeredCount} Soal Dijawab
 </span>
         
         {/* KANAN: Indikator soal ke berapa yang sedang ditampilkan */}
 {/* KANAN: Indikator soal ke berapa yang sedang ditampilkan */}
 <span className="text-lg font-black text-indigo-600">
-    {filteredQuestions.length > 0 ? currentIndex : 0} / {filteredQuestions.length}
+    {answeredCount} / {filteredQuestions.length}
 </span>
     </div>
 <div className="h-3 bg-gray-100 rounded-full overflow-hidden p-1 shadow-inner">
