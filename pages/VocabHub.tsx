@@ -662,11 +662,14 @@ const prevQuestion = () => {
         return;
     }
     
-    // JANGAN ubah answeredCount - cuma ubah flashIndex
+    // Kurangi answeredCount juga (biar progress turun)
+    if (answeredCount > 0) {
+        setAnsweredCount(prev => prev - 1);
+    }
+    
     setFlashIndex(flashIndex - 1);
     setIsFlipped(false);
     
-    // Set timer kalau mode exam
     if (studyMode === 'exam') {
         setTimeLeft(10);
         setIsTimerRunning(true);
