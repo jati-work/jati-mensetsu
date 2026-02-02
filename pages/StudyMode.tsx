@@ -39,18 +39,6 @@ const filteredQuestions = useMemo(() => {
 
 const currentQ = filteredQuestions[currentIndex];
     
-    // Hitung progress
-    const progressPercentage = filteredQuestions.length > 0 
-        ? (answeredCount / filteredQuestions.length) * 100 
-        : 0;
-    
-    // Review statistics
-    const masteredQuestions = questions.filter(q => q.mastered);
-    const notMasteredQuestions = questions.filter(q => !q.mastered);
-    const masteredPercentage = questions.length > 0 
-        ? Math.round((masteredQuestions.length / questions.length) * 100) 
-        : 0;
-    
     const categories = useMemo(() => {
         const cats = Array.from(new Set(questions.map(q => q.category))).filter(Boolean);
         return ['Semua', ...cats];
