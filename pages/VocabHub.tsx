@@ -47,15 +47,12 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [showImportModal, setShowImportModal] = useState(false);
     // Ambil semua kategori unik
     const [showReview, setShowReview] = useState(false);
-    const [studyMode, setStudyMode] = useState<'casual' | 'exam' | 'random' | 'examRandom'>('casual');
+    const [studyMode, setStudyMode] = useState<'casual' | 'exam'>('casual');
     const [timeLeft, setTimeLeft] = useState(10);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [isReviewing, setIsReviewing] = useState(false);
     const [reviewType, setReviewType] = useState<'mastered' | 'needsReview' | null>(null);
     const [answeredCount, setAnsweredCount] = useState(0);
-    const [originalIndex, setOriginalIndex] = useState(0);
-    const [shuffledQueue, setShuffledQueue] = useState<number[]>([]);
-    const [queueIndex, setQueueIndex] = useState(0);
 
 const playBeep = (frequency: number = 800, duration: number = 100) => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -102,13 +99,8 @@ const filteredList = useMemo(() => {
 
 const progressPercentage = useMemo(() => {
     if (filteredList.length === 0) return 0;
-    
-    if (studyMode === 'random' || studyMode === 'examRandom') {
-        return (answeredCount / filteredList.length) * 100;
-    } else {
-        return ((flashIndex + 1) / filteredList.length) * 100;
-    }
-}, [studyMode, answeredCount, flashIndex, filteredList.length]);
+    return (answeredCount / filteredList.length) * 100;
+}, [answeredCount, filteredList.length]);
     
 const existingCategories = useMemo(() => {
     return Array.from(new Set(vocabList.map(v => v.category))).filter(cat => cat.trim() !== '');
@@ -132,17 +124,6 @@ useEffect(() => {
     
     return () => clearInterval(timer);
 }, [isTimerRunning, timeLeft, flashIndex, filteredList.length, studyMode]);
-
-// Shuffle queue saat mode random dimulai
-useEffect(() => {
-    if (studyMode === 'random' || studyMode === 'examRandom') {
-        const shuffled = [...Array(filteredList.length).keys()].sort(() => Math.random() - 0.5);
-        setShuffledQueue(shuffled);
-        setQueueIndex(0);
-        setFlashIndex(shuffled[0] || 0);
-        setAnsweredCount(0);
-    }
-}, [studyMode, filteredList.length]);
 
 // Reset timer saat ganti kartu
 useEffect(() => {
@@ -650,33 +631,38 @@ const startReview = (type: 'mastered' | 'needsReview') => {
 
 // TAMBAH DI SINI ↓
 const nextQuestion = () => {
-    if (studyMode === 'random' || studyMode === 'examRandom') {
-        const newQueueIndex = queueIndex + 1;
-        if (newQueueIndex < shuffledQueue.length) {
-            setQueueIndex(newQueueIndex);
-            setFlashIndex(shuffledQueue[newQueueIndex]);
-        }
-        setAnsweredCount(newQueueIndex);  // ← PINDAH KE LUAR IF supaya tetap update
+    // Nambah answered count
+    setAnsweredCount(prev => prev + 1);
+    
+    // Cek apakah udah jawab semua vocab (count = total vocab)
+    if (answeredCount + 1 >= filteredList.length) {
+        // Reset semua ke awal
+        setAnsweredCount(0);
+        setFlashIndex(0);
     } else {
-        setFlashIndex((flashIndex + 1) % filteredList.length);
+        // Masih ada vocab berikutnya, lanjut
+        setFlashIndex(flashIndex + 1);
     }
+    
     setIsFlipped(false);
 };
 
+const prevQuestion = () => {
+    if (flashIndex === 0) {
+        alert('Ini sudah kartu pertama!');
+        return;
+    }
+    
+    setFlashIndex(flashIndex - 1);
+    setIsFlipped(false);
+};
+    
 const resetQuiz = () => {
     setAnsweredCount(0);
+    setFlashIndex(0);
     setIsFlipped(false);
-    
-    if (studyMode === 'random' || studyMode === 'examRandom') {
-        // Shuffle ulang
-        const shuffled = [...Array(filteredList.length).keys()].sort(() => Math.random() - 0.5);
-        setShuffledQueue(shuffled);
-        setQueueIndex(0);
-        setFlashIndex(shuffled[0] || 0);
-    } else {
-        // Mode santai/exam: reset ke awal
-        setFlashIndex(0);
-    }
+    setReviewType(null);
+    setSelectedCategory('Semua');
 };
     
 // Mode Review Khusus
@@ -857,11 +843,29 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 
 <div className="relative">
     <div className="flex gap-2 overflow-x-auto pb-2 scroll-smooth">
-        {categories.map(cat => (
-            <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-5 py-2 rounded-full text-[9px] font-black uppercase transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-50 text-gray-400'}`}>
-                {cat}
-            </button>
-        ))}
+        {categories.map(cat => {
+            // Cek apakah semua vocab di kategori ini sudah mastered
+            const categoryVocab = cat === 'Semua' 
+                ? vocabList 
+                : vocabList.filter(v => v.category === cat);
+            const allMastered = categoryVocab.length > 0 && categoryVocab.every(v => v.mastered);
+            
+            return (
+                <button 
+                    key={cat} 
+                    onClick={() => setSelectedCategory(cat)} 
+                    className={`px-5 py-2 rounded-full text-[9px] font-black uppercase transition-all whitespace-nowrap ${
+                        selectedCategory === cat 
+                            ? 'bg-indigo-600 text-white shadow-lg' 
+                            : allMastered
+                                ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-300'
+                                : 'bg-gray-50 text-gray-400'
+                    }`}
+                >
+                    {cat}
+                </button>
+            );
+        })}
     </div>
 </div>
 
@@ -954,18 +958,6 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
         className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'exam' ? 'bg-rose-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
     >
         ⏱️ UJIAN (10s)
-    </button>
-    <button 
-        onClick={() => setStudyMode('random')} 
-        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'random' ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
-    >
-        🎲 ACAK
-    </button>
-    <button 
-        onClick={() => setStudyMode('examRandom')} 
-        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${studyMode === 'examRandom' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
-    >
-        🎯 UJIAN ACAK
     </button>
 </div>
                 
@@ -1067,8 +1059,8 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 {/* Progress Bar */}
 <div className="w-full max-w-lg mx-auto mb-6 bg-white/5 p-4 rounded-3xl border-2 border-white/20 backdrop-blur-sm">
 <div className="flex justify-between mb-3 text-xs text-white font-black">
-    <span>PROGRESS: {(studyMode === 'random' || studyMode === 'examRandom') ? `${answeredCount} SOAL DIJAWAB` : `${flashIndex + 1} SOAL DIJAWAB`}</span>
-    <span className="text-emerald-300">{flashIndex + 1} / {filteredList.length}</span>
+    <span>PROGRESS: {answeredCount} SOAL DIJAWAB</span>
+    <span className="text-emerald-300">{answeredCount} / {filteredList.length}</span>
 </div>
 <div className="bg-white/20 rounded-full h-4 overflow-hidden border border-white/30 shadow-inner">
     <div 
@@ -1080,23 +1072,14 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
                                     
 {/* Navigasi & Kontrol */}
 <div className="flex items-center gap-6 justify-center">
-{/* Tombol PREV */}
-<button 
-    onClick={() => {
-        if (studyMode !== 'random' && studyMode !== 'examRandom') {
-            // Mode santai/exam aja yang bisa mundur
-            setFlashIndex((flashIndex - 1 + filteredList.length) % filteredList.length);
-        }
-    }}
-    disabled={studyMode === 'random' || studyMode === 'examRandom'}
-    className={`p-5 rounded-3xl text-white transition-all ${
-        studyMode === 'random' || studyMode === 'examRandom'
-            ? 'bg-white/5 opacity-30 cursor-not-allowed' 
-            : 'bg-white/10 hover:bg-white/20'
-    }`}
->
-    <ChevronLeft size={32} />
-</button>
+    {/* Tombol PREV */}
+    <button 
+        onClick={prevQuestion}
+        className="p-5 rounded-3xl bg-white/10 hover:bg-white/20 text-white transition-all"
+        title="Sebelumnya"
+    >
+        <ChevronLeft size={32} />
+    </button>
     
     {/* Tombol MASTERED */}
     <button 
@@ -1112,29 +1095,14 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
         <CheckCircle2 size={32} />
     </button>
     
-{/* Tombol NEXT / REFRESH */}
-{(studyMode === 'random' || studyMode === 'examRandom') && answeredCount >= filteredList.length ? (
+    {/* Tombol NEXT */}
     <button 
-        onClick={resetQuiz} 
-        className="p-5 bg-emerald-500 text-white rounded-3xl hover:bg-emerald-600 transition-all"
-    >
-        <RotateCw size={32} />
-    </button>
-) : (studyMode !== 'random' && studyMode !== 'examRandom') && flashIndex === filteredList.length - 1 ? (
-    <button 
-        onClick={resetQuiz} 
-        className="p-5 bg-emerald-500 text-white rounded-3xl hover:bg-emerald-600 transition-all"
-    >
-        <RotateCw size={32} />
-    </button>
-) : (
-    <button 
-        onClick={nextQuestion} 
-        className="p-5 bg-white text-indigo-600 rounded-3xl hover:bg-indigo-50 transition-all"
+        onClick={nextQuestion}
+        className="p-5 bg-white text-indigo-600 rounded-3xl hover:bg-indigo-50 transition-all shadow-xl"
+        title="Selanjutnya"
     >
         <ChevronRight size={32} />
     </button>
-)}
 </div>
                                 
                         </div>
