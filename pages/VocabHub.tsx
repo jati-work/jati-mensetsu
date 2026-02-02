@@ -180,9 +180,38 @@ useEffect(() => {
 }, [lastEditedId]);
 
 const loadVocab = async () => {
-    const { data } = await supabase.from('vocab').select('*').order('order_index', { ascending: true }).limit(10000);
-    if (data) {
-        setVocabList(data.map((v: any) => ({
+    // Ambil SEMUA data tanpa limit
+    let allData: any[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    
+    while (true) {
+        const { data, error } = await supabase
+            .from('vocab')
+            .select('*')
+            .order('order_index', { ascending: true })
+            .range(from, from + pageSize - 1);
+        
+        if (error) {
+            console.error('Error loading vocab:', error);
+            break;
+        }
+        
+        if (!data || data.length === 0) break;
+        
+        allData = [...allData, ...data];
+        console.log(`Loaded ${allData.length} vocab so far...`);
+        
+        // Kalau data yang diambil kurang dari pageSize, berarti udah habis
+        if (data.length < pageSize) break;
+        
+        from += pageSize;
+    }
+    
+    console.log(`✅ Total vocab loaded: ${allData.length}`);
+    
+    if (allData.length > 0) {
+        setVocabList(allData.map((v: any) => ({
             id: v.id,
             word: v.word,
             meaning: v.meaning,
