@@ -440,8 +440,8 @@ const prevQuestion = () => {
         }
     };
 
-    const progressPercentage = (mode === 'random' || mode === 'examRandom')
-    ? (answeredCount / filteredQuestions.length) * 100
+const progressPercentage = (mode === 'random' || mode === 'examRandom')
+    ? Math.min((answeredCount / filteredQuestions.length) * 100, 100)
     : filteredQuestions.length > 0 ? ((currentIndex + 1) / filteredQuestions.length) * 100 : 0;
     const currentQ = filteredQuestions[currentIndex];
 
