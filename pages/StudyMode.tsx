@@ -57,9 +57,6 @@ const filteredQuestions = useMemo(() => {
     const [timeLeft, setTimeLeft] = useState(30);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
-    const [answeredCount, setAnsweredCount] = useState(0);
-    const [shuffledQueue, setShuffledQueue] = useState<number[]>([]);  // TAMBAH INI
-    const [queueIndex, setQueueIndex] = useState(0);                   // TAMBAH INI
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
@@ -205,13 +202,7 @@ if (epData && epData.length > 0) {
 
 useEffect(() => {
     setCurrentIndex(0);
-    setAnsweredCount(0);
     resetSession();
-    
-    // Initialize shuffled queue untuk mode random
-    if (mode === 'random' || mode === 'examRandom') {
-        initializeShuffledQueue();
-    }
 }, [selectedCategory, filteredQuestions, mode]);
 
     const speak = (text: string) => {
@@ -259,24 +250,6 @@ const playBeep = (frequency: number = 800, duration: number = 100) => {
     
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + duration / 1000);
-};
-
-// TAMBAH FUNGSI INI
-const shuffleArray = (array: any[]) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-};
-
-const initializeShuffledQueue = () => {
-    const indices = filteredQuestions.map((_, idx) => idx);
-    const shuffled = shuffleArray(indices);
-    setShuffledQueue(shuffled);
-    setQueueIndex(0);
-    setCurrentIndex(shuffled[0] || 0);
 };
     
 const startReview = (type: 'mastered' | 'needsReview') => {
@@ -338,39 +311,13 @@ const startReview = (type: 'mastered' | 'needsReview') => {
     };
 
 const nextQuestion = () => {
-    // Mode acak - pakai shuffled queue
-    if (mode === 'random' || mode === 'examRandom') {
-        setAnsweredCount(prev => prev + 1);
-        
-        // Cek apakah masih ada soal di queue
-        if (queueIndex < shuffledQueue.length - 1) {
-            // Lanjut ke soal berikutnya di queue
-            const nextQueueIdx = queueIndex + 1;
-            setQueueIndex(nextQueueIdx);
-            setCurrentIndex(shuffledQueue[nextQueueIdx]);
-            
-            // Set timer untuk soal berikutnya
-            if (mode === 'examRandom' && filteredQuestions[shuffledQueue[nextQueueIdx]]) {
-                setTimeLeft(filteredQuestions[shuffledQueue[nextQueueIdx]].timeLimit);
-                setIsTimerRunning(true);
-            }
-        }
-        // Kalau udah habis semua, shuffle ulang untuk putaran berikutnya
-        else {
-            initializeShuffledQueue();
-        }
-    } 
-    // Mode normal
-    else {
-        if (currentIndex < filteredQuestions.length - 1) {
-            setCurrentIndex(currentIndex + 1);
-        }
-        
-        // Set timer untuk mode exam normal
-        if (mode === 'exam' && filteredQuestions[currentIndex + 1]) {
-            setTimeLeft(filteredQuestions[currentIndex + 1].timeLimit);
-            setIsTimerRunning(true);
-        }
+    if (currentIndex < filteredQuestions.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+    }
+    
+    if (mode === 'exam' && filteredQuestions[currentIndex + 1]) {
+        setTimeLeft(filteredQuestions[currentIndex + 1].timeLimit);
+        setIsTimerRunning(true);
     }
     
     setShowAnswer(false);
@@ -380,18 +327,12 @@ const nextQuestion = () => {
 
 const resetQuiz = () => {
     setCurrentIndex(0);
-    setAnsweredCount(0);
     setShowAnswer(false);
     setAiFeedback(null);
     setRecordedAudioUrl(null);
     setTimeLeft(30);
     setReviewType(null);
     setSelectedCategory('Semua');
-    
-    // Reset shuffled queue
-    if (mode === 'random' || mode === 'examRandom') {
-        initializeShuffledQueue();
-    }
 };
     
 const prevQuestion = () => {
@@ -440,9 +381,9 @@ const prevQuestion = () => {
         }
     };
 
-const progressPercentage = (mode === 'random' || mode === 'examRandom')
-    ? Math.min((answeredCount / filteredQuestions.length) * 100, 100)
-    : filteredQuestions.length > 0 ? (currentIndex / filteredQuestions.length) * 100 : 0;
+const progressPercentage = filteredQuestions.length > 0 
+    ? (currentIndex / filteredQuestions.length) * 100 
+    : 0;
 
   const currentQ = filteredQuestions[currentIndex];  
     
@@ -589,27 +530,6 @@ const masteredPercentage = filteredQuestions.length > 0
                         <div className="flex flex-wrap gap-2">
                             <button onClick={() => setMode('casual')} className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'casual' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}><Coffee size={16} /> SANTAI</button>
                             <button onClick={() => { setMode('exam'); setTimeLeft(currentQ?.timeLimit || 30); }} className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'exam' ? 'bg-rose-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}><Timer size={16} /> UJIAN</button>
-<button 
-    onClick={() => { 
-        setMode('random'); 
-        initializeShuffledQueue(); 
-    }} 
-    className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'random' ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
->
-    <Shuffle size={16} /> ACAK
-</button>
-
-<button 
-    onClick={() => { 
-        setMode('examRandom'); 
-        initializeShuffledQueue();
-        setTimeLeft(currentQ?.timeLimit || 30); 
-        setIsTimerRunning(true); 
-    }} 
-    className={`px-6 py-3 rounded-2xl flex items-center gap-2 font-black text-xs transition-all ${mode === 'examRandom' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
->
-    <Target size={16} /> UJIAN ACAK
-</button>
                         </div>
                         
                         <div className="flex items-center gap-2 bg-indigo-50 p-2 rounded-2xl border border-indigo-100">
@@ -697,17 +617,12 @@ const masteredPercentage = filteredQuestions.length > 0
 <div className="flex items-center justify-center gap-4 md:gap-8">
 <button 
     onClick={prevQuestion} 
-    disabled={mode === 'random' || mode === 'examRandom'}
-    className={`p-5 rounded-3xl transition-all active:scale-90 ${
-        mode === 'random' || mode === 'examRandom'
-            ? 'bg-gray-50 text-gray-200 cursor-not-allowed opacity-50'
-            : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-    }`} 
-    title={mode === 'random' || mode === 'examRandom' ? 'Tidak bisa mundur di mode acak' : 'Sebelumnya'}
+    className="p-5 rounded-3xl transition-all active:scale-90 bg-gray-100 text-gray-400 hover:bg-gray-200" 
+    title="Sebelumnya"
 >
     <ChevronLeft size={28} />
 </button>
-
+    
     <button onClick={() => setQuestions(questions.map(q => q.id === currentQ?.id ? {...q, mastered: !q.mastered} : q))} className={`p-5 rounded-3xl transition-all active:scale-90 ${currentQ?.mastered ? 'bg-emerald-500 text-white shadow-lg' : 'bg-gray-100 text-gray-300 hover:text-gray-400'}`} title="Tandai Bisa">
         <CheckCircle2 size={28} />
     </button>
@@ -716,30 +631,22 @@ const masteredPercentage = filteredQuestions.length > 0
         {showAnswer ? <EyeOff size={28} /> : <Eye size={28} />}
     </button>
 
-    {/* Tombol Next atau Refresh */}
-    {(mode === 'random' || mode === 'examRandom') && answeredCount >= filteredQuestions.length ? (
-        <button onClick={resetQuiz} className="p-5 bg-emerald-600 text-white rounded-3xl shadow-xl hover:bg-emerald-700 active:scale-90 transition-all" title="Mulai Lagi">
-            <RotateCcw size={28} />
-        </button>
-    ) : (mode !== 'random' && mode !== 'examRandom') && currentIndex === filteredQuestions.length - 1 ? (
-        <button onClick={resetQuiz} className="p-5 bg-emerald-600 text-white rounded-3xl shadow-xl hover:bg-emerald-700 active:scale-90 transition-all" title="Mulai Lagi">
-            <RotateCcw size={28} />
-        </button>
-    ) : (
-        <button onClick={nextQuestion} className="p-5 bg-indigo-600 text-white rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-90 transition-all" title="Selanjutnya">
-            <ChevronRight size={28} />
-        </button>
-    )}
+{currentIndex === filteredQuestions.length - 1 ? (
+    <button onClick={resetQuiz} className="p-5 bg-emerald-600 text-white rounded-3xl shadow-xl hover:bg-emerald-700 active:scale-90 transition-all" title="Mulai Lagi">
+        <RotateCcw size={28} />
+    </button>
+) : (
+    <button onClick={nextQuestion} className="p-5 bg-indigo-600 text-white rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-90 transition-all" title="Selanjutnya">
+        <ChevronRight size={28} />
+    </button>
+)}
 </div>
 
 <div className="w-full max-md mx-auto space-y-3">
     <div className="flex justify-between items-end px-2">
         {/* KIRI: Progress berapa soal dijawab (SEMUA MODE) */}
 <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
-    Progress: {mode === 'random' || mode === 'examRandom' 
-        ? `${answeredCount} Soal Dijawab` 
-        : `${currentIndex} Soal Dijawab`
-    }
+    Progress: {currentIndex} Soal Dijawab
 </span>
         
         {/* KANAN: Indikator soal ke berapa yang sedang ditampilkan */}
@@ -748,18 +655,11 @@ const masteredPercentage = filteredQuestions.length > 0
     {filteredQuestions.length > 0 ? currentIndex : 0} / {filteredQuestions.length}
 </span>
     </div>
-<div className="relative h-3 bg-gray-100 rounded-full overflow-visible p-1 shadow-inner">
+<div className="h-3 bg-gray-100 rounded-full overflow-hidden p-1 shadow-inner">
     <div 
         className="h-full bg-indigo-500 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(99,102,241,0.4)]" 
         style={{ width: `${progressPercentage}%` }}
     ></div>
-    {(mode === 'random' || mode === 'examRandom') && filteredQuestions.length > 0 && (
-        <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-[9px] font-black text-indigo-600 bg-white/90 px-2 py-0.5 rounded-full shadow-sm">
-                SOAL #{currentIndex + 1}
-            </span>
-        </div>
-    )}
 </div>
 </div>
                             
