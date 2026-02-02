@@ -480,10 +480,11 @@ const exportExcel = async () => {
         return ['Semua', ...cats];
     }, [vocabList]);
 
-    useEffect(() => {
-        setFlashIndex(0);
-        setIsFlipped(false);
-    }, [selectedCategory]);
+useEffect(() => {
+    setFlashIndex(0);
+    setAnsweredCount(0);  // ← TAMBAH INI
+    setIsFlipped(false);
+}, [selectedCategory, reviewType]);  // ← TAMBAH reviewType
 
 const handleSaveVocab = async () => {
     if (!newWord.trim() || !newMeaning.trim()) return;
@@ -634,15 +635,23 @@ const nextQuestion = () => {
     // Nambah answered count
     setAnsweredCount(prev => prev + 1);
     
-    // Cek apakah udah jawab semua vocab (count = total vocab)
-    if (answeredCount + 1 >= filteredList.length) {
-        // Reset semua ke awal
+    // Cek apakah udah jawab semua vocab (count > total vocab)
+    if (answeredCount + 1 > filteredList.length) {
+        // Reset semua
         setAnsweredCount(0);
         setFlashIndex(0);
-    } else {
+    } else if (answeredCount + 1 < filteredList.length) {
         // Masih ada vocab berikutnya, lanjut
         setFlashIndex(flashIndex + 1);
+        
+        // Set timer untuk vocab berikutnya (kalau mode exam)
+        if (studyMode === 'exam') {
+            setTimeLeft(10);
+            setIsTimerRunning(true);
+        }
     }
+    // Kalau answeredCount + 1 === filteredList.length
+    // flashIndex tetep (vocab terakhir), cuma counter jadi 25/25
     
     setIsFlipped(false);
 };
@@ -653,8 +662,15 @@ const prevQuestion = () => {
         return;
     }
     
+    // JANGAN ubah answeredCount - cuma ubah flashIndex
     setFlashIndex(flashIndex - 1);
     setIsFlipped(false);
+    
+    // Set timer kalau mode exam
+    if (studyMode === 'exam') {
+        setTimeLeft(10);
+        setIsTimerRunning(true);
+    }
 };
     
 const resetQuiz = () => {
@@ -1059,8 +1075,8 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 {/* Progress Bar */}
 <div className="w-full max-w-lg mx-auto mb-6 bg-white/5 p-4 rounded-3xl border-2 border-white/20 backdrop-blur-sm">
 <div className="flex justify-between mb-3 text-xs text-white font-black">
-    <span>PROGRESS: {answeredCount} SOAL DIJAWAB</span>
-    <span className="text-emerald-300">{answeredCount} / {filteredList.length}</span>
+<span>PROGRESS: {answeredCount} SOAL DIJAWAB</span>
+<span className="text-emerald-300">{answeredCount} / {filteredList.length}</span>
 </div>
 <div className="bg-white/20 rounded-full h-4 overflow-hidden border border-white/30 shadow-inner">
     <div 
