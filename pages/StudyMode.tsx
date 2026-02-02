@@ -311,10 +311,10 @@ const startReview = (type: 'mastered' | 'needsReview') => {
     };
 
 const nextQuestion = () => {
-    if (currentIndex < filteredQuestions.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-    }
+    // Selalu nambah currentIndex, nggak dibatasi
+    setCurrentIndex(currentIndex + 1);
     
+    // Set timer cuma kalau masih ada soal berikutnya
     if (mode === 'exam' && filteredQuestions[currentIndex + 1]) {
         setTimeLeft(filteredQuestions[currentIndex + 1].timeLimit);
         setIsTimerRunning(true);
