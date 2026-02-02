@@ -742,9 +742,15 @@ const masteredPercentage = filteredQuestions.length > 0
         </span>
         
         {/* KANAN: Indikator soal ke berapa yang sedang ditampilkan */}
-        <span className="text-lg font-black text-indigo-600">
-            {filteredQuestions.length > 0 ? currentIndex + 1 : 0} / {filteredQuestions.length}
-        </span>
+{/* KANAN: Indikator soal ke berapa yang sedang ditampilkan */}
+<span className="text-lg font-black text-indigo-600">
+    {(mode === 'random' || mode === 'examRandom') && answeredCount >= filteredQuestions.length
+        ? '✅ SELESAI'
+        : (mode !== 'random' && mode !== 'examRandom') && currentIndex === filteredQuestions.length - 1
+            ? '✅ SELESAI'
+            : `${filteredQuestions.length > 0 ? currentIndex + 1 : 0} / ${filteredQuestions.length}`
+    }
+</span>
     </div>
     <div className="h-3 bg-gray-100 rounded-full overflow-hidden p-1 shadow-inner">
         <div 
