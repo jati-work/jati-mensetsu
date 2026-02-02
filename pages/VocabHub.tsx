@@ -33,6 +33,7 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [selectedCategory, setSelectedCategory] = useState('Semua');
     const [flashIndex, setFlashIndex] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
+    const [isNavigating, setIsNavigating] = useState(false);
     
     // Fitur: Gender TTS & Flip Mode
     const [voiceGender, setVoiceGender] = useState<'female' | 'male'>('female');
@@ -632,6 +633,9 @@ const startReview = (type: 'mastered' | 'needsReview') => {
 
 // TAMBAH DI SINI ↓
 const nextQuestion = () => {
+    if (isNavigating) return; // Prevent spam click
+    
+    setIsNavigating(true);
     // Nambah answered count
     setAnsweredCount(prev => prev + 1);
     
@@ -654,9 +658,15 @@ const nextQuestion = () => {
     // flashIndex tetep (vocab terakhir), cuma counter jadi 25/25
     
     setIsFlipped(false);
+setTimeout(() => {
+        setIsNavigating(false);
+    }, 300);
 };
 
 const prevQuestion = () => {
+    if (isNavigating) return; // Prevent spam click
+    
+    setIsNavigating(true);
     if (flashIndex === 0) {
         alert('Ini sudah kartu pertama!');
         return;
@@ -674,6 +684,9 @@ const prevQuestion = () => {
         setTimeLeft(10);
         setIsTimerRunning(true);
     }
+setTimeout(() => {
+        setIsNavigating(false);
+    }, 300);
 };
     
 const resetQuiz = () => {
@@ -1092,11 +1105,12 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 {/* Navigasi & Kontrol */}
 <div className="flex items-center gap-6 justify-center">
     {/* Tombol PREV */}
-    <button 
-        onClick={prevQuestion}
-        className="p-5 rounded-3xl bg-white/10 hover:bg-white/20 text-white transition-all"
-        title="Sebelumnya"
-    >
+<button 
+    onClick={prevQuestion}
+    disabled={isNavigating}
+    className="p-5 rounded-3xl bg-white/10 hover:bg-white/20 text-white transition-all disabled:opacity-50"
+    title="Sebelumnya"
+>
         <ChevronLeft size={32} />
     </button>
     
@@ -1115,11 +1129,12 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
     </button>
     
     {/* Tombol NEXT */}
-    <button 
-        onClick={nextQuestion}
-        className="p-5 bg-white text-indigo-600 rounded-3xl hover:bg-indigo-50 transition-all shadow-xl"
-        title="Selanjutnya"
-    >
+<button 
+    onClick={nextQuestion}
+    disabled={isNavigating}
+    className="p-5 bg-white text-indigo-600 rounded-3xl hover:bg-indigo-50 transition-all shadow-xl disabled:opacity-50"
+    title="Selanjutnya"
+>
         <ChevronRight size={32} />
     </button>
 </div>
