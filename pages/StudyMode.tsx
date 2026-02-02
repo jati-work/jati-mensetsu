@@ -37,6 +37,20 @@ const filteredQuestions = useMemo(() => {
     return filtered;
 }, [questions, selectedCategory, reviewType]);
 
+const currentQ = filteredQuestions[currentIndex];
+    
+    // Hitung progress
+    const progressPercentage = filteredQuestions.length > 0 
+        ? (answeredCount / filteredQuestions.length) * 100 
+        : 0;
+    
+    // Review statistics
+    const masteredQuestions = questions.filter(q => q.mastered);
+    const notMasteredQuestions = questions.filter(q => !q.mastered);
+    const masteredPercentage = questions.length > 0 
+        ? Math.round((masteredQuestions.length / questions.length) * 100) 
+        : 0;
+    
     const categories = useMemo(() => {
         const cats = Array.from(new Set(questions.map(q => q.category))).filter(Boolean);
         return ['Semua', ...cats];
@@ -57,6 +71,7 @@ const filteredQuestions = useMemo(() => {
     const [timeLeft, setTimeLeft] = useState(30);
     const [isTimerRunning, setIsTimerRunning] = useState(false);
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+    const [answeredCount, setAnsweredCount] = useState(0);
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
