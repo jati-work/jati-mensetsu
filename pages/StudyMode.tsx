@@ -312,30 +312,26 @@ const startReview = (type: 'mastered' | 'needsReview') => {
     };
 
 const nextQuestion = () => {
-    // Nambah answered count (untuk display counter)
-    const newCount = answeredCount + 1;
-    setAnsweredCount(newCount);
+    // Nambah answered count
+    setAnsweredCount(prev => prev + 1);
     
-    // Kalau count udah melebihi total soal, reset semua
-    if (newCount > filteredQuestions.length) {
+    // Cek apakah udah jawab semua soal (count = total soal)
+    if (answeredCount + 1 > filteredQuestions.length) {
+        // Reset semua
         setAnsweredCount(0);
         setCurrentIndex(0);
-    } 
-    // Kalau count = total soal, tetep di soal terakhir (tapi counter jadi 4/4)
-    else if (newCount === filteredQuestions.length) {
-        // currentIndex tetep di soal terakhir (index 3)
-        // tapi counter jadi 4/4
-    }
-    // Kalau belum sampe akhir, lanjut ke soal berikutnya
-    else {
+    } else if (answeredCount + 1 < filteredQuestions.length) {
+        // Masih ada soal berikutnya, lanjut
         setCurrentIndex(currentIndex + 1);
+        
+        // Set timer untuk soal berikutnya
+        if (mode === 'exam' && filteredQuestions[currentIndex + 1]) {
+            setTimeLeft(filteredQuestions[currentIndex + 1].timeLimit);
+            setIsTimerRunning(true);
+        }
     }
-    
-    // Set timer
-    if (mode === 'exam' && filteredQuestions[currentIndex + 1]) {
-        setTimeLeft(filteredQuestions[currentIndex + 1].timeLimit);
-        setIsTimerRunning(true);
-    }
+    // Kalau answeredCount + 1 === filteredQuestions.length
+    // currentIndex tetep (soal terakhir), cuma counter jadi 4/4
     
     setShowAnswer(false);
     setAiFeedback(null);
