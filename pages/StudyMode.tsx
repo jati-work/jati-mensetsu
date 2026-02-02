@@ -631,7 +631,7 @@ const masteredPercentage = filteredQuestions.length > 0
         {showAnswer ? <EyeOff size={28} /> : <Eye size={28} />}
     </button>
 
-{currentIndex === filteredQuestions.length - 1 ? (
+{currentIndex >= filteredQuestions.length ? (
     <button onClick={resetQuiz} className="p-5 bg-emerald-600 text-white rounded-3xl shadow-xl hover:bg-emerald-700 active:scale-90 transition-all" title="Mulai Lagi">
         <RotateCcw size={28} />
     </button>
