@@ -900,7 +900,7 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
                                 : 'bg-gray-50 text-gray-400'
                     }`}
                 >
-                    {cat}
+                    {cat} ({getCategoryCount(cat)})
                 </button>
             );
         })}
