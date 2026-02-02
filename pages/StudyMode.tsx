@@ -735,30 +735,37 @@ const masteredPercentage = filteredQuestions.length > 0
 <div className="w-full max-md mx-auto space-y-3">
     <div className="flex justify-between items-end px-2">
         {/* KIRI: Progress berapa soal dijawab (SEMUA MODE) */}
-        <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
-            Progress: {mode === 'random' || mode === 'examRandom' 
-                ? `${answeredCount} Soal Dijawab` 
-                : `${currentIndex + 1} Soal Dijawab`
-            }
-        </span>
+<span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+    Progress: {mode === 'random' || mode === 'examRandom' 
+        ? `${answeredCount} Soal Dijawab` 
+        : `${currentIndex} Soal Dijawab`
+    }
+</span>
         
         {/* KANAN: Indikator soal ke berapa yang sedang ditampilkan */}
 {/* KANAN: Indikator soal ke berapa yang sedang ditampilkan */}
 <span className="text-lg font-black text-indigo-600">
     {(mode === 'random' || mode === 'examRandom') && answeredCount >= filteredQuestions.length
         ? '✅ SELESAI'
-        : (mode !== 'random' && mode !== 'examRandom') && currentIndex === filteredQuestions.length - 1
+        : (mode !== 'random' && mode !== 'examRandom') && currentIndex >= filteredQuestions.length - 1 && currentIndex > 0
             ? '✅ SELESAI'
             : `${filteredQuestions.length > 0 ? currentIndex : 0} / ${filteredQuestions.length}`
     }
 </span>
     </div>
-    <div className="h-3 bg-gray-100 rounded-full overflow-hidden p-1 shadow-inner">
-        <div 
-            className="h-full bg-indigo-500 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(99,102,241,0.4)]" 
-            style={{ width: `${progressPercentage}%` }}
-        ></div>
-    </div>
+<div className="relative h-3 bg-gray-100 rounded-full overflow-visible p-1 shadow-inner">
+    <div 
+        className="h-full bg-indigo-500 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(99,102,241,0.4)]" 
+        style={{ width: `${progressPercentage}%` }}
+    ></div>
+    {(mode === 'random' || mode === 'examRandom') && filteredQuestions.length > 0 && (
+        <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-[9px] font-black text-indigo-600 bg-white/90 px-2 py-0.5 rounded-full shadow-sm">
+                SOAL #{currentIndex + 1}
+            </span>
+        </div>
+    )}
+</div>
 </div>
                             
                             {/* ========== TOMBOL REVIEW - TAMBAHKAN DI SINI ========== */}
