@@ -106,6 +106,12 @@ const progressPercentage = useMemo(() => {
 const existingCategories = useMemo(() => {
     return Array.from(new Set(vocabList.map(v => v.category))).filter(cat => cat.trim() !== '');
 }, [vocabList]);
+
+// Fungsi untuk hitung jumlah vocab per kategori
+const getCategoryCount = (category: string) => {
+    if (category === 'Semua') return vocabList.length;
+    return vocabList.filter(v => v.category === category).length;
+};
     
 useEffect(() => {
     let timer: any;
