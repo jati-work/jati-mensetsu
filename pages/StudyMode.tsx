@@ -355,6 +355,11 @@ const prevQuestion = () => {
         return;
     }
     
+    // Kurangi answeredCount juga (biar progress turun)
+    if (answeredCount > 0) {
+        setAnsweredCount(prev => prev - 1);
+    }
+    
     setCurrentIndex(currentIndex - 1);
     setShowAnswer(false);
     setAiFeedback(null);
