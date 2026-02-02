@@ -340,17 +340,24 @@ const startReview = (type: 'mastered' | 'needsReview') => {
 const nextQuestion = () => {
     // Mode acak - pakai shuffled queue
     if (mode === 'random' || mode === 'examRandom') {
-        const newAnsweredCount = answeredCount + 1;
-        setAnsweredCount(newAnsweredCount);
+        setAnsweredCount(prev => prev + 1);
         
-        // Kalau udah habis semua soal, shuffle ulang
-        if (queueIndex >= shuffledQueue.length - 1) {
+        // Cek apakah masih ada soal di queue
+        if (queueIndex < shuffledQueue.length - 1) {
+            // Lanjut ke soal berikutnya di queue
+            const nextQueueIdx = queueIndex + 1;
+            setQueueIndex(nextQueueIdx);
+            setCurrentIndex(shuffledQueue[nextQueueIdx]);
+            
+            // Set timer untuk soal berikutnya
+            if (mode === 'examRandom' && filteredQuestions[shuffledQueue[nextQueueIdx]]) {
+                setTimeLeft(filteredQuestions[shuffledQueue[nextQueueIdx]].timeLimit);
+                setIsTimerRunning(true);
+            }
+        }
+        // Kalau udah habis semua, shuffle ulang untuk putaran berikutnya
+        else {
             initializeShuffledQueue();
-        } else {
-            // Ambil soal berikutnya dari queue
-            const nextQueueIndex = queueIndex + 1;
-            setQueueIndex(nextQueueIndex);
-            setCurrentIndex(shuffledQueue[nextQueueIndex]);
         }
     } 
     // Mode normal
@@ -358,20 +365,17 @@ const nextQuestion = () => {
         if (currentIndex < filteredQuestions.length - 1) {
             setCurrentIndex(currentIndex + 1);
         }
+        
+        // Set timer untuk mode exam normal
+        if (mode === 'exam' && filteredQuestions[currentIndex + 1]) {
+            setTimeLeft(filteredQuestions[currentIndex + 1].timeLimit);
+            setIsTimerRunning(true);
+        }
     }
     
     setShowAnswer(false);
     setAiFeedback(null);
     setRecordedAudioUrl(null);
-    
-    const nextIdx = (mode === 'random' || mode === 'examRandom') 
-        ? shuffledQueue[queueIndex + 1] 
-        : currentIndex + 1;
-    
-    if ((mode === 'exam' || mode === 'examRandom') && filteredQuestions[nextIdx]) {
-        setTimeLeft(filteredQuestions[nextIdx].timeLimit);
-        setIsTimerRunning(true);
-    }
 };
 
 const resetQuiz = () => {
@@ -554,11 +558,29 @@ const masteredPercentage = filteredQuestions.length > 0
 <div className="flex gap-2 overflow-x-auto pb-4 scroll-smooth">
     <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100">
         <div className="p-2 text-indigo-400 bg-white rounded-xl shadow-sm"><Layers size={16}/></div>
-        {categories.map(cat => (
-            <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase whitespace-nowrap transition-all ${selectedCategory === cat ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-indigo-400'}`}>
-                {cat}
-            </button>
-        ))}
+{categories.map(cat => {
+    // Cek apakah semua soal di kategori ini sudah mastered
+    const categoryQuestions = cat === 'Semua' 
+        ? questions 
+        : questions.filter(q => q.category === cat);
+    const allMastered = categoryQuestions.length > 0 && categoryQuestions.every(q => q.mastered);
+    
+    return (
+        <button 
+            key={cat} 
+            onClick={() => setSelectedCategory(cat)} 
+            className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase whitespace-nowrap transition-all ${
+                selectedCategory === cat 
+                    ? 'bg-indigo-600 text-white shadow-md' 
+                    : allMastered
+                        ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-300'
+                        : 'text-gray-400 hover:text-indigo-400'
+            }`}
+        >
+            {cat}
+        </button>
+    );
+})}
     </div>
 </div>
                     
