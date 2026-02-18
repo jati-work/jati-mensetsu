@@ -14,26 +14,33 @@ interface CollapsibleSection {
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 const t = {
-  red:     '#C0392B',
-  redMid:  '#E74C3C',
-  redSoft: '#FDECEA',
-  ink:     '#1A1A2E',
-  slate:   '#2C3E50',
-  mist:    '#F5F6FA',
+  // Primary: Indigo (matches app's purple/blue)
+  red:     '#4338CA',   // indigo-700
+  redMid:  '#6366F1',   // indigo-500
+  redSoft: '#EEF2FF',   // indigo-50
+  // Ink / text
+  ink:     '#1E1B4B',   // indigo-950
+  slate:   '#312E81',   // indigo-900 (dark text)
+  mist:    '#F8F9FF',   // very light indigo tint
   white:   '#FFFFFF',
-  gold:    '#D4A843',
-  goldSoft:'#FDF6E3',
-  sage:    '#27AE60',
-  sageSoft:'#EAFAF1',
-  sky:     '#2980B9',
-  skySoft: '#EBF5FB',
-  amber:   '#E67E22',
-  amberSoft:'#FEF9E7',
-  border:  '#E8EAED',
+  // Accent: Teal/mint (matches app's green cards)
+  gold:    '#0D9488',   // teal-600
+  goldSoft:'#F0FDFA',   // teal-50
+  // Success: Teal
+  sage:    '#0D9488',   // teal-600
+  sageSoft:'#CCFBF1',   // teal-100
+  // Info: Sky blue
+  sky:     '#0284C7',   // sky-600
+  skySoft: '#E0F2FE',   // sky-100
+  // Warning: Amber
+  amber:   '#D97706',   // amber-600
+  amberSoft:'#FEF3C7',  // amber-100
+  // Danger: Rose
+  border:  '#E5E7EB',
   textSub: '#6B7280',
   radius:  '12px',
-  shadow:  '0 2px 16px rgba(26,26,46,0.08)',
-  shadowHov:'0 8px 32px rgba(26,26,46,0.14)',
+  shadow:  '0 2px 16px rgba(30,27,75,0.08)',
+  shadowHov:'0 8px 32px rgba(30,27,75,0.14)',
 };
 
 const font = {
@@ -90,7 +97,7 @@ const GLOBAL_CSS = `
   }
   .mg-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, ${t.red}, ${t.gold});
+    background: linear-gradient(90deg, #4338CA, #0D9488);
     border-radius: 99px;
     transition: width 0.5s ease;
   }
@@ -219,7 +226,7 @@ const GLOBAL_CSS = `
     padding: 14px 18px;
     margin-bottom: 12px;
   }
-  .mg-tips-box h4 { font-size: 0.82rem; color: ${t.amber}; margin-bottom: 6px; }
+  .mg-tips-box h4 { font-size: 0.82rem; color: ${t.gold}; margin-bottom: 6px; }
   .mg-tips-box ul { padding-left: 16px; }
   .mg-tips-box li { font-size: 0.86rem; line-height: 1.5; }
 
@@ -288,7 +295,7 @@ const GLOBAL_CSS = `
     border: none;
     font-size: 1.1rem;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(192,57,43,0.4);
+    box-shadow: 0 4px 16px rgba(67,56,202,0.4);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -586,7 +593,7 @@ const MensetsuGuide: React.FC = () => {
 
             {/* Hero */}
             <div style={{
-              background: `linear-gradient(135deg, ${t.ink} 0%, ${t.slate} 60%, #C0392B22 100%)`,
+              background: `linear-gradient(135deg, ${t.ink} 0%, #3730A3 60%, #6366F122 100%)`,
               borderRadius: '20px',
               padding: '48px 40px',
               marginBottom: '28px',
@@ -983,7 +990,7 @@ const MensetsuGuide: React.FC = () => {
                 <ol className="mg-body-ol">
                   <li><strong>Join early:</strong> Enter waiting room 5 minutes before</li>
                   <li><strong>First impression:</strong> Camera ON, mic ON, smiling</li>
-                  <li><strong>Bow:</strong> When admitted, bow slightly (15°) and say:<br /><em style={{ color: t.sky }}>"Konnichiwa. Watashi wa [Name] desu. Kyou wa yoroshiku onegaishimasu."</em><br /><span style={{ fontSize: '0.82rem', color: t.textSub }}}>("Good afternoon. I am [Name]. Thank you for today.")</span></li>
+                  <li><strong>Bow:</strong> When admitted, bow slightly (15°) and say:<br /><em style={{ color: t.sky }}>"Konnichiwa. Watashi wa [Name] desu. Kyou wa yoroshiku onegaishimasu."</em><br /><span style={{ fontSize: '0.82rem', color: t.textSub }}>("Good afternoon. I am [Name]. Thank you for today.")</span></li>
                   <li><strong>Wait:</strong> Let interviewer start</li>
                 </ol>
               </CollapsibleItem>
@@ -1078,7 +1085,7 @@ const MensetsuGuide: React.FC = () => {
 
             {/* ── Closing Hero ── */}
             <div style={{
-              background: `linear-gradient(135deg, ${t.ink} 0%, ${t.slate} 100%)`,
+              background: `linear-gradient(135deg, ${t.ink} 0%, #3730A3 100%)`,
               borderRadius: '20px',
               padding: '48px 40px',
               textAlign: 'center',
