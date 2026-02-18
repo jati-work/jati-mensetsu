@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, FileSearch, Briefcase, BookOpen, Settings, LogOut, X, Menu, BrainCircuit, RotateCw } from 'lucide-react';
+import { LayoutDashboard, FileSearch, Briefcase, BookOpen, Settings, LogOut, X, Menu, BrainCircuit, RotateCw, BookOpenCheck } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
@@ -7,6 +7,7 @@ import DocumentHub from './pages/DocumentHub.tsx';
 import TSKTracker from './pages/TSKTracker.tsx';
 import StudyMode from './pages/StudyMode.tsx';
 import VocabHub from './pages/VocabHub.tsx';
+import MensetsuGuide from './pages/MensetsuGuide.tsx';
 import Management from './pages/Management.tsx';
 
 const App: React.FC = () => {
@@ -230,6 +231,7 @@ const loadAllData = async () => {
                         { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
                         { id: 'docs', icon: FileSearch, label: 'Document Hub' },
                         { id: 'tsk', icon: Briefcase, label: 'TSK Tracker' },
+                        { id: 'guide', icon: BookOpenCheck, label: 'Mensetsu Guide' },
                         { id: 'vocab', icon: BrainCircuit, label: 'Vocab Hub' },
                         { id: 'mensetsu', icon: BookOpen, label: 'Study Mode' },
                         { id: 'manage', icon: Settings, label: 'Database' }
@@ -274,6 +276,7 @@ const loadAllData = async () => {
                     {activeTab === 'dashboard' && <Dashboard userName={userName} roadmapSteps={roadmapSteps} setRoadmapSteps={setRoadmapSteps} targetDate={targetDate} setTargetDate={setTargetDate} certStatus={certStatus} setCertStatus={setCertStatus} tskList={tskList} />}
                     {activeTab === 'docs' && <DocumentHub checklist={checklist} setChecklist={setChecklist} docNotes={docNotes} setDocNotes={setDocNotes} />}
                     {activeTab === 'tsk' && <TSKTracker tskList={tskList} setTskList={setTskList} />}
+                    {activeTab === 'guide' && <MensetsuGuide />}
                     {activeTab === 'vocab' && <VocabHub vocabList={vocabList} setVocabList={setVocabList} />}
                     {activeTab === 'mensetsu' && <StudyMode questions={questions} setQuestions={setQuestions} interviewPoints={interviewPoints} setInterviewPoints={setInterviewPoints} emergencyPhrases={emergencyPhrases} setEmergencyPhrases={setEmergencyPhrases} studyNotes={studyNotes} setStudyNotes={setStudyNotes} />}
                     {activeTab === 'manage' && <Management questions={questions} setQuestions={setQuestions} />}
