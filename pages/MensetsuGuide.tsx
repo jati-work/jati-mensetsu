@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './mensetsu-guide.css';
 
 interface ChecklistItem {
   id: string;
