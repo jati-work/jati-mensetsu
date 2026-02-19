@@ -117,8 +117,8 @@ const DC: Record<string, any> = {
   'checklist.mantra': { main: '"Aku siap. Aku bisa. Aku layak."', sub: 'Semangat dan bangga — kamu sedang melakukan hal baik pada dirimu sendiri. 🌸' },
 
   // Closing hero
-  'closing.main': { text: 'Kamu pasti bisa! Semoga panduan ini membantumu sukses dalam perjalanan menjadi pekerja kaigo di Jepang.' },
-  'closing.sub': { text: 'Kepedulianmu akan membuat perbedaan nyata bagi banyak orang. 🙏' },
+  'closing.main': { text: 'Lelah, Takut, Sulit? Lakukan. Kalau memang ini sulit berarti ini nyata, bukan penipuan good to be true.' },
+  'closing.sub': { text: 'Jangan menyerah, ketuk pintunya sampai terbuka, ketuk pintunya sampai dibuka. 🙏' },
 };
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
