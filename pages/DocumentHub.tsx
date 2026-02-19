@@ -88,16 +88,15 @@ const handleFileUpload = (id: number) => {
                 // Set loading state
                 setUploadingId(id);
                 
-                // ===== TARUH DI SINI: Delete old file =====
+                // Delete old file from storage (if exists)
                 if (item?.fileUrl) {
-                    const oldFileName = item.fileUrl.split('/').pop(); // Extract filename from URL
+                    const oldFileName = item.fileUrl.split('/').pop();
                     if (oldFileName) {
                         await supabase.storage
                             .from('documents')
                             .remove([oldFileName]);
                     }
                 }
-                // ===== SAMPAI SINI =====
                 
                 // Generate unique filename
                 const timestamp = Date.now();
