@@ -220,7 +220,7 @@ const handleDragOver = (e: React.DragEvent, targetId: number) => {
                                     {item.fileName && <p className="text-[9px] font-bold text-indigo-400 mt-1 uppercase truncate max-w-[150px]">{item.fileName}</p>}
                                 </div>
                                 
-                                <div className="flex gap-2 flex-shrink-0">
+                                <div className="flex gap-2 flex-shrink-0 ml-auto">
                                     <button 
     onClick={() => handleFileUpload(item.id)} 
     disabled={uploadingId === item.id}
