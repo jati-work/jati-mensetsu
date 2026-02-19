@@ -206,13 +206,33 @@ const handleBulkAdd = async () => {
         setImportProgress(0);
         setImportResults(null);
         
-        const rows = bulkCsv.split('\n').filter(r => r.trim());
-        setImportProgress(10);
-        
-        // Parse semua data dulu
-        const parsedData = rows.map((r, index) => {
-            const separator = r.includes('\t') ? '\t' : ',';
-            const p = r.split(separator).map(v => v.trim().replace(/^"|"$/g, ''));
+// Handle newline di dalam cell Excel
+// Baris valid = punya tab (paste dari Excel). Baris tanpa tab = lanjutan cell sebelumnya
+const rawLines = bulkCsv.split('\n');
+const rows: string[] = [];
+let currentRow = '';
+
+for (const line of rawLines) {
+    if (!line.trim()) continue;
+    const isNewRow = line.includes('\t') || currentRow === '';
+    if (isNewRow && currentRow !== '') {
+        rows.push(currentRow);
+        currentRow = line;
+    } else if (isNewRow) {
+        currentRow = line;
+    } else {
+        // Newline di dalam cell → gabung dengan " / " sebagai pemisah variasi
+        currentRow += ' / ' + line.trim();
+    }
+}
+if (currentRow.trim()) rows.push(currentRow);
+
+setImportProgress(10);
+
+// Parse semua data dulu
+const parsedData = rows.filter(r => r.trim()).map((r, index) => {
+    const separator = r.includes('\t') ? '\t' : ',';
+    const p = r.split(separator).map(v => v.trim().replace(/^"|"$/g, '').replace(/\n/g, ' / '));
             
             return {
                 question: p[1] || '?',
@@ -249,36 +269,46 @@ const handleBulkAdd = async () => {
             failedList.push(`${item.question} (sudah ada di database)`);
         });
         
-        // INSERT yang baru aja
-        if (newData.length > 0) {
-            const { data, error } = await supabase
-                .from('questions')
-                .insert(newData)
-                .select();
-            
-            setImportProgress(80);
-            
-            if (error) {
-                console.error('Error bulk insert:', error);
-                newData.forEach(item => failedList.push(`${item.question} (error: ${error.message})`));
-            } else if (data) {
-                const newQuestions = data.map((item: any) => ({
-                    id: item.id,
-                    category: item.category,
-                    question: item.question,
-                    answerJapanese: item.answer_japanese,
-                    answerRomaji: item.answer_romaji,
-                    answerIndo: item.answer_indo,
-                    mastered: item.mastered,
-                    timeLimit: item.time_limit
-                }));
-                
-                setQuestions([...questions, ...newQuestions]);
-                data.forEach(item => successList.push(item.question));
-            }
-        } else {
-            setImportProgress(80);
+// INSERT satu per satu agar yang gagal tidak membatalkan yang lain
+const insertedQuestions: Question[] = [];
+
+if (newData.length > 0) {
+    for (let i = 0; i < newData.length; i++) {
+        const item = newData[i];
+        const { data, error } = await supabase
+            .from('questions')
+            .insert(item)
+            .select()
+            .single();
+        
+        if (error) {
+            const isDuplicate = error.message.includes('duplicate') || error.message.includes('unique');
+            const reason = isDuplicate ? 'sudah ada di database' : `error: ${error.message.substring(0, 40)}`;
+            failedList.push(`${item.question} (${reason})`);
+        } else if (data) {
+            insertedQuestions.push({
+                id: data.id,
+                category: data.category,
+                question: data.question,
+                answerJapanese: data.answer_japanese,
+                answerRomaji: data.answer_romaji,
+                answerIndo: data.answer_indo,
+                mastered: data.mastered,
+                timeLimit: data.time_limit
+            });
+            successList.push(data.question);
         }
+        
+        // Update progress secara bertahap
+        setImportProgress(50 + Math.round(((i + 1) / newData.length) * 45));
+    }
+    
+    if (insertedQuestions.length > 0) {
+        setQuestions([...questions, ...insertedQuestions]);
+    }
+} else {
+    setImportProgress(80);
+}
         
         setImportProgress(100);
         setImportResults({ success: successList, failed: failedList });
