@@ -238,8 +238,30 @@ const handleDragOver = (e: React.DragEvent, targetId: number) => {
     )}
 </button>
                                     {item.fileUrl && (
-                                        <a href={item.fileUrl} download={item.fileName || "document"} className="p-3 bg-white rounded-xl text-emerald-500 shadow-sm hover:bg-emerald-50" title="Download Document"><Download size={16} /></a>
-                                    )}
+    <button
+        onClick={async () => {
+            try {
+                const response = await fetch(item.fileUrl);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = item.fileName || 'document';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (err) {
+                alert('Gagal download. Coba lagi.');
+                console.error(err);
+            }
+        }}
+        className="p-3 bg-white rounded-xl text-emerald-500 shadow-sm hover:bg-emerald-50"
+        title="Download Document"
+    >
+        <Download size={16} />
+    </button>
+)}
                                 </div>
                             </div>
                             
