@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { ShieldCheck, PlusCircle, CheckSquare, Upload, Trash2, Download, StickyNote, Edit3, CheckCircle, Lock, GripVertical } from 'lucide-react';
-import { initGoogleDrive, uploadToDrive } from '../utils/googleDrive';
 
 interface Props {
     checklist: any[];
@@ -18,7 +17,6 @@ const DocumentHub: React.FC<Props> = ({ checklist, setChecklist, docNotes, setDo
 useEffect(() => {
     loadDocs();
     loadNotes();
-    initGoogleDrive(); // Initialize Google Drive
 }, []);
 
     const loadDocs = async () => {
@@ -71,6 +69,16 @@ const saveDoc = async (doc: any) => {
     };
 
 const handleFileUpload = (id: number) => {
+    const item = checklist.find(i => i.id === id);
+    
+    // Konfirmasi kalau udah ada file
+    if (item?.fileUrl) {
+        const confirmReplace = window.confirm(
+            `File "${item.fileName}" sudah ada.\n\nUpload file baru akan mengganti file lama.\n\nLanjutkan?`
+        );
+        if (!confirmReplace) return;
+    }
+    
     const input = document.createElement('input');
     input.type = 'file';
     input.onchange = async (e: any) => {
@@ -80,16 +88,42 @@ const handleFileUpload = (id: number) => {
                 // Set loading state
                 setUploadingId(id);
                 
-                // Upload to Google Drive
-                const driveFile = await uploadToDrive(file);
+                // ===== TARUH DI SINI: Delete old file =====
+                if (item?.fileUrl) {
+                    const oldFileName = item.fileUrl.split('/').pop(); // Extract filename from URL
+                    if (oldFileName) {
+                        await supabase.storage
+                            .from('documents')
+                            .remove([oldFileName]);
+                    }
+                }
+                // ===== SAMPAI SINI =====
                 
-                // Generate direct download link
-                const downloadUrl = `https://drive.google.com/uc?export=download&id=${driveFile.fileId}`;
+                // Generate unique filename
+                const timestamp = Date.now();
+                const fileName = `${timestamp}_${file.name}`;
                 
-                // Update checklist with Drive link
+                // Upload to Supabase Storage
+                const { data, error } = await supabase.storage
+                    .from('documents')
+                    .upload(fileName, file, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+                
+                if (error) throw error;
+                
+                // Get public URL
+                const { data: urlData } = supabase.storage
+                    .from('documents')
+                    .getPublicUrl(fileName);
+                
+                const fileUrl = urlData.publicUrl;
+                
+                // Update checklist
                 const updated = checklist.map(i => 
                     i.id === id 
-                    ? { ...i, isDone: true, fileUrl: downloadUrl, fileName: driveFile.name } 
+                    ? { ...i, isDone: true, fileUrl, fileName: file.name } 
                     : i
                 );
                 setChecklist(updated);
@@ -100,11 +134,11 @@ const handleFileUpload = (id: number) => {
                 
                 // Clear loading & show success
                 setUploadingId(null);
-                alert('✅ File berhasil di-upload ke Google Drive!');
+                alert('✅ File berhasil di-upload!');
             } catch (error) {
                 console.error('Upload error:', error);
                 setUploadingId(null);
-                alert('❌ Upload gagal. Pastikan kamu sudah login ke Google dan coba lagi.');
+                alert('❌ Upload gagal. Coba lagi.');
             }
         }
     };
