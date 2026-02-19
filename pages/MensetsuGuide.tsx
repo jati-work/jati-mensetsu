@@ -279,12 +279,18 @@ const MensetsuGuide: React.FC = () => {
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
-  // Progress tracker
-  useEffect(() => {
-    const all = document.querySelectorAll('.mg-cl li').length;
-    const done = Object.values(ci).filter(Boolean).length;
-    setProgress(all > 0 ? (done / all) * 100 : 0);
-  }, [ci]);
+// Progress tracker — tiap kotak = 20%, ada 5 kotak
+useEffect(() => {
+  const SECTIONS = ['w2', 'w1', 'd2', 'nm', 'm'];
+  const completedSections = SECTIONS.filter(pfx =>
+    document.querySelectorAll(`.mg-cl li[class]`).length >= 0 &&
+    (() => {
+      const allInSection = Object.keys(ci).filter(k => k.startsWith(pfx + '-'));
+      return allInSection.length > 0 && allInSection.every(k => ci[k]);
+    })()
+  ).length;
+  setProgress(completedSections * 20);
+}, [ci]);
 
   const saveBlock = useCallback(async (key: string, val: any) => {
     setContent(p => ({ ...p, [key]: val }));
