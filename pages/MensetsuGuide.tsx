@@ -279,25 +279,14 @@ const MensetsuGuide: React.FC = () => {
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
-// Progress tracker — tiap kotak = 20%, ada 5 kotak
+// Progress tracker — manual per kotak
+const [sectionDone, setSectionDone] = useState<Record<string, boolean>>({});
+const toggleSection = (key: string) => setSectionDone(p => ({ ...p, [key]: !p[key] }));
+
 useEffect(() => {
-  const sectionPrefixes = [
-    ['w2m', 'w2j', 'w2k'],
-    ['w1p', 'w1t', 'w1l'],
-    ['d2p', 'd2s'],
-    ['nm',  'np'],
-    ['m1h', 'm5m'],
-  ];
-  const completedSections = sectionPrefixes.filter(prefixes => {
-    const allKeys = prefixes.flatMap(p =>
-      Array.from({ length: 20 }, (_, i) => `${p}-${i}`)
-        .filter(k => document.querySelector(`[data-id="${k}"]`) !== null)
-    );
-    if (allKeys.length === 0) return false;
-    return allKeys.every(k => ci[k] === true);
-  }).length;
-  setProgress(completedSections * 20);
-}, [ci]);
+  const done = Object.values(sectionDone).filter(Boolean).length;
+  setProgress(done * 20);
+}, [sectionDone]);
 
   const saveBlock = useCallback(async (key: string, val: any) => {
     setContent(p => ({ ...p, [key]: val }));
@@ -328,15 +317,24 @@ useEffect(() => {
 
 const [collOpen, setCollOpen] = useState<Record<string, boolean>>({});
 
-const Coll: React.FC<{ title: string; icon?: string; children: React.ReactNode }> = ({ title, icon, children }) => {
+const Coll: React.FC<{ title: string; icon?: string; children: React.ReactNode; sectionKey?: string }> = ({ title, icon, children, sectionKey }) => {
   const key = title;
   const open = collOpen[key] ?? false;
   const toggle = () => setCollOpen(p => ({ ...p, [key]: !p[key] }));
+  const done = sectionKey ? sectionDone[sectionKey] : false;
   return (
     <div style={{ marginBottom: '7px' }}>
       <div className={`mg-coll-hdr ${open ? 'open' : ''}`} onClick={toggle}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>{icon && <span>{icon}</span>}<span>{title}</span></span>
-        <span style={{ fontSize: '0.68rem', opacity: 0.7, display: 'inline-block', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {sectionKey && (
+            <span
+              onClick={e => { e.stopPropagation(); toggleSection(sectionKey); }}
+              style={{ width: '22px', height: '22px', borderRadius: '6px', border: `2px solid ${done ? t.emerald : 'rgba(255,255,255,0.5)'}`, background: done ? t.emerald : 'transparent', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', color: 'white', cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s' }}
+            >{done ? '✓' : ''}</span>
+          )}
+          <span style={{ fontSize: '0.68rem', opacity: 0.7, display: 'inline-block', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
+        </span>
       </div>
       {open && <div className="mg-coll-body">{children}</div>}
     </div>
@@ -740,25 +738,25 @@ const Coll: React.FC<{ title: string; icon?: string; children: React.ReactNode }
               <ST icon="✅">Checklist Persiapan</ST>
               <p style={{ color: t.body, fontSize: '0.9rem', lineHeight: 1.65, marginBottom: '20px' }}>Klik setiap item untuk menandainya selesai. Arahkan kursor ke blok untuk mengedit isinya.</p>
 
-              <Coll title="2-3 Minggu Sebelum" icon="📋">
+              <Coll title="2-3 Minggu Sebelum" icon="📋" sectionKey="w2">
                 <H4s>Materi:</H4s><CL bk="checklist.w2mat" pfx="w2m" />
                 <H4s mt>Bahasa Jepang:</H4s><CL bk="checklist.w2jp" pfx="w2j" />
                 <H4s mt>Simulasi Mensetsu:</H4s><CL bk="checklist.w2mock" pfx="w2k" />
               </Coll>
-              <Coll title="1 Minggu Sebelum" icon="📋">
+              <Coll title="1 Minggu Sebelum" icon="📋" sectionKey="w1">
                 <H4s>Perbaikan & Polesan:</H4s><CL bk="checklist.w1pol" pfx="w1p" />
                 <H4s mt>Teknis:</H4s><CL bk="checklist.w1tech" pfx="w1t" />
                 <H4s mt>Logistik:</H4s><CL bk="checklist.w1log" pfx="w1l" />
               </Coll>
-              <Coll title="1-2 Hari Sebelum" icon="📋">
+              <Coll title="1-2 Hari Sebelum" icon="📋" sectionKey="d2">
                 <H4s>Persiapan Akhir:</H4s><CL bk="checklist.d2prep" pfx="d2p" />
                 <H4s mt>Perawatan Diri:</H4s><CL bk="checklist.d2self" pfx="d2s" />
               </Coll>
-              <Coll title="Malam H-1" icon="🌙">
+              <Coll title="Malam H-1" icon="🌙" sectionKey="nm">
                 <H4s>Persiapan Mental:</H4s><CL bk="checklist.nment" pfx="nm" />
                 <H4s mt>Persiapan Praktis:</H4s><CL bk="checklist.nprac" pfx="np" />
               </Coll>
-              <Coll title="Pagi Hari-H" icon="☀️">
+              <Coll title="Pagi Hari-H" icon="☀️" sectionKey="ph">
                 <H4s>1 Jam Sebelum:</H4s><CL bk="checklist.m1h" pfx="m1h" />
                 <H4s mt>5 Menit Sebelum:</H4s><CL bk="checklist.m5m" pfx="m5m" />
                 <E bk="checklist.mantra" type="mantra">
