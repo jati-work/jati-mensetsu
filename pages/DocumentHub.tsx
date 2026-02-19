@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { ShieldCheck, PlusCircle, CheckSquare, Upload, Trash2, Download, StickyNote, Edit3, CheckCircle, Lock, GripVertical } from 'lucide-react';
+import { initGoogleDrive, uploadToDrive } from '../utils/googleDrive';
 
 interface Props {
     checklist: any[];
@@ -13,10 +14,11 @@ const DocumentHub: React.FC<Props> = ({ checklist, setChecklist, docNotes, setDo
     const [isEditing, setIsEditing] = useState(false);
     const [draggedId, setDraggedId] = useState<number | null>(null);
 
-    useEffect(() => {
-        loadDocs();
-        loadNotes();
-    }, []);
+useEffect(() => {
+    loadDocs();
+    loadNotes();
+    initGoogleDrive(); // Initialize Google Drive
+}, []);
 
     const loadDocs = async () => {
         const { data } = await supabase.from('documents').select('*').order('order_index', { ascending: true });
@@ -67,22 +69,37 @@ const saveDoc = async (doc: any) => {
         }
     };
 
-    const handleFileUpload = (id: number) => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.onchange = async (e: any) => {
-            const file = e.target.files[0];
-            if (file) {
-                const fileUrl = URL.createObjectURL(file);
-                const updated = checklist.map(i => i.id === id ? { ...i, isDone: true, fileUrl, fileName: file.name } : i);
+const handleFileUpload = (id: number) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = async (e: any) => {
+        const file = e.target.files[0];
+        if (file) {
+            try {
+                // Upload to Google Drive
+                const driveFile = await uploadToDrive(file);
+                
+                // Update checklist with Drive link
+                const updated = checklist.map(i => 
+                    i.id === id 
+                    ? { ...i, isDone: true, fileUrl: driveFile.webViewLink, fileName: driveFile.name } 
+                    : i
+                );
                 setChecklist(updated);
+                
+                // Save to database
                 const updatedItem = updated.find(i => i.id === id);
                 if (updatedItem) await saveDoc(updatedItem);
+                
+                alert('✅ File berhasil di-upload ke Google Drive!');
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('❌ Upload gagal. Pastikan kamu sudah login ke Google.');
             }
-        };
-        input.click();
+        }
     };
-
+    input.click();
+};
     const handleDragStart = (id: number) => setDraggedId(id);
 
 const handleDragOver = (e: React.DragEvent, targetId: number) => {
