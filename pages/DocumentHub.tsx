@@ -210,7 +210,7 @@ const handleDragOver = (e: React.DragEvent, targetId: number) => {
                                     <CheckSquare size={20} />
                                 </button>
                                 
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-0">
                                     <input value={item.label} onChange={(e) => {
                                         const updated = checklist.map(i => i.id === item.id ? {...i, label: e.target.value} : i);
                                         setChecklist(updated);
