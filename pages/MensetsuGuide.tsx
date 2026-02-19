@@ -281,14 +281,21 @@ const MensetsuGuide: React.FC = () => {
 
 // Progress tracker — tiap kotak = 20%, ada 5 kotak
 useEffect(() => {
-  const SECTIONS = ['w2', 'w1', 'd2', 'nm', 'm'];
-  const completedSections = SECTIONS.filter(pfx =>
-    document.querySelectorAll(`.mg-cl li[class]`).length >= 0 &&
-    (() => {
-      const allInSection = Object.keys(ci).filter(k => k.startsWith(pfx + '-'));
-      return allInSection.length > 0 && allInSection.every(k => ci[k]);
-    })()
-  ).length;
+  const sectionPrefixes = [
+    ['w2m', 'w2j', 'w2k'],
+    ['w1p', 'w1t', 'w1l'],
+    ['d2p', 'd2s'],
+    ['nm',  'np'],
+    ['m1h', 'm5m'],
+  ];
+  const completedSections = sectionPrefixes.filter(prefixes => {
+    const allKeys = prefixes.flatMap(p =>
+      Array.from({ length: 20 }, (_, i) => `${p}-${i}`)
+        .filter(k => document.querySelector(`[data-id="${k}"]`) !== null)
+    );
+    if (allKeys.length === 0) return false;
+    return allKeys.every(k => ci[k] === true);
+  }).length;
   setProgress(completedSections * 20);
 }, [ci]);
 
