@@ -319,18 +319,22 @@ useEffect(() => {
     </div>
   );
 
-  const Coll: React.FC<{ title: string; icon?: string; children: React.ReactNode }> = ({ title, icon, children }) => {
-    const [open, setOpen] = useState(false);
-    return (
-      <div style={{ marginBottom: '7px' }}>
-        <div className={`mg-coll-hdr ${open ? 'open' : ''}`} onClick={() => setOpen(!open)}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>{icon && <span>{icon}</span>}<span>{title}</span></span>
-          <span style={{ fontSize: '0.68rem', opacity: 0.7, display: 'inline-block', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
-        </div>
-        {open && <div className="mg-coll-body">{children}</div>}
+const [collOpen, setCollOpen] = useState<Record<string, boolean>>({});
+
+const Coll: React.FC<{ title: string; icon?: string; children: React.ReactNode }> = ({ title, icon, children }) => {
+  const key = title;
+  const open = collOpen[key] ?? false;
+  const toggle = () => setCollOpen(p => ({ ...p, [key]: !p[key] }));
+  return (
+    <div style={{ marginBottom: '7px' }}>
+      <div className={`mg-coll-hdr ${open ? 'open' : ''}`} onClick={toggle}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>{icon && <span>{icon}</span>}<span>{title}</span></span>
+        <span style={{ fontSize: '0.68rem', opacity: 0.7, display: 'inline-block', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
       </div>
-    );
-  };
+      {open && <div className="mg-coll-body">{children}</div>}
+    </div>
+  );
+};
 
   const EColl: React.FC<{ bk: string; children: React.ReactNode }> = ({ bk, children }) => (
     <E bk={bk} type="coll">
