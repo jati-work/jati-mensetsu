@@ -41,6 +41,8 @@ const VocabHub: React.FC<Props> = ({ vocabList, setVocabList }) => {
     const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
     const [draggedId, setDraggedId] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
+    const [draggedCat, setDraggedCat] = useState<string | null>(null);
     const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [importProgress, setImportProgress] = useState(0);
@@ -144,6 +146,26 @@ useEffect(() => {
 useEffect(() => {
     loadVocab();
 }, []);
+
+useEffect(() => {
+    const loadCategoryOrder = async () => {
+        const { data } = await supabase
+            .from('user_preferences')
+            .select('value')
+            .eq('key', 'category_order')
+            .single();
+        if (data) setCategoryOrder(JSON.parse(data.value));
+    };
+    loadCategoryOrder();
+}, []);
+
+useEffect(() => {
+    if (categoryOrder.length === 0) return;
+    supabase.from('user_preferences').upsert({
+        key: 'category_order',
+        value: JSON.stringify(categoryOrder)
+    }, { onConflict: 'key' });
+}, [categoryOrder]);
 
 // AUTO SCROLL #1: Saat MULAI EDIT → scroll ke kotak edit
 useEffect(() => {
@@ -535,10 +557,12 @@ const exportExcel = async () => {
         window.speechSynthesis.onvoiceschanged = loadVoices;
     }, []);
 
-    const categories = useMemo(() => {
-        const cats = Array.from(new Set(vocabList.map(v => v.category))).filter(Boolean);
-        return ['Semua', ...cats];
-    }, [vocabList]);
+const categories = useMemo(() => {
+    const cats = Array.from(new Set(vocabList.map(v => v.category))).filter(Boolean);
+    const newCats = cats.filter(c => !categoryOrder.includes(c));
+    const ordered = categoryOrder.filter(c => cats.includes(c));
+    return ['Semua', ...ordered, ...newCats];
+}, [vocabList, categoryOrder]);
 
 useEffect(() => {
     setFlashIndex(0);
@@ -939,17 +963,33 @@ Salam,さようなら,Selamat tinggal,さようなら、また会いましょう
 <div className="relative">
     <div className="flex gap-2 overflow-x-auto pb-2 scroll-smooth">
         {categories.map(cat => {
-            // Cek apakah semua vocab di kategori ini sudah mastered
             const categoryVocab = cat === 'Semua' 
                 ? vocabList 
                 : vocabList.filter(v => v.category === cat);
             const allMastered = categoryVocab.length > 0 && categoryVocab.every(v => v.mastered);
+            const isFixed = cat === 'Semua';
             
             return (
                 <button 
                     key={cat} 
+                    draggable={!isFixed}
+                    onDragStart={() => !isFixed && setDraggedCat(cat)}
+                    onDragOver={(e) => {
+                        e.preventDefault();
+                        if (!draggedCat || draggedCat === cat || isFixed) return;
+                        const currentOrder = categories.filter(c => c !== 'Semua');
+                        const fromIdx = currentOrder.indexOf(draggedCat);
+                        const toIdx = currentOrder.indexOf(cat);
+                        if (fromIdx === -1 || toIdx === -1) return;
+                        const newOrder = [...currentOrder];
+                        newOrder.splice(fromIdx, 1);
+                        newOrder.splice(toIdx, 0, draggedCat);
+                        setCategoryOrder(newOrder);
+                    }}
+                    onDragEnd={() => setDraggedCat(null)}
                     onClick={() => setSelectedCategory(cat)} 
-                    className={`px-5 py-2 rounded-full text-[9px] font-black uppercase transition-all whitespace-nowrap ${
+                    className={`px-5 py-2 rounded-full text-[9px] font-black uppercase transition-all whitespace-nowrap cursor-grab active:cursor-grabbing ${
+                        draggedCat === cat ? 'opacity-40 scale-95' :
                         selectedCategory === cat 
                             ? 'bg-indigo-600 text-white shadow-lg' 
                             : allMastered
