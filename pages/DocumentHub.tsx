@@ -13,6 +13,7 @@ interface Props {
 const DocumentHub: React.FC<Props> = ({ checklist, setChecklist, docNotes, setDocNotes }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [draggedId, setDraggedId] = useState<number | null>(null);
+    const [uploadingId, setUploadingId] = useState<number | null>(null);
 
 useEffect(() => {
     loadDocs();
@@ -76,13 +77,19 @@ const handleFileUpload = (id: number) => {
         const file = e.target.files[0];
         if (file) {
             try {
+                // Set loading state
+                setUploadingId(id);
+                
                 // Upload to Google Drive
                 const driveFile = await uploadToDrive(file);
+                
+                // Generate direct download link
+                const downloadUrl = `https://drive.google.com/uc?export=download&id=${driveFile.fileId}`;
                 
                 // Update checklist with Drive link
                 const updated = checklist.map(i => 
                     i.id === id 
-                    ? { ...i, isDone: true, fileUrl: driveFile.webViewLink, fileName: driveFile.name } 
+                    ? { ...i, isDone: true, fileUrl: downloadUrl, fileName: driveFile.name } 
                     : i
                 );
                 setChecklist(updated);
@@ -91,10 +98,13 @@ const handleFileUpload = (id: number) => {
                 const updatedItem = updated.find(i => i.id === id);
                 if (updatedItem) await saveDoc(updatedItem);
                 
+                // Clear loading & show success
+                setUploadingId(null);
                 alert('✅ File berhasil di-upload ke Google Drive!');
             } catch (error) {
                 console.error('Upload error:', error);
-                alert('❌ Upload gagal. Pastikan kamu sudah login ke Google.');
+                setUploadingId(null);
+                alert('❌ Upload gagal. Pastikan kamu sudah login ke Google dan coba lagi.');
             }
         }
     };
@@ -178,7 +188,22 @@ const handleDragOver = (e: React.DragEvent, targetId: number) => {
                                 </div>
                                 
                                 <div className="flex gap-2 flex-shrink-0">
-                                    <button onClick={() => handleFileUpload(item.id)} className="p-3 bg-white rounded-xl text-indigo-500 shadow-sm hover:bg-indigo-50" title="Upload Document"><Upload size={16} /></button>
+                                    <button 
+    onClick={() => handleFileUpload(item.id)} 
+    disabled={uploadingId === item.id}
+    className={`p-3 rounded-xl shadow-sm transition-all ${
+        uploadingId === item.id 
+        ? 'bg-indigo-500 text-white animate-pulse cursor-wait' 
+        : 'bg-white text-indigo-500 hover:bg-indigo-50'
+    }`} 
+    title={uploadingId === item.id ? "Uploading..." : "Upload Document"}
+>
+    {uploadingId === item.id ? (
+        <div className="animate-spin">⏳</div>
+    ) : (
+        <Upload size={16} />
+    )}
+</button>
                                     {item.fileUrl && (
                                         <a href={item.fileUrl} download={item.fileName || "document"} className="p-3 bg-white rounded-xl text-emerald-500 shadow-sm hover:bg-emerald-50" title="Download Document"><Download size={16} /></a>
                                     )}
