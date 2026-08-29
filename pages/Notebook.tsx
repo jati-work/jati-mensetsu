@@ -332,7 +332,7 @@ const Notebook: React.FC = () => {
           <button onClick={() => gantiHalaman(1)} disabled={indexAktif >= halaman.length - 1} className={toolBtn(false)} style={{ opacity: indexAktif >= halaman.length - 1 ? 0.3 : 1 }}><ChevronRight size={18} /></button>
           <button onClick={tambahHalaman} title="Tambah halaman" className={toolBtn(false)}><Plus size={18} /></button>
           <button onClick={() => (terkunci ? bukaKunci() : kunciHalaman())} title={terkunci ? 'Buka kunci' : 'Kunci halaman'} className={toolBtn(terkunci)}>
-            {terkunci ? <Unlock size={18} /> : <Lock size={18} />}
+            {terkunci ? <Lock size={18} /> : <Unlock size={18} />}
           </button>
           <button onClick={() => setKonfirmasiHapus(true)} title="Hapus halaman" className={toolBtn(false, true)}><Trash2 size={18} /></button>
         </div>
@@ -371,7 +371,7 @@ const Notebook: React.FC = () => {
       {/* Kertas */}
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-10 flex justify-center overflow-x-auto">
         {terkunci ? (
-          <div style={{ position: 'relative', width: PAPER_WIDTH, minHeight: PAPER_HEIGHT, fontSize: 16, lineHeight: 1.8, color: '#1f2937', whiteSpace: 'pre-wrap', textAlign: 'left' }}>
+          <div style={{ position: 'relative', width: PAPER_WIDTH, minHeight: PAPER_HEIGHT, fontSize: 16, lineHeight: 1.8, color: '#1f2937', whiteSpace: 'pre-wrap', textAlign: 'left', userSelect: 'none', WebkitUserSelect: 'none' }}>
             {teks || <span className="text-gray-300">(halaman ini kosong)</span>}
             <div
               ref={overlayRef}
