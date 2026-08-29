@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, FileSearch, Briefcase, LogOut, X, Menu, RotateCw, BookOpenCheck } from 'lucide-react';
+import { LayoutDashboard, FileSearch, Briefcase, LogOut, X, Menu, RotateCw, BookOpenCheck, NotebookPen } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import DocumentHub from './pages/DocumentHub.tsx';
 import TSKTracker from './pages/TSKTracker.tsx';
 import MensetsuGuide from './pages/MensetsuGuide.tsx';
+import Notebook from './pages/Notebook.tsx';
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('kaigo_logged') === 'true');
   const [userName, setUserName] = useState(() => localStorage.getItem('kaigo_user') || 'Jati');
   const [activeTab, setActiveTab] = useState(() => {
     const saved = localStorage.getItem('kaigo_active_tab') || 'dashboard';
-    const validTabs = ['dashboard', 'docs', 'tsk', 'guide'];
+    const validTabs = ['dashboard', 'docs', 'tsk', 'guide', 'notebook'];
     return validTabs.includes(saved) ? saved : 'dashboard';
   });
   const [isSyncing, setIsSyncing] = useState(false);
@@ -176,7 +177,8 @@ const App: React.FC = () => {
             { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
             { id: 'docs', icon: FileSearch, label: 'Document Hub' },
             { id: 'tsk', icon: Briefcase, label: 'TSK Tracker' },
-            { id: 'guide', icon: BookOpenCheck, label: 'Mensetsu Guide' }
+            { id: 'guide', icon: BookOpenCheck, label: 'Mensetsu Guide' },
+            { id: 'notebook', icon: NotebookPen, label: 'Notebook' }
           ].map((item) => (
             <div
               key={item.id}
@@ -217,6 +219,7 @@ const App: React.FC = () => {
           {activeTab === 'docs' && <DocumentHub checklist={checklist} setChecklist={setChecklist} docNotes={docNotes} setDocNotes={setDocNotes} />}
           {activeTab === 'tsk' && <TSKTracker tskList={tskList} setTskList={setTskList} />}
           {activeTab === 'guide' && <MensetsuGuide />}
+          {activeTab === 'notebook' && <Notebook />}
         </div>
       </main>
     </div>
