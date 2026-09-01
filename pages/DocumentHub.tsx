@@ -90,11 +90,12 @@ const handleFileUpload = (id: number) => {
                 
                 // Delete old file from storage (if exists)
                 if (item?.fileUrl) {
-                    const oldFileName = item.fileUrl.split('/').pop();
+                    const oldFileName = decodeURIComponent(item.fileUrl.split('/').pop() || '');
                     if (oldFileName) {
-                        await supabase.storage
+                        const { error: removeError } = await supabase.storage
                             .from('documents')
                             .remove([oldFileName]);
+                        if (removeError) console.error('Gagal hapus file lama:', removeError);
                     }
                 }
                 
