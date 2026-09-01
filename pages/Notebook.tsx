@@ -83,7 +83,7 @@ function HighlightBox({ data, onHapus, hapusMode, modeUji, revealed, onToggleRev
   );
 }
 
-const Notebook: React.FC = () => {
+const Notebook: React.FC<{ visibleTick?: number }> = ({ visibleTick = 0 }) => {
   const [halaman, setHalaman] = useState<any[]>([]);
   const [indexAktif, setIndexAktif] = useState(0);
   const [teks, setTeks] = useState('');
@@ -314,7 +314,7 @@ const Notebook: React.FC = () => {
   if (loading) return <div className="p-16 text-gray-400 font-bold">Memuat notebook...</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" key={visibleTick} style={{ animation: 'fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}>
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
