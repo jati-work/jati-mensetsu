@@ -49,6 +49,16 @@ const saveDoc = async (doc: any) => {
 };
 
     const deleteDoc = async (id: number) => {
+        const item = checklist.find(i => i.id === id);
+        if (item?.fileUrl) {
+            const oldFileName = decodeURIComponent(item.fileUrl.split('/').pop() || '');
+            if (oldFileName) {
+                const { error: removeError } = await supabase.storage
+                    .from('documents')
+                    .remove([oldFileName]);
+                if (removeError) console.error('Gagal hapus file di storage:', removeError);
+            }
+        }
         await supabase.from('documents').delete().eq('id', id);
     };
 
