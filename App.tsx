@@ -218,8 +218,8 @@ const App: React.FC = () => {
           {activeTab === 'dashboard' && <Dashboard userName={userName} roadmapSteps={roadmapSteps} setRoadmapSteps={setRoadmapSteps} targetDate={targetDate} setTargetDate={setTargetDate} certStatus={certStatus} setCertStatus={setCertStatus} tskList={tskList} />}
           {activeTab === 'docs' && <DocumentHub checklist={checklist} setChecklist={setChecklist} docNotes={docNotes} setDocNotes={setDocNotes} />}
           {activeTab === 'tsk' && <TSKTracker tskList={tskList} setTskList={setTskList} />}
-          {activeTab === 'guide' && <MensetsuGuide />}
-          {activeTab === 'notebook' && <Notebook />}
+          <div style={{ display: activeTab === 'guide' ? 'block' : 'none' }}><MensetsuGuide /></div>
+          <div style={{ display: activeTab === 'notebook' ? 'block' : 'none' }}><Notebook /></div>
         </div>
       </main>
     </div>
