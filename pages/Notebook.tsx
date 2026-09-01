@@ -371,7 +371,7 @@ const Notebook: React.FC = () => {
       {/* Kertas */}
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-10 flex justify-center overflow-x-auto">
         {terkunci ? (
-          <div style={{ position: 'relative', width: PAPER_WIDTH, minHeight: PAPER_HEIGHT, fontSize: 16, lineHeight: 1.8, color: '#1f2937', whiteSpace: 'pre-wrap', textAlign: 'left', userSelect: 'none', WebkitUserSelect: 'none' }}>
+          <div style={{ position: 'relative', width: PAPER_WIDTH, minHeight: PAPER_HEIGHT, boxSizing: 'border-box', padding: '48px 56px', fontSize: 16, lineHeight: 1.8, color: '#1f2937', whiteSpace: 'pre-wrap', textAlign: 'left', userSelect: 'none', WebkitUserSelect: 'none' }}>
             {teks || <span className="text-gray-300">(halaman ini kosong)</span>}
             <div
               ref={overlayRef}
@@ -407,7 +407,7 @@ const Notebook: React.FC = () => {
             value={teks}
             onChange={e => handleChangeTeks(e.target.value)}
             placeholder="Tulis pertanyaan & jawaban yang mau dihafalin di sini..."
-            style={{ width: PAPER_WIDTH, minHeight: PAPER_HEIGHT, resize: 'none', border: 'none', outline: 'none', fontSize: 16, lineHeight: 1.8, color: '#1f2937' }}
+            style={{ width: PAPER_WIDTH, minHeight: PAPER_HEIGHT, boxSizing: 'border-box', padding: '48px 56px', resize: 'none', border: 'none', outline: 'none', fontSize: 16, lineHeight: 1.8, color: '#1f2937' }}
           />
         )}
       </div>
