@@ -239,7 +239,7 @@ const CSS = `
 `;
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-const MensetsuGuide: React.FC = () => {
+const MensetsuGuide: React.FC<{ visibleTick?: number }> = ({ visibleTick = 0 }) => {
   const [activeSection, setActiveSection] = useState('intro');
   const [showBtt, setShowBtt] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -505,7 +505,7 @@ const Coll: React.FC<{ title: string; icon?: string; children: React.ReactNode; 
   return (
     <>
       <style>{CSS}</style>
-      <div className="mg">
+      <div className="mg" key={visibleTick} style={{ animation: 'fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}>
         {saveBadge && <div className="mg-save-badge">✓ Tersimpan</div>}
         <Modal />
 
