@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LayoutDashboard, FileSearch, Briefcase, LogOut, X, Menu, RotateCw, BookOpenCheck, NotebookPen } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import Login from './pages/Login.tsx';
@@ -20,6 +20,8 @@ const App: React.FC = () => {
   const [isSupabaseConfigured, setIsSupabaseConfigured] = useState(false);
   const [isPortrait, setIsPortrait] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const guideWrapRef = useRef<HTMLDivElement>(null);
+  const notebookWrapRef = useRef<HTMLDivElement>(null);
 
   // --- SHARED STATES ---
   const [tskList, setTskList] = useState([]);
@@ -126,6 +128,16 @@ const App: React.FC = () => {
     }
   }, [isLoggedIn, isSupabaseConfigured]);
 
+  // Retrigger animasi fade-in pas pindah ke tab guide/notebook (komponennya sengaja nggak di-unmount, jadi animasi harus dipicu manual)
+  useEffect(() => {
+    const el = activeTab === 'guide' ? guideWrapRef.current : activeTab === 'notebook' ? notebookWrapRef.current : null;
+    if (el) {
+      el.classList.remove('fade-in');
+      void el.offsetWidth; // paksa reflow biar animasi bisa jalan ulang
+      el.classList.add('fade-in');
+    }
+  }, [activeTab]);
+
   const handleLogin = (name: string) => {
     setUserName(name);
     setIsLoggedIn(true);
@@ -218,8 +230,8 @@ const App: React.FC = () => {
           {activeTab === 'dashboard' && <Dashboard userName={userName} roadmapSteps={roadmapSteps} setRoadmapSteps={setRoadmapSteps} targetDate={targetDate} setTargetDate={setTargetDate} certStatus={certStatus} setCertStatus={setCertStatus} tskList={tskList} />}
           {activeTab === 'docs' && <DocumentHub checklist={checklist} setChecklist={setChecklist} docNotes={docNotes} setDocNotes={setDocNotes} />}
           {activeTab === 'tsk' && <TSKTracker tskList={tskList} setTskList={setTskList} />}
-          <div style={{ display: activeTab === 'guide' ? 'block' : 'none' }}><MensetsuGuide /></div>
-          <div style={{ display: activeTab === 'notebook' ? 'block' : 'none' }}><Notebook /></div>
+          <div ref={guideWrapRef} style={{ display: activeTab === 'guide' ? 'block' : 'none' }}><MensetsuGuide /></div>
+          <div ref={notebookWrapRef} style={{ display: activeTab === 'notebook' ? 'block' : 'none' }}><Notebook /></div>
         </div>
       </main>
     </div>
