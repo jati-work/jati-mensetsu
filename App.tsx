@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, FileSearch, Briefcase, LogOut, X, Menu, RotateCw, BookOpenCheck, NotebookPen } from 'lucide-react';
 import { supabase } from './supabase.ts';
 import Login from './pages/Login.tsx';
@@ -20,8 +20,8 @@ const App: React.FC = () => {
   const [isSupabaseConfigured, setIsSupabaseConfigured] = useState(false);
   const [isPortrait, setIsPortrait] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const guideWrapRef = useRef<HTMLDivElement>(null);
-  const notebookWrapRef = useRef<HTMLDivElement>(null);
+  const [guideTick, setGuideTick] = useState(0);
+  const [notebookTick, setNotebookTick] = useState(0);
 
   // --- SHARED STATES ---
   const [tskList, setTskList] = useState([]);
@@ -128,14 +128,11 @@ const App: React.FC = () => {
     }
   }, [isLoggedIn, isSupabaseConfigured]);
 
-  // Retrigger animasi fade-in pas pindah ke tab guide/notebook (komponennya sengaja nggak di-unmount, jadi animasi harus dipicu manual)
+  // Naikin tick pas pindah ke tab guide/notebook — komponennya sengaja nggak di-unmount penuh (biar nggak fetch ulang),
+  // tapi root div di dalamnya pakai key={tick} jadi cuma DOM-nya yang di-refresh & animasi fade-in ke-trigger lagi
   useEffect(() => {
-    const el = activeTab === 'guide' ? guideWrapRef.current : activeTab === 'notebook' ? notebookWrapRef.current : null;
-    if (el) {
-      el.classList.remove('fade-in');
-      void el.offsetWidth; // paksa reflow biar animasi bisa jalan ulang
-      el.classList.add('fade-in');
-    }
+    if (activeTab === 'guide') setGuideTick(t => t + 1);
+    if (activeTab === 'notebook') setNotebookTick(t => t + 1);
   }, [activeTab]);
 
   const handleLogin = (name: string) => {
@@ -230,8 +227,8 @@ const App: React.FC = () => {
           {activeTab === 'dashboard' && <Dashboard userName={userName} roadmapSteps={roadmapSteps} setRoadmapSteps={setRoadmapSteps} targetDate={targetDate} setTargetDate={setTargetDate} certStatus={certStatus} setCertStatus={setCertStatus} tskList={tskList} />}
           {activeTab === 'docs' && <DocumentHub checklist={checklist} setChecklist={setChecklist} docNotes={docNotes} setDocNotes={setDocNotes} />}
           {activeTab === 'tsk' && <TSKTracker tskList={tskList} setTskList={setTskList} />}
-          <div ref={guideWrapRef} style={{ display: activeTab === 'guide' ? 'block' : 'none' }}><MensetsuGuide /></div>
-          <div ref={notebookWrapRef} style={{ display: activeTab === 'notebook' ? 'block' : 'none' }}><Notebook /></div>
+          <div style={{ display: activeTab === 'guide' ? 'block' : 'none' }}><MensetsuGuide visibleTick={guideTick} /></div>
+          <div style={{ display: activeTab === 'notebook' ? 'block' : 'none' }}><Notebook visibleTick={notebookTick} /></div>
         </div>
       </main>
     </div>
